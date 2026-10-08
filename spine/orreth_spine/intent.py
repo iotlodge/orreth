@@ -51,7 +51,8 @@ from . import envelope as ev, outbox
 INTENTION_DECLARED = "orreth.intention.declared.v1"
 INTENTION_STOPPED = "orreth.intention.stopped.v1"
 INTENTION_RESTARTED = "orreth.intention.restarted.v1"   # W20: the reverse act, its own fact
-SERVES = ("business", "security", "resiliency", "compliance", "cost")
+SERVES = ("business", "security", "resiliency", "compliance", "cost",
+          "operating-state")                      # Phase 8 sp5: THE OPERATING STATE — the five measurements' own
 KINDS = ("human", "role", "kernel")
 ASK_KINDS = ("thought", "objective", "intention")      # P23: the ask wears its kind
 WATCH_RED = "watch-red"                                # seeded by the kernel (markers.SEED)
@@ -94,6 +95,7 @@ def ensure_schema(conn) -> None:
         # W20: the restart is recorded beside the stop — the history stays whole
         cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_by text")
         cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_at timestamptz")
+        cur.execute("ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS watches text")   # Phase 8 sp5: the metrics it takes
         # P7 sp8 row 3c: the remediation rail — the dossier the planner read, the lever the kernel
         # pulled (its args, the planner's reason, the hop's ask, when), the outcome attributed
         for col in ("dossier text", "watch text", "episode text", "tries int NOT NULL DEFAULT 1",
@@ -162,8 +164,8 @@ def read_words(text: str) -> dict:
 # ---- the record ----
 _COLS = ("intention_id, words, serves, kind, interests, planner, runner, every_s, gates,"
          " active, stopped_by, stopped_at, added_by, marker, session, next_at, last_at, added_at,"
-         " blocked_crew, blocked_note, restarted_by, restarted_at")
-_NCOLS = 22
+         " blocked_crew, blocked_note, restarted_by, restarted_at, watches")
+_NCOLS = 23
 
 
 def _dict(r) -> dict:
@@ -176,6 +178,7 @@ def _dict(r) -> dict:
             "next_at": r[15].isoformat() if r[15] else None,
             "last_at": r[16].isoformat() if r[16] else None, "added_at": r[17].isoformat(),
             "blocked": r[18] is not None, "blocked_note": r[19],
+            "watches": json.loads(r[22]) if len(r) > 22 and r[22] else None,   # Phase 8 sp5: the metrics it takes
             "restarted_by": r[20],                                    # W20: the reverse act
             "restarted_at": r[21].isoformat() if r[21] else None}
 
@@ -183,9 +186,12 @@ def _dict(r) -> dict:
 def declare(conn, words: str, *, serves: str, kind: str, by: str,
             interests: list[str] | tuple = (), planner: str = "planner",
             runner: str | None = None, every_s: int | None = None,
-            gates: dict | None = None) -> dict:
+            gates: dict | None = None, watches: list[str] | None = None) -> dict:
     """An intention lands: its row, its root marker, its own session (where
-    its objectives show), and its fact on the rail — one transaction."""
+    its objectives show), and its fact on the rail — one transaction. Phase 8
+    sp5: `watches` names the metrics whose reds this intention takes (the watch
+    is the discriminator — an intention naming none takes every red that is
+    not a measurement)."""
     from . import markers
     from .resident import ensure_schema as _ground
     if serves not in SERVES:
@@ -226,12 +232,12 @@ def declare(conn, words: str, *, serves: str, kind: str, by: str,
                     " VALUES (%s, %s, %s, %s, 'in')", (sid, by, ev.universe(), words[:120]))
         cur.execute(
             "INSERT INTO spine_intentions (intention_id, words, serves, kind, interests,"
-            " planner, runner, every_s, gates, added_by, scope, marker, session, next_at)"
+            " planner, runner, every_s, gates, added_by, scope, marker, session, next_at, watches)"
             " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,"
-            " CASE WHEN %s::int IS NULL THEN NULL ELSE now() + make_interval(secs => %s) END)",
+            " CASE WHEN %s::int IS NULL THEN NULL ELSE now() + make_interval(secs => %s) END, %s)",
             (iid, words, serves, kind, json.dumps(interests), planner, runner, every_s,
              json.dumps(gates) if gates else None, by, ev.universe(), mid, sid,
-             every_s, every_s or 0))
+             every_s, every_s or 0, json.dumps(list(watches)) if watches else None))
 
     outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
     return get(conn, iid)
@@ -747,9 +753,12 @@ def _turn(conn) -> dict:
     from . import markers, proof
     expired = proof.expire_holds(conn)       # W35's boundary: a hold with no word ages out — cancel is the default
     observed = []
+    from . import operating
     for w in _watch_transitions(conn):
         note = watch_note(w["name"], w["metric"], w["op"], w["threshold"], w["value"])
         for i in interested(conn, WATCH_RED):
+            if not operating.routes_to(i.get("watches"), w["metric"]):   # Phase 8 sp5: the watch is the discriminator
+                continue
             m = markers.set_marker(conn, WATCH_RED, ref=w["watch_id"], by="the kernel",
                                    parent=i["marker"], note=note)
             observed.append(m["id"])

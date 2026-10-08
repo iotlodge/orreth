@@ -360,6 +360,7 @@ class Resident:
         self._current_ask = None
         self._current_marker = None  # the ask's marker: WHY this serve (0006)
         self._experiment = None      # Phase 8 sp4: the Experiment this serve reviews, when it does
+        self._grading = None         # Phase 8 sp5: the live reply this serve grades, when it does
         self._current_chain = None   # the chain the serve command arrived with (AG-7)
         self._state = "in"
         self._ckpt_graph = None      # the checkpointed graph, one per life
@@ -523,6 +524,50 @@ class Resident:
                                              f"declaration is {json.dumps(xp.get('candidate'), sort_keys=True)[:1200]}")
                             if _xp.KERNEL not in read:
                                 read.append(_xp.KERNEL)   # the evidence is the kernel's record — another's words, never mine
+                # Phase 8 sp5: THE OPERATING STATE — a live reply handed to the grader by the grade beat: the
+                # reply IS the evidence (another body's words, never mine); the grader's verdict feeds Trust
+                if self.function == "grade" and self._current_ask:
+                    from . import operating as _op
+                    gid = _op.graded_ask_of(conn, self._current_ask)
+                    if gid:
+                        cur.execute("SELECT a.text, a.reply, a.served_by, coalesce(j.name, 'a body') FROM spine_asks a"
+                                    " LEFT JOIN LATERAL (SELECT name FROM spine_joins WHERE did = a.served_by ORDER BY join_id DESC LIMIT 1) j ON true"
+                                    " WHERE a.ask_id = %s", (gid,))
+                        gr = cur.fetchone()
+                        if gr:
+                            self._grading = gid
+                            notes.append(f"THE REPLY TO GRADE — {gr[3]} replied to {gr[0]!r}: {str(gr[1] or '')[:1500]!r} "
+                                         "(theirs; grade it against the ask: the right thing, completely, plainly)")
+                            fb = _op.feedback_on(conn, gid)
+                            if fb:
+                                notes.append("THE HUMAN'S THUMBS on this reply (evidence you weigh, never the verdict itself): "
+                                             + "; ".join(f"{'up' if f['sign'] >= 0 else 'down'}" + (f" — {f['words']}" if f.get('words') else "") for f in fb))
+                            if gr[2] and gr[2] not in read:
+                                read.append(gr[2])
+                # Phase 8 sp5: the critic asked under an IMPROVEMENT marker — the marked reply, the body that gave it and
+                # its template are the evidence; the propose tool lands a draft under that body's owner
+                if self.function == "critique" and xm.get("parent"):
+                    cur.execute("SELECT kind, ref, note FROM spine_markers WHERE marker_id = %s", (xm["parent"],))
+                    pm = cur.fetchone()
+                    if pm and pm[0] == "improvement":
+                        cur.execute("SELECT a.text, a.reply, a.served_by, coalesce(j.name, '') FROM spine_asks a"
+                                    " LEFT JOIN LATERAL (SELECT name FROM spine_joins WHERE did = a.served_by ORDER BY join_id DESC LIMIT 1) j ON true"
+                                    " WHERE a.ask_id = %s", (pm[1],))
+                        ir = cur.fetchone()
+                        who = ir[3] if ir and ir[3] else None
+                        notes.append(f"THE IMPROVEMENT MARKED ({xm['parent']}): {pm[2] or 'no note'}"
+                                     + (f" — on {who}'s reply to {ir[0]!r}: {str(ir[1] or '')[:800]!r}" if ir and who else ""))
+                        if who:
+                            from . import services as _sv
+                            tpl = _sv.get(conn, f"{who}.template")
+                            if tpl:
+                                notes.append(f"{who}'S TEMPLATE on the shelf (version {tpl['version']}): "
+                                             f"{json.dumps(tpl['manifest'], sort_keys=True)[:1200]}")
+                            notes.append(f"If you see ONE concrete change to {who}'s template, prompt, skill or graph that would "
+                                         f"cure this, call the propose tool ONCE with for='{who}' and the WHOLE declaration as body — "
+                                         "it lands as a draft under that body's owner, who cuts it; never offer to cut.")
+                            if ir[2] and ir[2] not in read:
+                                read.append(ir[2])
                 if person:
                     # the pack's third rung (canon 0003): the SHORT VERSION
                     # first — the digests of this human's earlier sessions,
@@ -761,6 +806,10 @@ class Resident:
                     part = {"reply": echo_reply(self.name, cur_state["text"]),
                             "steps": cur_state["steps"] + [f"echoed every word — none summarized away "
                                                             f"({self.template.get('persona') or 'a plain-spoken echo'})"]}
+                elif n["kind"] == "import":              # Phase 8 sp5: a repo'd graph run inside the hull (dev universes only)
+                    from . import operating as _op
+                    reply, said = _op.run_import(self._serve_conn, n, cur_state["text"])
+                    part = {"reply": reply, "steps": cur_state["steps"] + [said]}
                 else:
                     part = think(cur_state, n)
                 cur_state.update(part)
@@ -821,6 +870,11 @@ class Resident:
                                "are executing, mark it: call the mark tool "
                                "with kind 'improvement' and a short note — "
                                "other bodies act on marks.")   # 0006's policy line
+                if "tools:propose" in self.template.get("capabilities", []):   # Phase 8 sp5: the improvement loop's actor
+                    system += (" When your notes carry THE IMPROVEMENT MARKED and you see one concrete change to that "
+                               "body's template, prompt, skill or graph, call the propose tool once with the whole "
+                               "declaration — it lands as a draft under the body's owner, who cuts it; never offer to cut, "
+                               "never change anything yourself.")
                 worn: list[str] = []                   # Phase 8 sp3: the node's refs, said in the journey
                 if node.get("prompt"):                 # Phase 8 sp2: a node's prompt component, from the shelf
                     from . import crafts
@@ -874,13 +928,13 @@ class Resident:
                             system=system, prompt=prompt, door=door,
                             model=mind.get("model"), on_delta=deltas,
                             subject=self.name, klass=mind.get("class"),
-                            pin=mind.get("pin"))                          # P6.5 sp3: the Stable decides the mind
+                            pin=mind.get("pin"), ask=self._current_ask)   # P6.5 sp3: the Stable decides the mind · sp5: the meter wears the ask
                         if not (reply or "").strip():          # W26: asked again, once
                             reply, more = self.gateway.think_acting(
                                 self._serve_conn, did=self.identity.did,
                                 system=system, prompt=prompt, door=door,
                                 model=mind.get("model"), on_delta=deltas,
-                                subject=self.name, klass=mind.get("class"), pin=mind.get("pin"))
+                                subject=self.name, klass=mind.get("class"), pin=mind.get("pin"), ask=self._current_ask)
                             acts, retried = acts + more, [W26_STEP]
                             if not (reply or "").strip():
                                 reply = W26_WORDS
@@ -891,13 +945,13 @@ class Resident:
                         self._serve_conn, did=self.identity.did,
                         system=system, prompt=prompt,
                         model=mind.get("model"), on_delta=deltas,
-                        subject=self.name, klass=mind.get("class"), pin=mind.get("pin"))   # P6.5 sp3
+                        subject=self.name, klass=mind.get("class"), pin=mind.get("pin"), ask=self._current_ask)   # P6.5 sp3 · sp5
                     if not (reply or "").strip():              # W26: asked again, once
                         reply = self.gateway.think(
                             self._serve_conn, did=self.identity.did,
                             system=system, prompt=prompt,
                             model=mind.get("model"), on_delta=deltas,
-                            subject=self.name, klass=mind.get("class"), pin=mind.get("pin"))
+                            subject=self.name, klass=mind.get("class"), pin=mind.get("pin"), ask=self._current_ask)
                         retried = [W26_STEP]
                         if not (reply or "").strip():
                             reply = W26_WORDS
@@ -1033,6 +1087,7 @@ class Resident:
         _mrow = cur.fetchone()
         self._current_marker = _mk.as_env(self._serve_conn, _mrow[0]) if _mrow and _mrow[0] else None
         self._experiment = None
+        self._grading = None
         initial = {"text": text, "reply": "", "steps": [], "notes": [],
                    "hold": None, "read": [], "edge": ""}
         resumed = None
@@ -1076,6 +1131,17 @@ class Resident:
             outbox.add_row(cur, ev.encode(n), n["message_id"])
             return
         self._land_reply(cur, ask_id, out["reply"], full_chain)
+        if self._grading and self.function == "grade":
+            # Phase 8 sp5: the grader's SIGNED VERDICT on a LIVE reply — under its own DID, in its reply's
+            # transaction (rule 2); Trust reads it; a verdict not in the form is said, never guessed
+            from . import experiments as _xp, operating as _op
+            v = _op.grade_of_live(out.get("reply") or "")
+            if v["grade"]:
+                _xp.verdict_in(cur, experiment_id=None, identity=self.identity, by_name=self.name, reviewer="grader",
+                               ask_id=ask_id, verdict=v, words=out.get("reply") or "", scope=self.scope, on_ask=self._grading)
+                self._journey(cur, ask_id, [f"wrote my signed verdict on {self._grading} under my own name — grade {v['grade']}"], full_chain)
+            else:
+                self._journey(cur, ask_id, [f"no verdict written on {self._grading} — my reply did not keep the form `grade: <A-F> — …`"], full_chain)
         if self._experiment and self.function in ("grade", "critique"):
             # Phase 8 sp4: a reviewer's SIGNED VERDICT on an Experiment — written by the reviewer
             # itself, under its own DID, in its reply's transaction (rule 2: nothing grades its own

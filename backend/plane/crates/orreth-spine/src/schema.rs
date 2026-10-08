@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 7; // 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
+pub const SCHEMA_VERSION: i32 = 8; // 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -135,6 +135,8 @@ pub const INTENT_DDL: &[&str] = &[
     "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS heard boolean NOT NULL DEFAULT false",
     "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_by text",
     "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS restarted_at timestamptz",
+    // Phase 8 sp5: the metrics an intention takes (the watch as the discriminator)
+    "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS watches text",
     // P7 sp8 row 3c: the remediation rail — the dossier the planner read, the lever the kernel
     // pulled (its args, the planner's reason, the hop's ask, when), the outcome attributed
     "ALTER TABLE spine_intent_turns ADD COLUMN IF NOT EXISTS dossier text",
@@ -247,6 +249,8 @@ pub const GATEWAY_DDL: &[&str] = &[
      DEFAULT now())",
     // P7 sp7: the meter wears its world — the per-world roll-up
     "ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS scope text",
+    // Phase 8 sp5: the ask a thought served — Cost's attribution
+    "ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS ask text",
     "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_meter' AND column_name = 'service') THEN ALTER TABLE spine_meter ADD COLUMN service text; END IF; \
      END $$",
@@ -455,16 +459,35 @@ pub const EXPERIMENTS_DDL: &[&str] = &[
      at_path text)",
     "CREATE INDEX IF NOT EXISTS spine_experiments_scope ON spine_experiments (scope, state, opened_at DESC)",
     "CREATE TABLE IF NOT EXISTS spine_verdicts ( verdict_id text PRIMARY KEY, scope text NOT NULL, experiment_id text \
-     NOT NULL, by_did text NOT NULL, by_name text NOT NULL, reviewer text NOT NULL, ask text, verdict text NOT NULL, \
-     words text NOT NULL, sig text NOT NULL, at timestamptz NOT NULL DEFAULT now())",
+     by_did text NOT NULL, by_name text NOT NULL, reviewer text NOT NULL, ask text, verdict text NOT NULL, \
+     words text NOT NULL, sig text NOT NULL, at timestamptz NOT NULL DEFAULT now(), on_ask text)",
     "CREATE INDEX IF NOT EXISTS spine_verdicts_experiment ON spine_verdicts (experiment_id, at)",
     "CREATE TABLE IF NOT EXISTS spine_body_seats ( name text NOT NULL, scope text NOT NULL, template text NOT NULL, \
      at_path text NOT NULL, state text NOT NULL, version int, by_did text NOT NULL, since timestamptz NOT NULL DEFAULT \
      now(), changed_at timestamptz NOT NULL DEFAULT now(), ask text, PRIMARY KEY (name, scope))",
 ];
 
+/// Phase 8 sp5, THE OPERATING STATE (`operating_live`): the thumbs given, the includes of a session (summon
+/// generalized), the live replies handed to the grader; the meter wears the ask it served, a verdict may stand on a
+/// live reply, an intention names the watches it takes.
+pub const OPERATING_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_feedback ( feedback_id text PRIMARY KEY, scope text NOT NULL, ask_id text NOT NULL, \
+     person text NOT NULL, sign int NOT NULL, words text, at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_feedback_scope ON spine_feedback (scope, at)",
+    "CREATE TABLE IF NOT EXISTS spine_includes ( row_id bigserial PRIMARY KEY, scope text NOT NULL, session text, person \
+     text NOT NULL, body text NOT NULL, state text NOT NULL, marker text, at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_includes_session ON spine_includes (scope, session, body, row_id DESC)",
+    "CREATE TABLE IF NOT EXISTS spine_grading ( ask_id text PRIMARY KEY, scope text NOT NULL, grade_ask text NOT NULL, at \
+     timestamptz NOT NULL DEFAULT now())",
+    "ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS ask text",
+    "ALTER TABLE spine_verdicts ALTER COLUMN experiment_id DROP NOT NULL",
+    "ALTER TABLE spine_verdicts ADD COLUMN IF NOT EXISTS on_ask text",
+    "CREATE INDEX IF NOT EXISTS spine_verdicts_on_ask ON spine_verdicts (scope, on_ask)",
+    "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS watches text",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 24] = [
+pub const ROAD: [(&str, &[&str]); 25] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -491,6 +514,7 @@ pub const ROAD: [(&str, &[&str]); 24] = [
     ("levels", LEVELS_DDL), // Phase 8 sp1: THE PATH — the levels of this universe (schema 5)
     ("crafts", CRAFTS_DDL), // Phase 8 sp2: THE SHELF WIDENED — the wear table and the draft shelf (schema 6)
     ("experiments", EXPERIMENTS_DDL), // Phase 8 sp4: THE EXPERIMENT AND THE CUT — the experiments, the verdicts, the body seats (schema 7)
+    ("operating", OPERATING_DDL), // Phase 8 sp5: THE OPERATING STATE — feedback, the includes, the grading; the meter's ask, the intention's watches (schema 8)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

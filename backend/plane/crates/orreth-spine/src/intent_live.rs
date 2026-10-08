@@ -30,7 +30,7 @@ use std::time::SystemTime;
 const COLS: &str =
     "intention_id, words, serves, kind, interests, planner, runner, every_s, gates, \
                     active, stopped_by, stopped_at, added_by, marker, session, next_at, last_at, \
-                    added_at, blocked_crew, blocked_note, restarted_by, restarted_at";
+                    added_at, blocked_crew, blocked_note, restarted_by, restarted_at, watches";
 
 fn dict(r: &tokio_postgres::Row) -> Value {
     let blocked_crew: Option<String> = r.get(18);
@@ -51,6 +51,7 @@ fn dict(r: &tokio_postgres::Row) -> Value {
         "blocked": blocked_crew.is_some(), "blocked_note": r.get::<_, Option<String>>(19),
         "restarted_by": r.get::<_, Option<String>>(20),
         "restarted_at": iso_opt(r.get::<_, Option<SystemTime>>(21)),
+        "watches": json_text(r.get::<_, Option<String>>(22).as_deref()),   // Phase 8 sp5
     })
 }
 
@@ -77,6 +78,8 @@ pub struct Declare {
     pub runner: Option<String>,
     pub every_s: Option<i64>,
     pub gates: Option<Value>,
+    /// Phase 8 sp5: the metrics whose reds this intention takes (the watch is the discriminator).
+    pub watches: Option<Vec<String>>,
 }
 
 /// An intention lands: its row, its root marker, its own session, and its
@@ -156,6 +159,7 @@ pub async fn declare(g: &mut Ground, w: &World, d: Declare) -> Result<Value, Roa
     );
     let interests_text = serde_json::to_string(&interests).unwrap_or_else(|_| "[]".into());
     let gates_text = d.gates.as_ref().map(|g| g.to_string());
+    let watches_text = d.watches.as_ref().filter(|w| !w.is_empty()).map(|w| serde_json::to_string(w).unwrap_or_else(|_| "[]".into()));
     let every: Option<i32> = d.every_s.map(|e| e as i32);
     let note = markers_live::note_head(&words);
     let (iid2, mid2, sid2, words2) = (iid.clone(), mid.clone(), sid.clone(), words.clone());
@@ -172,12 +176,12 @@ pub async fn declare(g: &mut Ground, w: &World, d: Declare) -> Result<Value, Roa
         .await?;
         tx.execute(
             "INSERT INTO spine_intentions (intention_id, words, serves, kind, interests, planner, \
-             runner, every_s, gates, added_by, scope, marker, session, next_at) VALUES ($1, $2, $3, \
+             runner, every_s, gates, added_by, scope, marker, session, next_at, watches) VALUES ($1, $2, $3, \
              $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, CASE WHEN $8::int IS NULL THEN NULL ELSE \
-             now() + make_interval(secs => coalesce($8, 0)) END)",
+             now() + make_interval(secs => coalesce($8, 0)) END, $14)",
             &[
                 &iid2, &words2, &serves, &kind, &interests_text, &planner, &runner, &every,
-                &gates_text, &by, &scope, &mid2, &sid2,
+                &gates_text, &by, &scope, &mid2, &sid2, &watches_text,
             ],
         )
         .await?;
@@ -215,10 +219,11 @@ pub async fn listing(
         .iter()
         .map(|r| {
             let mut d = dict(r);
-            d["objectives"] = json!(r.get::<_, i64>(22));
-            d["observations"] = json!(r.get::<_, i64>(23));
-            d["turns"] = json!(r.get::<_, i64>(24));
-            d["last_outcome"] = json!(r.get::<_, Option<String>>(25)); // row 3c: the newest attributed outcome
+            // Phase 8 sp5: COLS gained `watches` at 22 — the counts follow it
+            d["objectives"] = json!(r.get::<_, i64>(23));
+            d["observations"] = json!(r.get::<_, i64>(24));
+            d["turns"] = json!(r.get::<_, i64>(25));
+            d["last_outcome"] = json!(r.get::<_, Option<String>>(26)); // row 3c: the newest attributed outcome
             d
         })
         .collect())
@@ -1046,6 +1051,10 @@ async fn turn_inner(g: &mut Ground, w: &World) -> Result<Value, RoadError> {
         );
         let wid = t["watch_id"].as_str().unwrap_or_default().to_string();
         for i in interested(g, &w.scope, WATCH_RED).await? {
+            // Phase 8 sp5: the watch is the discriminator — THE OPERATING STATE takes the measurements' reds, Resiliency the rest
+            if !crate::operating::routes_to(i["watches"].as_array(), t["metric"].as_str().unwrap_or_default()) {
+                continue;
+            }
             let m = markers_live::set_marker(
                 g,
                 w,

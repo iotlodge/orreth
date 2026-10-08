@@ -14,7 +14,7 @@ use serde_json::{json, Value};
 
 pub const CONTRACT: &str = "orreth.crafts/1";
 pub const CRAFT_KINDS: [&str; 7] = ["template", "prompt", "skill", "policy", "graph", "binding", "golden"];
-pub const NODE_KINDS: [&str; 2] = ["think", "echo"];
+pub const NODE_KINDS: [&str; 3] = ["think", "echo", "import"]; // Phase 8 sp5: `import` runs a repo'd graph inside the hull
 /// Phase 8 sp3: what a way out may be conditioned on — the hull's edge · the ask's words · the last reply.
 pub const WHEN_KEYS: [&str; 3] = ["edge", "ask", "reply"];
 pub const EDGES: [&str; 3] = ["chat", "work", "event"];
@@ -254,6 +254,14 @@ pub fn validate_graph(g: &Value) -> Value {
             if !ok {
                 return no(format!("node {}: `tools` is a list of tool names", repr_str(&id)));
             }
+        }
+        if n.get("kind").and_then(Value::as_str) == Some("import")
+            && !n.get("source").and_then(Value::as_str).is_some_and(|s| !s.trim().is_empty())
+        {
+            return no(format!(
+                "node {}: an import node names its `source` — the repo'd source on the shelf (repo · commit · entry)",
+                repr_str(&id)
+            ));
         }
         ids.push(id);
     }

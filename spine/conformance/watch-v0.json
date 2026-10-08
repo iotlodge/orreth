@@ -218,7 +218,7 @@
    }
   },
   {
-   "name": "watch_metrics: the vocabulary both kernels measure - fifteen names in one order; a name here is a value the snapshot carries, never a zero by omission (the honest glass, 2026-09-29)",
+   "name": "watch_metrics: the vocabulary both kernels measure - fifteen names in one order; a name here is a value the snapshot carries, never a zero by omission (the honest glass, 2026-09-29) (twenty since Phase 8 sp5: the five measurements)",
    "kind": "watch_metrics",
    "input": {},
    "expect": {
@@ -237,7 +237,12 @@
      "door_p95_ms",
      "pool_busy",
      "pool_waiting",
-     "parked"
+     "parked",
+     "trust",
+     "recall",
+     "efficiency",
+     "experience",
+     "cost"
     ]
    }
   }

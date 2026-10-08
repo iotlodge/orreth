@@ -18,7 +18,7 @@ use std::sync::LazyLock;
 
 /// The metrics this world measures — ONE vocabulary on both kernels, in one order (fixture
 /// `watch_metrics`); a name here is a name the snapshot carries, never a zero by omission.
-pub const METRICS: [&str; 15] = [
+pub const METRICS: [&str; 20] = [
     "outbox_pending",
     "oldest_outbox_age_s",
     "asks_received",
@@ -37,6 +37,13 @@ pub const METRICS: [&str; 15] = [
     "pool_waiting",
     // re-base sp1: poison events the dispatcher holds at — a person's decision is owed
     "parked",
+    // Phase 8 sp5: THE OPERATING STATE — the five Kernel Strategic Measurements at v0, each 1.0 at the
+    // ideal, unknown (null) while nothing is there to measure — never a silent 1.0 (operating.rs)
+    "trust",
+    "recall",
+    "efficiency",
+    "experience",
+    "cost",
 ];
 /// A watch changed state: red ↔ green.
 pub const WATCH_TURNED: &str = "orreth.watch.turned.v1";
@@ -69,10 +76,12 @@ pub fn state(red: bool) -> &'static str {
 /// bare `> 0`: `red when bodies_dormant > 0.0 · now 0 → green`. The threshold
 /// and value are printed as Python prints them (`0.0` stays `0.0`, `0` stays `0`).
 pub fn reads(metric: &str, op: &str, threshold: &Value, value: &Value, red: bool) -> String {
+    // Phase 8 sp5: an unknown value says so
+    let now = if value.is_null() { "unknown (nothing to measure yet)".to_string() } else { python_str(value) };
     format!(
         "red when {metric} {op} {} · now {} → {}",
         python_str(threshold),
-        python_str(value),
+        now,
         if red { "RED" } else { "green" }
     )
 }

@@ -795,7 +795,7 @@
   <div id="kind"><span>KIND</span><b id="kind-word" title="click to flip — or type “objective: …” / “intention: …”">THOUGHT</b>
     <span class="hint" id="kind-hint">the words propose it · click to flip · the marker is minted with the ask</span>
     <button id="impact-btn" class="btn-impact" hidden title="ask MITL — the Master Mind In the Loop — what this intention would touch, before you declare it">expected impact?</button>
-    <span class="sep">·</span><b id="mitl-word" title="MITL — the Master Mind In the Loop, Orreth's own specialist · click to summon or dismiss (recorded, never deleted)">MITL OFF</b>
+    <span class="sep">·</span><b id="mitl-word" title="MITL — the Master Mind In the Loop, Orreth's own specialist · click to summon or dismiss (recorded, never deleted)">MITL OFF</b><span id="summoned" title="the bodies summoned into this session's crew (Phase 8 sp5)"></span>
     <span class="hint" id="mitl-hint">the Master Mind In the Loop · off · click to summon</span></div>
 </div>
 <div id="pulse">PULSE · connecting…</div>
@@ -1381,6 +1381,17 @@ async function copyText(t){
   try { const ta = document.createElement("textarea"); ta.value = t; ta.style.position = "fixed"; ta.style.opacity = "0";
         document.body.appendChild(ta); ta.select(); const ok = document.execCommand("copy"); ta.remove(); return ok; } catch (e) { return false; }
 }
+function thumbs(askId){                            // Phase 8 sp5: a thumb on a reply — routine, recorded; it feeds the
+  const d = document.createElement("div"); d.className = "thumbs";   // Experience measurement and the grader's evidence, never a body
+  for (const [sign, face, title] of [[1, "👍", "the right thing, plainly"], [-1, "👎", "not this — say why in the chat"]]){
+    const b = document.createElement("button"); b.className = "copybtn"; b.textContent = face; b.title = title + " · recorded under your seat";
+    b.onclick = async e => { e.stopPropagation();
+      const r = await fetch("/feedback", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({ask_id: askId, sign, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+      d.innerHTML = `<span class="meta">${esc(r && r.words ? "thumb " + (sign > 0 ? "up" : "down") + " — " + r.words : (r && r.error) || "the feedback door did not answer")}</span>`; };
+    d.appendChild(b);
+  }
+  return d;
+}
 function copyBtn(getText){
   const b = document.createElement("button"); b.className = "copybtn"; b.textContent = "copy"; b.title = "copy the plain words";
   b.onclick = async e => { e.stopPropagation(); const ok = await copyText(getText());
@@ -1437,6 +1448,14 @@ function drawMitl(){
                           : "the Master Mind In the Loop · off · click to summon";
   drawChips();
 }
+let SUMMONED = [];
+async function loadIncludes(){                   // Phase 8 sp5: who is in this session's crew — the four, and the summoned
+  const r = await fetch("/includes?" + new URLSearchParams({session: SESSION || ""})).then(x=>x.json()).catch(()=>null);
+  if (!r) return;
+  SUMMONED = r.summoned || [];
+  const box = document.getElementById("summoned"); if (!box) return;
+  box.innerHTML = SUMMONED.map(b => `<span class="cap" title="summoned into this session's crew — say “dismiss ${esc(b)}” to let it go">${esc(b)} ·summoned</span>`).join("");
+}
 async function loadMitl(){
   const r = await fetch("/mitl?" + new URLSearchParams({person: PERSON, session: SESSION || ""}))
     .then(x=>x.json()).catch(()=>null);
@@ -1461,6 +1480,16 @@ async function mitlWords(text){                  // "summon MITL" · "dismiss MI
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
   if (/^(summon|call|invite)\s+mitl$/.test(t)){ el("msg mine", esc(text)); await toggleMitl(true); return true; }
   if (/^(dismiss|release|excuse)\s+mitl$/.test(t)){ el("msg mine", esc(text)); await toggleMitl(false); return true; }
+  const sm = t.match(/^(summon|call|invite|dismiss|release|excuse)\s+(?:the\s+)?([a-z0-9_-]+)$/);   // Phase 8 sp5: summon generalized
+  if (sm){
+    el("msg mine", esc(text));
+    const on = /^(summon|call|invite)$/.test(sm[1]);
+    const r = await fetch("/summon", {method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({name: sm[2], summon: on, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+    if (r && r.words){ sysline(esc(r.words)); loadIncludes(); return true; }
+    sysline(r && r.error ? esc(r.error) : "the summon door did not answer");
+    return true;
+  }
   const m = text.match(/^mitl[,:]\s*(.+)$/i);
   if (!m && !/^what does the canon say/i.test(text)) return false;
   if (!MITL_ON){ sysline(`${mitlName()} is not summoned — say “summon MITL” first`); return true; }
@@ -1582,6 +1611,15 @@ async function onNotice(n){
     if (monitorPull.classList.contains("open")) loadMonitor();
     return;
   }
+  if (n.kind === "orreth.draft.proposed.v1"){       // Phase 8 sp5: the critic proposed a draft under its body's owner
+    const mine = await fetch("/drafts").then(x=>x.json()).catch(()=>null);
+    const d = mine && (mine.drafts || []).find(x => x.draft_id === n.ref);
+    if (d) sysline(`the critic proposed a draft for you — <b>${esc(d.name)} ${esc(d.kind)}</b>: ${esc(d.words || "")} · say “load my ${esc(d.name)} draft in the workshop” to read it, “cut the ${esc(d.name)} draft” to try it through the Experiment`);
+    if (typeof loadWorkshop === "function" && document.getElementById("ws-list")) loadWorkshop();   // the rail shows the new draft
+    return;
+  }
+  if (n.kind === "orreth.include.summoned.v1" || n.kind === "orreth.include.dismissed.v1"){ loadIncludes(); return; }
+  if (n.kind === "orreth.feedback.given.v1"){ return; }   // the thumb's own line was said at the click
   if (n.kind.startsWith("orreth.experiment.") || n.kind === "orreth.verdict.v1"){   // Phase 8 sp4: THE EXPERIMENT's facts — the ref is the experiment (a verdict's is its own id)
     if (n.kind === "orreth.verdict.v1"){ sysline("a reviewer wrote its signed verdict on an experiment — the proposal follows when every reviewer is done"); return; }
     const r = await fetch("/experiments?id=" + encodeURIComponent(n.ref)).then(x=>x.json()).catch(()=>null);
@@ -1720,6 +1758,7 @@ function renderOutcome(id, v, line){
     ? dutyBubble(name, v)                                                                   // W21: a duty's reply folds to one line
     : put("msg theirs", who + cite(plain(v.reply || "(no words came back)")));
   if (v.reply && !line._duty) bubble.prepend(copyBtn(() => stripMarks(v.reply)));            // W10
+  if (v.reply && !line._duty && v.served_by !== "the kernel") bubble.appendChild(thumbs(id));   // Phase 8 sp5: Experience
   if (line._stopping && v.status === "replied")                                             // W5 · W20: the act's outcome
     put("journey", `${VERB_DONE[line._verb || "stop"]} · “${esc(line._stopping)}” · proof ${esc(v.proof || "L1")} · recorded, never deleted`);
   if (v.status === "refused"){                                                              // W19: refused at the door
@@ -2525,7 +2564,26 @@ async function serviceWords(text){                 // "what services are here?" 
     toggleCrew(true);                              // the shelf, in the CREW pull
     return true;
   }
+  // ---- Phase 8 sp5, THE OPERATING STATE: a repo'd source onto the shelf (import runs it inside the hull) ----
+  m = text.trim().replace(/[.!?]+$/, "").match(/^register\s+the\s+source\s+([a-z0-9][a-z0-9._-]*)\s+from\s+(\S+)\s+at\s+([0-9a-fA-F]{7,64})\s+entry\s+(\S+)$/i);
+  if (m){
+    el("msg mine", esc(text));
+    const r = await fetch("/services", {method: "POST", headers: {"content-type": "application/json"},
+      body: JSON.stringify({name: m[1].toLowerCase(), kind: "source", manifest: {repo: m[2], commit: m[3], entry: m[4]}, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+    if (r && !r.error) sysline(`the source <b>${esc(m[1])}</b> stands on the shelf — ${esc(m[2])} at ${esc(m[3].slice(0, 12))}, entry ${esc(m[4])}; a graph node of kind import naming it runs the repo's entry inside the hull (a dev universe only)`);
+    else sysline(r && r.error ? esc(r.error) : "the shelf door did not answer");
+    return true;
+  }
   // ---- Phase 8 sp4, THE EXPERIMENT AND THE CUT: the experiments, the seats, the promotion, the ladder ----
+  m = t.match(/^show\s+(?:me\s+)?(?:the\s+)?measurements$/);   // Phase 8 sp5: THE OPERATING STATE's five, on the Monitor pull
+  if (m){
+    el("msg mine", esc(text));
+    const r = await fetch("/measurements").then(x=>x.json()).catch(()=>null);
+    if (!r){ sysline("the measurements door did not answer"); return true; }
+    for (const n of r.order || []) sysline(esc((r.measurements[n] || {}).words || n));
+    toggleMonitor(true);
+    return true;
+  }
   m = t.match(/^show\s+(?:me\s+)?(?:the\s+)?(experiments|seats)$/);
   if (m){
     el("msg mine", esc(text));
@@ -3324,6 +3382,15 @@ async function loadMonitor(){
            sub: `since ${sinceWords(a.asked_at)} · asked by ${esc(whoIs(a.person))}${a.target ? ` → ${esc(a.target)}` : ""} · ${esc(a.ask_id)}`, subTitle: a.text,
            lever: lever("stop", a.ask_id, "stop it", "stops this ask on your word before any body serves it — recorded as cancelled, its reply says so")})).join("") : ""));
   // ---- WATCHES: each with its author and its rest (W86); the rested counted, never drawn red
+  // Phase 8 sp5: THE OPERATING STATE — the five Kernel Strategic Measurements, 1.0 at the ideal; unknown is said, never a silent 1.0
+  const M = s.measurements || {};
+  const mline = n => { const m = M[n] || {}; const v = m.value === null || m.value === undefined ? null : m.value;
+    return line({label: n.toUpperCase(), sub: esc(m.words || ""), subTitle: m.words || "",
+                 value: v === null ? pill("unknown", "") : pill(v.toFixed(4), v >= 1 ? "ok" : "red")}); };
+  card("MEASUREMENTS · the operating state", (() => { const known = ["trust","recall","efficiency","experience","cost"].filter(n => M[n] && M[n].value !== null && M[n].value !== undefined);
+      return known.length ? `${known.length} of 5 measured · target 1.0` : "nothing measured yet — unknown is said, never a silent 1.0"; })(),
+       ["trust","recall","efficiency","experience","cost"].map(mline).join("") +
+       note("Trust = graded live replies that passed · Recall = served asks replayable by their marker chain · Efficiency = serves inside their latency class (chat 30 s · work and events 180 s) · Experience = thumbs up over thumbs given · Cost = spend a serving ask can be named for. The kernel watches each (red below 1.0); THE OPERATING STATE intention takes those reds, Resiliency every other."));
   const wRed = s.watches.filter(w => w.red).length;
   card("WATCHES", (s.watches.length ? `<b class="ok">${s.watches.length - wRed}</b> green${wRed ? ` · <span class="red">${wRed} red</span>` : ""}` : "none standing") + (s.watches_rested ? ` · ${s.watches_rested} rested` : ""),
        s.watches.map(w => line({label: esc(w.name),
@@ -3450,7 +3517,7 @@ async function rollSession(announce){
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
   popAllFocus();                    // a new topic starts at the bridge's focus
   clearDisplay();
-  MITL_SAID = false; loadMitl();    // the toggle is per session; the name in full again (P18)
+  MITL_SAID = false; loadMitl(); loadIncludes();    // the toggle is per session; the name in full again (P18) · sp5: the summoned too
   if (announce) sysline(`a fresh session · ${esc(SESSION.slice(4, 10))} — the previous one is ` +
                         `archived, not gone: say “list my sessions” to return to it`);
 }
@@ -3498,7 +3565,7 @@ async function loadSession(x){
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
   popAllFocus();
   clearDisplay();
-  MITL_SAID = false; loadMitl();    // the toggle is per session (P6 sp3)
+  MITL_SAID = false; loadMitl(); loadIncludes();    // the toggle is per session (P6 sp3) · sp5: the summoned too
   for (const a of v.asks){                       // the session, whole, in order
     el("msg mine", esc(a.text) + (a.target ? `<div class="who" style="text-align:right">→ ${esc(a.target)}</div>` : ""));
     const name = NAMES[a.served_by] || a.target || "orreth";

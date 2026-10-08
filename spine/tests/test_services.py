@@ -329,7 +329,7 @@ def test_the_built_ins_register_at_birth_and_the_shelf_door_lists_every_kind(pg,
     # Phase 8 sp2 THE SHELF WIDENED: the crafts the spine ships stand beside the identities — addressed, never minted
     crafts_ = {n: s for n, s in by_name.items() if s["kind"] in services.CRAFT_KINDS}
     idents = {n: s for n, s in by_name.items() if s["kind"] not in services.CRAFT_KINDS}
-    assert set(idents) == {"weather", "acquire", "mark", "purge-memory", "add-watch", "draft", "seal-record",
+    assert set(idents) == {"weather", "acquire", "mark", "purge-memory", "add-watch", "draft", "propose", "seal-record",
                            "erase-record", "services", "minds", "ground", "record"}   # no gateway: no mind seeded (honest);
     # (Phase 8 sp3: the Workshop agent's `draft` tool is a built-in on the shelf — routine, under the human's seat)
     # (P6.5 sp2: the keeper's `services` tool is a built-in on the shelf too — eight tools now)

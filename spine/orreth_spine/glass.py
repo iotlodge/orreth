@@ -56,6 +56,7 @@ from . import body as _body, desk, levers as _levers, rails, stable as _stable, 
 from . import doors as _doors                                                          # panel sp3: THE CLOCK at every door
 from . import projector as _projector                                                  # re-base sp1: the parked, the advance
 from . import experiments as _xp                                                       # Phase 8 sp4: THE EXPERIMENT AND THE CUT
+from . import operating as _op                                                         # Phase 8 sp5: THE OPERATING STATE
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -88,7 +89,9 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                # Phase 8 sp4: THE EXPERIMENT AND THE CUT — an experiment opened · proposed · settled, a reviewer's
                # signed verdict, a body rested · decommissioned · restored
                _xp.EXPERIMENT_OPENED, _xp.EXPERIMENT_PROPOSED, _xp.EXPERIMENT_SETTLED, _xp.VERDICT,
-               _xp.BODY_RESTED, _xp.BODY_DECOMMISSIONED, _xp.BODY_RESTORED]
+               _xp.BODY_RESTED, _xp.BODY_DECOMMISSIONED, _xp.BODY_RESTORED,
+               # Phase 8 sp5: THE OPERATING STATE — a thumb given, a body summoned · dismissed, a draft proposed
+               _op.FEEDBACK_GIVEN, _op.INCLUDE_SUMMONED, _op.INCLUDE_DISMISSED, _op.DRAFT_PROPOSED]
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -700,6 +703,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(200, {
                         "name": mitl.NAME, "expansion": mitl.EXPANSION,
                         "summoned": mitl.summoned(conn, qs.get("session") or None, person),
+                        "includes": _op.includes(conn, qs.get("session") or None, person),   # Phase 8 sp5: the session's crew
                         "ontology": {"passages": len(ont),
                                      "files": sorted({o["path"] for o in ont})},
                         "citations": mitl.citations()})      # W15: path#n → a human name
@@ -801,6 +805,18 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                                                        state=str(qs.get("state") or "") or None),
                                             "seats": _xp.seats(conn), "reviewers": list(_xp.REVIEWERS),
                                             "empty_slots": _xp.EMPTY_SLOTS})
+            if path == "/measurements":                  # Phase 8 sp5: THE OPERATING STATE — the five, measured live
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, {"measurements": _op.measure(conn), "target": _op.TARGET,
+                                            "latency_classes": _op.LATENCY_CLASSES, "order": list(_op.MEASUREMENTS)})
+            if path == "/includes":                      # Phase 8 sp5: who is in this session's crew — the four, and the summoned
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    sess = str(qs.get("session") or "") or None
+                    return self._json(200, {"includes": _op.includes(conn, sess, person), "summoned": _op.summoned(conn, sess, person),
+                                            "base": list(_op.BASE_INCLUDES)})
             if path == "/seats":                         # Phase 8 sp4: the promoted agents' seats — where each stands and its rung
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"seats": _xp.seats(conn), "ladder": list(_xp.LADDER)})
@@ -973,6 +989,26 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     except levels.LevelRefused as e:
                         return self._json(400, {"error": str(e)})
                 return self._json(202, made)
+            if path == "/feedback":                    # Phase 8 sp5: a thumb on a reply — routine, recorded; it feeds Experience and the grader
+                if not person:
+                    return self._json(401, {"error": "a thumb is a person's — knock with your seat"})
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    try:
+                        made = _op.give_feedback(conn, person, str(p.get("ask_id") or ""), int(p.get("sign") or 0),
+                                                 words=str(p.get("words") or "") or None)
+                    except (_op.OperatingRefused, ValueError) as e:
+                        return self._json(400, {"error": str(e)})
+                return self._json(201, made)
+            if path == "/summon":                      # Phase 8 sp5: summon generalized — any summonable body into the session's crew
+                if not person:
+                    return self._json(401, {"error": "a summons is a person's — knock with your seat"})
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    try:
+                        made = _op.summon(conn, person, str(p.get("name") or ""), str(p.get("session") or "") or None,
+                                          on=bool(p.get("summon", True)))
+                    except _op.OperatingRefused as e:
+                        return self._json(400, {"error": str(e)})
+                return self._json(201, made)
             if path in ("/experiments/promote", "/experiments/decline",
                         "/bodies/rest", "/bodies/decommission", "/bodies/restore"):   # Phase 8 sp4: THE EXPERIMENT AND THE CUT — the stamped acts
                 with psycopg.connect(dsn, autocommit=True) as conn:
@@ -1454,6 +1490,7 @@ class BridgeRig:
             next_prune = time.monotonic()                     # RETENTION (the perf cure): the first hour's sweep at once
             next_bench = time.monotonic() + 30                # W91 THE BENCH SWEEP: every 30 s, one kernel
             next_crafts = time.monotonic() + 60               # Phase 8 sp4 THE PRUNE BEAT: the first sweep a minute in, then hourly
+            next_grade = time.monotonic() + 20                # Phase 8 sp5 THE GRADE BEAT: twenty seconds in, then every minute
             self._sign_in("schedule")
             while not self._stop.is_set():
                 if self._yielding("schedule"):
@@ -1495,6 +1532,15 @@ class BridgeRig:
                                 print(f"  [experiment] {w}", file=sys.stderr, flush=True)
                 except Exception as e:                # noqa: BLE001
                     print(f"the experiment beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+                if time.monotonic() >= next_grade:    # Phase 8 sp5: THE GRADE BEAT — the grader hears the last hour's live replies
+                    next_grade = time.monotonic() + _op.GRADE_EVERY_S
+                    try:
+                        with ground.beat(conn, "grade") as ours:
+                            if ours:
+                                for w in _op.grade_beat(conn):
+                                    print(f"  [grade] {w}", file=sys.stderr, flush=True)
+                    except Exception as e:            # noqa: BLE001
+                        print(f"the grade beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
                 if time.monotonic() >= next_crafts:   # Phase 8 sp4: THE PRUNE BEAT — hourly, the crafts nobody wears retired
                     next_crafts = time.monotonic() + _xp.PRUNE_EVERY_S
                     try:
@@ -1612,6 +1658,10 @@ class BridgeRig:
                                     serves=intent.RESILIENCY["serves"], kind="kernel",
                                     by="the kernel", interests=intent.RESILIENCY["interests"],
                                     planner=intent.RESILIENCY["planner"], runner="librarian")
+                    # Phase 8 sp5: THE OPERATING STATE beside Resiliency, and the kernel's five watches
+                    _op.intention_at_light(conn)
+                    for w in _op.watches_at_light(conn):
+                        print(f"  [operating] the kernel watches {w} < {_op.TARGET:g} (unknown turns nothing red)", file=sys.stderr, flush=True)
                     break
                 except Exception as e:
                     if _attempt == 19:            # the last try says why, never silent

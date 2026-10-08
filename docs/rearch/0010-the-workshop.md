@@ -386,7 +386,25 @@ Each spoonful is a thing a human proves in the glass before the next opens
    Trust); the trial's words in the glass.
 5. **THE OPERATING STATE.** The five measurement watches at v0, the kernel
    intention, the improvement loop landing proposals on the owner's draft
-   shelf, summon generalized, import from a repo.
+   shelf, summon generalized, import from a repo. **BUILT 2026-10-08 (JB's
+   word: "go ahead and build it"); the walk in the glass OWED
+   (SPEC-OPERATING-01).** What landed, both kernels law for law
+   (`operating.py` · `operating.rs` · `operating_live.rs`, fixture
+   `operating-v0.json` ×51, schema 8): the five as watch metrics, coverage
+   ratios at v0, UNKNOWN while empty (never a silent 1.0; an unknown turns
+   nothing red); the kernel's five watches and THE OPERATING STATE intention
+   at light beside Resiliency, the watch the discriminator between them; THE
+   GRADE BEAT handing live replies to the grader under a grading marker (the
+   event edge), its signed verdicts on the reply feeding Trust; the feedback
+   door and the thumbs in the glass (Experience; the grader's evidence; raw
+   feedback never a body's); the critic's PROPOSE tool landing a draft under
+   the body's owner, marked with the improvement (the loop closes in the
+   Workshop); summon generalized by `summonable` on a template; a repo'd graph
+   run inside the hull by an `import` node, dev universes only. Named, not in
+   sp5: the measures as JB means them (the Costs Panel's itemisation; an ask's
+   own latency class); a room's own watches; the grader as a topic subscriber
+   (a beat over the ground stands in); the planner routing to "the right
+   crew" (the critic runs every measurement at v0).
 6. **THE TWO CHIPS.** Identity and security v0 as the gate's reviewers.
 
 **The proof is Bob.** One engineered agent walked create → cut → experiment
@@ -414,6 +432,12 @@ evolves.
   in this phase; import means a repo'd graph the kernel runs.
 - The lessons digest, the architect resident, RAG and the embedding lane,
   drag-to-wire authoring, and Claude the developer are after this phase.
+- The five measurements at v0 are coverage ratios (0010 §7's own words); Cost
+  reads the ask on the meter line, not the metal (the Costs Panel's row);
+  Efficiency's latency class is the hull's edge (chat 30 s · work and events
+  180 s), not an ask's own declared class; the grader hears live replies by a
+  beat over the ground every minute, not a topic subscription — the same
+  consumer in effect, named plainly.
 - The Experiment's evidence at v0 is the golden set alone: the shadow replay
   of recent real asks into the room (§5's optional arm) is named, not built;
   resiliency reads the universe's reds since the opening, not a room's own

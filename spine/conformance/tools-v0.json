@@ -146,6 +146,20 @@
    }
   },
   {
+   "name": "tool_manifest: the propose tool \u2014 its declaration, read from tools.v0.json, pinned (Phase 8 sp5)",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "propose"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Propose a change to a BODY's craft \\u2014 a DRAFT saved under that body's OWNER, marked with the improvement it came from (Phase 8 sp5, THE OPERATING STATE: the improvement loop closes in the Workshop). Routine: a draft is unversioned and lives under the owner's seat alone, never on the shelf; raw feedback never reaches a body \\u2014 a proposal does. Pass `for` (the body's name), the WHOLE declaration as `body` (the full object as it should stand after the change \\u2014 never a fragment), the draft's `name` and `kind`, and `words` (one line: what changes and why). The owner opens it in the Workshop and cuts it; the Experiment judges it. Never offer to cut; never change anything yourself.\",\"input_schema\":{\"properties\":{\"body\":{\"type\":\"object\"},\"for\":{\"type\":\"string\"},\"kind\":{\"enum\":[\"template\",\"prompt\",\"skill\",\"policy\",\"graph\",\"binding\",\"golden\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"words\":{\"type\":\"string\"}},\"required\":[\"for\",\"name\",\"kind\",\"body\"],\"type\":\"object\"},\"name\":\"propose\"}",
+    "hash": "sha256:d825e6c4a9b0dc9d197ffac05135ca67a371ef64fbdb7acfd05bc228b82872df",
+    "consequence": "routine",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
    "name": "tool_consequence: services {\"action\": \"list\"} \u2014 a look runs at once",
    "kind": "tool_consequence",
    "input": {

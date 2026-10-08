@@ -28,7 +28,7 @@ pub const MARKER_SET: &str = "orreth.marker.set.v1";
 pub const INCLUDES: [&str; 4] = ["planner", "critic", "grader", "mitl"];
 
 /// The kernel's kinds, in every world — kind, group, description.
-pub const SEED: [(&str, &str, &str); 8] = [
+pub const SEED: [(&str, &str, &str); 9] = [
     ("objective", "structural", "a human's ask — a root"),
     (
         "intention",
@@ -64,6 +64,11 @@ pub const SEED: [(&str, &str, &str); 8] = [
         "experiment",
         "quality",
         "an Experiment opened on an agent's candidate — its arms' runs and the reviewers' signed verdicts under it (0010 §5)",
+    ),
+    (
+        "grading",
+        "quality",
+        "a live reply handed to the grader by the grade beat — under the reply's own ask; the grader's signed verdict feeds Trust (0010 §7)",
     ),
 ];
 

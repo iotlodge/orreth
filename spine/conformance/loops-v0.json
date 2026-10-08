@@ -5,7 +5,7 @@
  "generated_at": "2026-09-23",
  "cases": [
   {
-   "name": "beat_lock: the classes count up from 742200 and the keys they make; the held words (retention joined 2026-09-29: the outbox's prune; experiment and prune joined 2026-10-07: Phase 8 sp4)",
+   "name": "beat_lock: the classes count up from 742200 and the keys they make; the held words (retention joined 2026-09-29: the outbox's prune; experiment and prune joined 2026-10-07: Phase 8 sp4; grade joined 2026-10-08: Phase 8 sp5)",
    "kind": "beat_lock",
    "input": {},
    "expect": {
@@ -17,7 +17,8 @@
      "retention": 4,
      "bench": 5,
      "experiment": 6,
-     "prune": 7
+     "prune": 7,
+     "grade": 8
     },
     "keys": {
      "scheduler": 742201,
@@ -26,7 +27,8 @@
      "retention": 742204,
      "bench": 742205,
      "experiment": 742206,
-     "prune": 742207
+     "prune": 742207,
+     "grade": 742208
     },
     "held": "the beat is held by another kernel on this ground"
    }

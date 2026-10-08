@@ -371,7 +371,7 @@ def test_the_doors_enroll_hold_the_kernels_intention_and_wear_one_face(pg, rig):
         if ints:
             break
         time.sleep(0.2)
-    [res] = ints
+    res = next(i for i in ints if i["serves"] == "resiliency")    # Phase 8 sp5: THE OPERATING STATE stands beside it
     s, b = _post(port, "/intentions/stop", {"intention_id": res["intention_id"], "person": me})
     assert s == 202 and b["level"] == "L3-master" and b["held"].startswith("ask_")
     view = _get(port, "/ask/" + b["held"])

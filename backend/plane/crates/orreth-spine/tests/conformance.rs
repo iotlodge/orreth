@@ -25,13 +25,26 @@
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, desk, doors, envelope, export, intent,
     kernel_self, levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services,
-    stable, tools, watch, levels, crafts, experiments};
+    stable, tools, watch, levels, crafts, experiments, operating};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 /// The kinds this crate has ported — one explicit list, so the report is honest.
 const PORTED_KINDS: &[&str] = &[
+    // Phase 8 sp5: THE OPERATING STATE
+    "op_ratio",
+    "op_latency_class",
+    "op_pass_grade",
+    "op_measure_words",
+    "op_routes_to",
+    "op_grade_of_live",
+    "op_grade_ask",
+    "op_proposal_words",
+    "op_summon_words",
+    "op_measurement_watch",
+    "op_import_words",
+    "op_operating",
     // Phase 8 sp4: THE EXPERIMENT AND THE CUT
     "exp_room",
     "exp_arms_plan",
@@ -786,6 +799,54 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
         }
         "source_form" => same!(crafts::source_form(&inp["manifest"]), exp.clone(), "the form"),
         "cut_demand" => same!(crafts::cut_demand(s(&inp["kind"]), &inp["manifest"], s(&inp["mode"])), exp.clone(), "the demand"),
+        // ---- Phase 8 sp5: THE OPERATING STATE (operating-v0) ----
+        "op_ratio" => same!(
+            operating::value_of(operating::ratio(inp["num"].as_f64().unwrap(), inp["den"].as_f64().unwrap())),
+            exp["value"],
+            "the ratio"
+        ),
+        "op_latency_class" => {
+            let (e, secs) = operating::latency_class(opt_str(&inp["marker_kind"]), opt_str(&inp["parent_kind"]));
+            same!(e, s(&exp["edge"]), "the edge");
+            same!(json!(secs), exp["seconds"], "the seconds");
+        }
+        "op_pass_grade" => same!(json!(operating::pass_grade(opt_str(&inp["grade"]))), exp["passed"], "the pass"),
+        "op_measure_words" => same!(
+            operating::measure_words(s(&inp["name"]), inp["value"].as_f64(), inp["num"].as_f64().unwrap(), inp["den"].as_f64().unwrap()),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "op_routes_to" => same!(json!(operating::routes_to(inp["watches"].as_array(), s(&inp["metric"]))), exp["routes"], "the route"),
+        "op_grade_of_live" => same!(operating::grade_of_live(s(&inp["text"])), exp["verdict"], "the verdict"),
+        "op_grade_ask" => same!(
+            operating::grade_ask(s(&inp["ask_id"]), s(&inp["who"]), s(&inp["text"]), s(&inp["reply"])),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "op_proposal_words" => same!(
+            operating::proposal_words(s(&inp["agent"]), s(&inp["name"]), s(&inp["kind"]), s(&inp["marker"])),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "op_summon_words" => same!(
+            operating::summon_words(s(&inp["body"]), inp["on"].as_bool().unwrap(), opt_str(&inp["session"])),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "op_measurement_watch" => same!(operating::measurement_watch(s(&inp["name"])), exp["watch"], "the watch"),
+        "op_import_words" => same!(
+            operating::import_words(s(&inp["source"]), s(&inp["commit"]), s(&inp["entry"])),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "op_operating" => {
+            same!(operating::operating(), exp["intention"], "the intention");
+            same!(json!(operating::MEASUREMENTS), exp["measurements"], "the measurements");
+            same!(operating::SERVES, s(&exp["serves"]), "serves");
+            same!(json!(operating::TARGET), exp["target"], "the target");
+            same!(operating::WATCH_OP, s(&exp["op"]), "the op");
+            same!(json!(operating::PASS_GRADES), exp["pass"], "the passing grades");
+        }
         // ---- Phase 8 sp4: THE EXPERIMENT AND THE CUT (experiments-v0) ----
         "exp_room" => same!(experiments::room_name(s(&inp["agent"]), inp["n"].as_i64().unwrap()), s(&exp["room"]), "the room"),
         "exp_arms_plan" => same!(experiments::arms_plan(inp["current_version"].as_i64()), s(&exp["words"]), "the words"),

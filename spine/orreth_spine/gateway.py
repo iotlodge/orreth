@@ -57,6 +57,7 @@ def ensure_schema(conn) -> None:
         # honest failure (ok = false with its reason), and a confessed degrade
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS usd double precision")
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS stall text")
+        cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS ask text")   # Phase 8 sp5: the ask a thought served (Cost)
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS request_id text")
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS ok boolean NOT NULL DEFAULT true")
         cur.execute("ALTER TABLE spine_meter ADD COLUMN IF NOT EXISTS note text")
@@ -72,7 +73,7 @@ def _scope() -> str:
 
 def meter(conn, did: str, model: str, tokens_in: int, tokens_out: int, *,
           usd: float | None = None, stall: str | None = None, request_id: str | None = None,
-          ok: bool = True, note: str | None = None) -> None:
+          ok: bool = True, note: str | None = None, ask: str | None = None) -> None:
     """ONE meter line, the same for every lane: who thought, which model,
     how many tokens, when (W17: the landing on the ground's clock) — and
     which mind service the model is, read from the ladder. P6.5 sp3: the
@@ -82,8 +83,8 @@ def meter(conn, did: str, model: str, tokens_in: int, tokens_out: int, *,
     with conn.transaction():
         conn.cursor().execute(
             "INSERT INTO spine_meter (did, model, tokens_in, tokens_out, at, service, usd, stall, request_id, ok, note,"
-            " scope) VALUES (%s, %s, %s, %s, clock_timestamp(), %s, %s, %s, %s, %s, %s, %s)",
-            (did, model, tokens_in, tokens_out, service, usd, stall, request_id, ok, note, _scope()))
+            " scope, ask) VALUES (%s, %s, %s, %s, clock_timestamp(), %s, %s, %s, %s, %s, %s, %s, %s)",
+            (did, model, tokens_in, tokens_out, service, usd, stall, request_id, ok, note, _scope(), ask))   # Phase 8 sp5: the ask it served
 
 
 class MindUnavailable(RuntimeError):
@@ -184,7 +185,7 @@ class LiteLLMGateway:
                         slot["function"]["arguments"] += f.get("arguments") or ""
         return "".join(text), [calls[i] for i in sorted(calls)], usage, dict(headers, id=rid)
 
-    def _land(self, conn, *, did: str, decision: dict, usage: dict, headers: dict) -> float:
+    def _land(self, conn, *, did: str, decision: dict, usage: dict, headers: dict, ask: str | None = None) -> float:
         from . import stable
         tin, tout = int(usage.get("prompt_tokens") or 0), int(usage.get("completion_tokens") or 0)
         cost = headers.get("x-litellm-response-cost")
@@ -195,7 +196,7 @@ class LiteLLMGateway:
             usd = stable.usd((row or {}).get("manifest", {}).get("price") or {}, tin, tout)
         meter(conn, did, decision["stall"], tin, tout, usd=usd, stall=decision["stall"],
               request_id=headers.get("id") or headers.get("x-litellm-call-id"),   # the ledger keys on the answer's id
-              note=decision["why"] if decision.get("degraded") else None)
+              note=decision["why"] if decision.get("degraded") else None, ask=ask)
         return usd
 
     def _fail(self, conn, *, did: str, stall: str | None, note: str) -> None:
@@ -220,7 +221,7 @@ class LiteLLMGateway:
     def think(self, conn, *, did: str, system: str, prompt: str,
               model: str | None = None, max_tokens: int = 1024,
               on_delta=None, subject: str | None = None, klass: str | None = None,
-              pin: str | None = None) -> str:
+              pin: str | None = None, ask: str | None = None) -> str:
         ensure_schema(conn)
         stall = None
         try:
@@ -233,13 +234,13 @@ class LiteLLMGateway:
                 key, on_delta)
         except (MindUnavailable, Drained, GatewayRefused) as e:
             return self._honest(conn, did=did, subject=subject, e=e, stall=stall)
-        self._land(conn, did=did, decision=d, usage=usage, headers=headers)
+        self._land(conn, did=did, decision=d, usage=usage, headers=headers, ask=ask)
         return text
 
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
                      max_rounds: int = 3, on_delta=None, subject: str | None = None,
-                     klass: str | None = None, pin: str | None = None) -> tuple[str, list[str]]:
+                     klass: str | None = None, pin: str | None = None, ask: str | None = None) -> tuple[str, list[str]]:
         """The acting mind through the gateway: the door's DECLARED tools in
         the OpenAI shape; every tool call through the door (journaled,
         interlocked — a ConsequentialHold propagates); every round metered."""
@@ -262,7 +263,7 @@ class LiteLLMGateway:
                     {"model": stall, "max_tokens": max_tokens, "messages": messages, "tools": tools}, key, on_delta)
             except (Drained, GatewayRefused) as e:
                 return self._honest(conn, did=did, subject=subject, e=e, stall=stall), notes
-            self._land(conn, did=did, decision=d, usage=usage, headers=headers)
+            self._land(conn, did=did, decision=d, usage=usage, headers=headers, ask=ask)
             if not calls:
                 return text, notes
             messages.append({"role": "assistant", "content": text or None, "tool_calls": calls})
@@ -303,7 +304,7 @@ class AnthropicGateway:
     def think(self, conn, *, did: str, system: str, prompt: str,
               model: str | None = None, max_tokens: int = 1024,
               on_delta=None, subject: str | None = None, klass: str | None = None,
-              pin: str | None = None) -> str:
+              pin: str | None = None, ask: str | None = None) -> str:
         """`on_delta(text)` streams the words as they form — display
         only, glass-bound; the durable truth is always the final reply
         landed through the door."""
@@ -321,13 +322,13 @@ class AnthropicGateway:
                 model=m, max_tokens=max_tokens, system=system,
                 messages=[{"role": "user", "content": prompt}])
         text = "".join(b.text for b in msg.content if b.type == "text")
-        meter(conn, did, m, msg.usage.input_tokens, msg.usage.output_tokens)
+        meter(conn, did, m, msg.usage.input_tokens, msg.usage.output_tokens, ask=ask)
         return text
 
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
                      max_rounds: int = 3, on_delta=None, subject: str | None = None,
-                     klass: str | None = None, pin: str | None = None) -> tuple[str, list[str]]:
+                     klass: str | None = None, pin: str | None = None, ask: str | None = None) -> tuple[str, list[str]]:
         """The acting mind: the model may use the door's DECLARED tools;
         every tool call goes through the door (journaled, interlocked),
         every model round through the meter. Returns (reply, act_notes).
@@ -349,7 +350,7 @@ class AnthropicGateway:
                 msg = self._client.messages.create(
                     model=m, max_tokens=max_tokens, system=system,
                     tools=door.schemas(), messages=messages)
-            meter(conn, did, m, msg.usage.input_tokens, msg.usage.output_tokens)
+            meter(conn, did, m, msg.usage.input_tokens, msg.usage.output_tokens, ask=ask)
             if msg.stop_reason != "tool_use":
                 return ("".join(b.text for b in msg.content
                                 if b.type == "text"), notes)
@@ -380,13 +381,13 @@ class FakeGateway:
     def think(self, conn, *, did: str, system: str, prompt: str,
               model: str | None = None, max_tokens: int = 1024,
               on_delta=None, subject: str | None = None, klass: str | None = None,
-              pin: str | None = None) -> str:
+              pin: str | None = None, ask: str | None = None) -> str:
         ensure_schema(conn)
         self.calls.append({"system": system, "prompt": prompt, "subject": subject, "pin": pin})
         if on_delta is not None:
             for w in self.reply.split(" "):
                 on_delta(w + " ")
-        meter(conn, did, model or self.DEFAULT_MODEL, len(prompt.split()), len(self.reply.split()))
+        meter(conn, did, model or self.DEFAULT_MODEL, len(prompt.split()), len(self.reply.split()), ask=ask)
         return self.reply
 
 
@@ -404,9 +405,9 @@ class FakeActingGateway:
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
                      max_rounds: int = 3, on_delta=None, subject: str | None = None,
-                     klass: str | None = None, pin: str | None = None) -> tuple[str, list[str]]:
+                     klass: str | None = None, pin: str | None = None, ask: str | None = None) -> tuple[str, list[str]]:
         ensure_schema(conn)
-        meter(conn, did, model or self.DEFAULT_MODEL, len(prompt.split()), 12)
+        meter(conn, did, model or self.DEFAULT_MODEL, len(prompt.split()), 12, ask=ask)
         notes, last = [], ""
         for step in self.script:
             if step[0] == "tool":

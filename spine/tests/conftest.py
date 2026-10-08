@@ -21,6 +21,9 @@ def _queue_ns():
     tok = "t" + secrets.token_hex(3)
     os.environ["SPINE_QUEUE_NS"] = tok
     os.environ["SPINE_SCOPE"] = "u:test-" + tok
+    # Phase 8 sp5: the session's rig grades no live replies on its own beat — the grader's asks would ride every
+    # test's benches (and spend); the Operating State's proof turns the dial on for itself
+    os.environ.setdefault("SPINE_GRADE_LIVE", "0")
     yield
     try:                                            # the perf cure (2026-09-29): the session's residue on the
         from orreth_spine import prune              # brokers — its topics, its queues, the empty test groups —
@@ -34,6 +37,7 @@ def _queue_ns():
         pass
     os.environ.pop("SPINE_QUEUE_NS", None)
     os.environ.pop("SPINE_SCOPE", None)
+    os.environ.pop("SPINE_GRADE_LIVE", None)
 
 
 @pytest.fixture(scope="session")

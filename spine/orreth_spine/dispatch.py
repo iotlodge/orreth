@@ -117,7 +117,9 @@ def submit_ask(conn, text: str, *, person: str,
         if kind not in (None, "thought", "objective"):
             raise ValueError("an ask is a thought or an objective — an intention is declared")
         ask_kind, parent = (kind or "objective"), parent_marker
-        if target in markers.INCLUDES or ask_kind == "thought":
+        from . import operating
+        if target in markers.INCLUDES or ask_kind == "thought" \
+                or (target and session and target in operating.summoned(conn, session)):   # Phase 8 sp5: summoned bodies are includes
             ask_kind = "thought"
             if parent is None and session:
                 cur0 = conn.cursor()

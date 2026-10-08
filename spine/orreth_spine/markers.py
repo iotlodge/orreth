@@ -32,6 +32,7 @@ SEED = [  # kind, group, description — the kernel's, in every world
     ("improvement", "quality", "an improvement observed to what was being executed — every body's policy marks it"),
     ("watch-red", "resiliency", "a watch judged red — under the intention that keeps it green (0007)"),
     ("experiment", "quality", "an Experiment opened on an agent's candidate — its arms' runs and the reviewers' signed verdicts under it (0010 §5)"),
+    ("grading", "quality", "a live reply handed to the grader by the grade beat — under the reply's own ask; the grader's signed verdict feeds Trust (0010 §7)"),
 ]
 
 

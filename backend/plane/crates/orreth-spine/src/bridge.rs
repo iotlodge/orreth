@@ -617,15 +617,21 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             }
         }));
     }
-    // Phase 8 sp4: THE EXPERIMENT BEAT — every 3 s under the `experiment` beat, every running experiment one step
-    // on (the trial life spawned, the current arm asked, the runs read, the reviewers asked, the proposal composed)
+    // Phase 8 sp4 · sp5: THE WORKSHOP'S BEATS — one task, ONE connection, three cadences (a standing connection per
+    // beat exhausted the ground beside a test suite): THE EXPERIMENT BEAT every 3 s under the `experiment` beat (the
+    // trial life spawned, the current arm asked, the runs read, the reviewers asked, the proposal composed); THE GRADE
+    // BEAT every minute under `grade` (the last hour's live replies handed to the grader under each reply's own marker);
+    // THE PRUNE BEAT hourly under `prune` (the crafts nobody wears any more retired, never deleted, never at request time)
     {
         let (w, stop, seats_bodies) = (w.clone(), stop.clone(), cfg.bodies);
         tasks.push(tokio::spawn(async move {
+            let mut next_grade = tokio::time::Instant::now() + Duration::from_secs(20);
+            let mut next_prune = tokio::time::Instant::now() + Duration::from_secs(60);
             while !stop.load(Ordering::Relaxed) {
                 match Ground::connect(&w.pg_dsn).await {
                     Ok(mut g) => {
                         while !stop.load(Ordering::Relaxed) {
+                            // the experiment beat
                             match crate::beat::try_beat(&g, &w.scope, "experiment").await {
                                 Ok(true) => {
                                     let spawn: Option<Box<crate::experiments_live::SpawnTrial>> = if seats_bodies {
@@ -652,49 +658,53 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                                     break;
                                 }
                             }
+                            let now = tokio::time::Instant::now();
+                            if now >= next_grade {
+                                next_grade = now + Duration::from_secs(crate::operating::GRADE_EVERY_S);
+                                match crate::beat::try_beat(&g, &w.scope, "grade").await {
+                                    Ok(true) => {
+                                        match crate::operating_live::grade_beat(&mut g, &w).await {
+                                            Ok(asked) => {
+                                                for a in asked {
+                                                    eprintln!("  [grade] {a}");
+                                                }
+                                            }
+                                            Err(e) => eprintln!("the grade beat stumbled: {e}"),
+                                        }
+                                        let _ = crate::beat::end_beat(&g, &w.scope, "grade").await;
+                                    }
+                                    Ok(false) => {}
+                                    Err(e) => {
+                                        eprintln!("the grade beat could not be claimed: {e}");
+                                        break;
+                                    }
+                                }
+                            }
+                            if now >= next_prune {
+                                next_prune = now + Duration::from_secs(crate::experiments::PRUNE_EVERY_S);
+                                match crate::beat::try_beat(&g, &w.scope, "prune").await {
+                                    Ok(true) => {
+                                        match crate::experiments_live::prune(&mut g, &w).await {
+                                            Ok(pruned) => {
+                                                for pr in pruned {
+                                                    eprintln!("  [prune] {}: {}", pr["component"].as_str().unwrap_or_default(), pr["words"].as_str().unwrap_or_default());
+                                                }
+                                            }
+                                            Err(e) => eprintln!("the prune beat stumbled: {e}"),
+                                        }
+                                        let _ = crate::beat::end_beat(&g, &w.scope, "prune").await;
+                                    }
+                                    Ok(false) => {}
+                                    Err(e) => {
+                                        eprintln!("the prune beat could not be claimed: {e}");
+                                        break;
+                                    }
+                                }
+                            }
                             sleep_unless_stopped(&stop, Duration::from_secs(3)).await;
                         }
                     }
-                    Err(e) => eprintln!("the experiment beat could not reach the ground: {e}"),
-                }
-                if !stop.load(Ordering::Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
-            }
-        }));
-    }
-    // Phase 8 sp4: THE PRUNE BEAT — a minute in, then hourly under the `prune` beat: the crafts nobody wears any more
-    // (every body that ever wore one decommissioned) retired on the shelf, never deleted, never at request time
-    {
-        let (w, stop) = (w.clone(), stop.clone());
-        tasks.push(tokio::spawn(async move {
-            sleep_unless_stopped(&stop, Duration::from_secs(60)).await;
-            while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
-                    Ok(mut g) => {
-                        while !stop.load(Ordering::Relaxed) {
-                            match crate::beat::try_beat(&g, &w.scope, "prune").await {
-                                Ok(true) => {
-                                    match crate::experiments_live::prune(&mut g, &w).await {
-                                        Ok(pruned) => {
-                                            for pr in pruned {
-                                                eprintln!("  [prune] {}: {}", pr["component"].as_str().unwrap_or_default(), pr["words"].as_str().unwrap_or_default());
-                                            }
-                                        }
-                                        Err(e) => eprintln!("the prune beat stumbled: {e}"),
-                                    }
-                                    let _ = crate::beat::end_beat(&g, &w.scope, "prune").await;
-                                }
-                                Ok(false) => {}
-                                Err(e) => {
-                                    eprintln!("the prune beat could not be claimed: {e}");
-                                    break;
-                                }
-                            }
-                            sleep_unless_stopped(&stop, Duration::from_secs(crate::experiments::PRUNE_EVERY_S)).await;
-                        }
-                    }
-                    Err(e) => eprintln!("the prune beat could not reach the ground: {e}"),
+                    Err(e) => eprintln!("the Workshop's beats could not reach the ground: {e}"),
                 }
                 if !stop.load(Ordering::Relaxed) {
                     tokio::time::sleep(Duration::from_millis(500)).await;
@@ -762,12 +772,25 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                                     runner: Some("librarian".into()),
                                     every_s: None,
                                     gates: None,
+                                    watches: None,
                                 },
                             )
                             .await
                             {
                                 Ok(_) => {
                                     declared = true;
+                                    // Phase 8 sp5: THE OPERATING STATE beside Resiliency, and the kernel's five watches
+                                    if let Err(e) = crate::operating_live::intention_at_light(&mut g, &w).await {
+                                        eprintln!("the Operating State could not be declared at boot: {e}");
+                                    }
+                                    match crate::operating_live::watches_at_light(&g, &w.scope).await {
+                                        Ok(made) => {
+                                            for n in made {
+                                                eprintln!("  [operating] the kernel watches {n} < {} (unknown turns nothing red)", crate::operating::TARGET);
+                                            }
+                                        }
+                                        Err(e) => eprintln!("the kernel's measurement watches could not be declared: {e}"),
+                                    }
                                     break;
                                 }
                                 Err(e) => {
@@ -954,6 +977,10 @@ fn router(app: Arc<App>) -> Router {
         .route("/experiments/promote", post(experiments_post)) // the stamped promotion — held at L2 (an agent) · L3 (a resident)
         .route("/experiments/decline", post(experiments_post)) // the human's no — routine, recorded
         .route("/seats", get(seats_door)) // the promoted agents' seats — where each stands and its rung
+        .route("/measurements", get(measurements_door)) // Phase 8 sp5: THE OPERATING STATE — the five, measured live
+        .route("/includes", get(includes_door)) // the session's crew: the four, and the summoned
+        .route("/feedback", post(feedback_post)) // a thumb on a reply — routine, recorded
+        .route("/summon", post(summon_post)) // summon generalized — a summonable body into the session's crew
         .route("/bodies/rest", post(bodies_rung)) // the ladder: rest (L2) · decommission (L3) · restore (L2)
         .route("/bodies/decommission", post(bodies_rung))
         .route("/bodies/restore", post(bodies_rung))
@@ -2063,6 +2090,7 @@ async fn ask_post(
                     runner: to.as_ref().and_then(|t| t.first().cloned()),
                     every_s,
                     gates: None,
+                    watches: p["watches"].as_array().map(|a| a.iter().map(python_str).collect()),   // Phase 8 sp5
                 },
             )
             .await?;
@@ -2594,6 +2622,73 @@ async fn experiments_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<S
     .await;
     match out {
         Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /measurements` — Phase 8 sp5: THE OPERATING STATE's five, measured live.
+async fn measurements_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        Ok::<_, RoadError>(json!({"measurements": crate::operating_live::measure(g.client(), scope(&app)).await?,
+                                  "target": crate::operating::TARGET,
+                                  "latency_classes": {"chat": 30.0, "work": 180.0, "event": 180.0},
+                                  "order": crate::operating::MEASUREMENTS}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /includes[?session=]` — who is in this session's crew: the four, and the summoned.
+async fn includes_door(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>, Query(q): Query<HashMap<String, String>>) -> Response {
+    let sess = q.get("session").filter(|s| !s.is_empty()).map(String::as_str);
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        Ok::<_, RoadError>(json!({"includes": crate::operating_live::includes(g.client(), sc, sess, Some(&seated.person)).await?,
+                                  "summoned": crate::operating_live::summoned(g.client(), sc, sess, Some(&seated.person)).await?,
+                                  "base": crate::operating::BASE_INCLUDES}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /feedback {ask_id, sign, words?}` (201) — a person's thumb on a reply; routine, recorded.
+async fn feedback_post(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let out = async {
+        let mut g = ground(&app).await?;
+        crate::operating_live::give_feedback(&mut g, &app.cfg.world, &seated.person, &s_or(&p, "ask_id", ""), p["sign"].as_i64().unwrap_or(0), s_opt(&p, "words").as_deref()).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /summon {name, summon?: bool, session?}` (201) — a summonable body into the session's crew, or out of it.
+async fn summon_post(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>, body: Bytes) -> Response {
+    let p = body_json(&body);
+    let on = match p.get("summon") {
+        None => true,
+        Some(v) => truthy(v),
+    };
+    let out = async {
+        let mut g = ground(&app).await?;
+        crate::operating_live::summon(&mut g, &app.cfg.world, &seated.person, &s_or(&p, "name", ""), s_opt(&p, "session").as_deref(), on).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(201, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
         Err(e) => refuse(e),
     }
 }

@@ -342,6 +342,13 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
             values[k] = v.clone();
         }
     }
+    // Phase 8 sp5: THE OPERATING STATE — the five, measured live (null = unknown)
+    let measurements = crate::operating_live::measure(g.client(), scope).await?;
+    if let Some(m) = measurements.as_object() {
+        for (k, v) in m {
+            values[k] = v["value"].clone();
+        }
+    }
     let stable_view = stable_face(g, scope).await;
     let rows = g
         .client()
@@ -365,7 +372,8 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         let (metric, op): (String, String) = (r.get(2), r.get(3));
         let threshold: f64 = r.get(4);
         let value = values[&metric].clone();
-        let red = judge_one(&op, as_f64(&value), threshold).unwrap_or(false);
+        // Phase 8 sp5: an UNKNOWN value (a measurement with nothing to measure yet) turns nothing red
+        let red = if value.is_null() { false } else { judge_one(&op, as_f64(&value), threshold).unwrap_or(false) };
         let last_ok: Option<bool> = r.get(6);
         let since: Option<SystemTime> = r.get(7);
         // `since`: when the RECORDED state last turned (judge writes it) — shown
@@ -413,6 +421,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "namespace": w.ns,
     });
     Ok(json!({
+        "measurements": measurements,
         "world": scope,
         "home": home,
         "outbox": {"pending": lag.pending, "oldest_age_s": lag.oldest_age_s},

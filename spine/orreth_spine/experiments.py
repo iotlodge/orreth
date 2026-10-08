@@ -332,9 +332,9 @@ DDL = (
     " settled_at timestamptz, settled_by text, at_path text)",
     "CREATE INDEX IF NOT EXISTS spine_experiments_scope ON spine_experiments (scope, state, opened_at DESC)",
     "CREATE TABLE IF NOT EXISTS spine_verdicts ("
-    " verdict_id text PRIMARY KEY, scope text NOT NULL, experiment_id text NOT NULL, by_did text NOT NULL,"
+    " verdict_id text PRIMARY KEY, scope text NOT NULL, experiment_id text, by_did text NOT NULL,"
     " by_name text NOT NULL, reviewer text NOT NULL, ask text, verdict text NOT NULL, words text NOT NULL,"
-    " sig text NOT NULL, at timestamptz NOT NULL DEFAULT now())",
+    " sig text NOT NULL, at timestamptz NOT NULL DEFAULT now(), on_ask text)",
     "CREATE INDEX IF NOT EXISTS spine_verdicts_experiment ON spine_verdicts (experiment_id, at)",
     "CREATE TABLE IF NOT EXISTS spine_body_seats ("
     " name text NOT NULL, scope text NOT NULL, template text NOT NULL, at_path text NOT NULL,"
@@ -723,17 +723,18 @@ def trial(conn, exp: dict, *, gateway=None, home=None, policy=None, say=None) ->
     return run
 
 
-def verdict_in(cur, *, experiment_id: str, identity, by_name: str, reviewer: str, ask_id: str | None,
-               verdict: dict, words: str, scope: str) -> str:
+def verdict_in(cur, *, experiment_id: str | None, identity, by_name: str, reviewer: str, ask_id: str | None,
+               verdict: dict, words: str, scope: str, on_ask: str | None = None) -> str:
     """A reviewer's SIGNED VERDICT, written by the reviewer itself in its reply's transaction (rule
     2: under its own DID, over the experiment's evidence, never its own yardstick): the row and
-    the fact `orreth.verdict.v1`."""
+    the fact `orreth.verdict.v1`. Phase 8 sp5: on a LIVE reply too — `experiment_id` None and
+    `on_ask` the graded ask (Trust reads these)."""
     vid = "vd_" + secrets.token_hex(6)
-    payload = {"experiment": experiment_id, "reviewer": reviewer, "verdict": verdict, "by": identity.did}
+    payload = {"experiment": experiment_id, "reviewer": reviewer, "verdict": verdict, "by": identity.did, "on_ask": on_ask}
     sig = identity.sign(payload)
     cur.execute("INSERT INTO spine_verdicts (verdict_id, scope, experiment_id, by_did, by_name, reviewer, ask, verdict,"
-                " words, sig) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                (vid, ev.universe(), experiment_id, identity.did, by_name, reviewer, ask_id, json.dumps(verdict), words, sig))
+                " words, sig, on_ask) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (vid, ev.universe(), experiment_id, identity.did, by_name, reviewer, ask_id, json.dumps(verdict), words, sig, on_ask))
     _fact(cur, VERDICT, vid, {**payload, "sig": sig, "ask": ask_id}, [identity.did], None, scope=scope)
     return vid
 

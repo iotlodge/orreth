@@ -46,7 +46,10 @@ METRICS = ("outbox_pending", "oldest_outbox_age_s", "asks_received",
            # (fixture `watch_metrics`) — the reference has no pool and measures its strain as 0
            "door_p95_ms", "pool_busy", "pool_waiting",
            # re-base sp1: poison events the dispatcher holds at — a person's decision is owed
-           "parked")
+           "parked",
+           # Phase 8 sp5: THE OPERATING STATE — JB's five Kernel Strategic Measurements at v0, each 1.0 at the
+           # ideal, unknown (null) while its denominator is empty — never a silent 1.0 (operating.py)
+           "trust", "recall", "efficiency", "experience", "cost")
 OPS = {"<=": lambda v, t: v <= t, ">=": lambda v, t: v >= t,
        "<": lambda v, t: v < t, ">": lambda v, t: v > t, "==": lambda v, t: v == t}
 
@@ -77,14 +80,19 @@ def ensure_schema(conn) -> None:
 
 def judge_one(op: str, value, threshold) -> bool:
     """The sense of a watch, in one place (conformance `watch_judge`):
-    True = RED — the watched condition holds now."""
+    True = RED — the watched condition holds now. Phase 8 sp5: an UNKNOWN value
+    (None — a measurement with nothing to measure yet) turns nothing red."""
+    if value is None:
+        return False
     return bool(OPS[op](value, threshold))
 
 
 def reads(w: dict) -> str:
     """The watch in a human's sentence — the sense spelled out, never
-    left to a bare `> 0`: 'red when bodies_dormant > 0.0 · now 0 → green'."""
-    return (f"red when {w['metric']} {w['op']} {w['threshold']} · now {w['value']} → "
+    left to a bare `> 0`: 'red when bodies_dormant > 0.0 · now 0 → green';
+    an unknown value says so (Phase 8 sp5)."""
+    now = "unknown (nothing to measure yet)" if w["value"] is None else w["value"]
+    return (f"red when {w['metric']} {w['op']} {w['threshold']} · now {now} → "
             f"{'RED' if w['red'] else 'green'}")
 
 
@@ -276,6 +284,9 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     from . import projector                       # re-base sp1: the poison events the dispatcher holds at (the
     parked = projector.parked(conn, "glass-dispatcher", 20) if _has_table(conn, "spine_parked") else []
     values["parked"] = len(parked)                # ground's count — the same on both kernels), watchable
+    from . import operating                       # Phase 8 sp5: THE OPERATING STATE — the five, measured live
+    measurements = operating.measure(conn)
+    values.update({k: v["value"] for k, v in measurements.items()})
     stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
                 " FROM spine_watches WHERE scope = %s AND active ORDER BY added_at", (ev.universe(),))  # sp2: the active alone
@@ -297,6 +308,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     from . import cells
     home = cells.card(conn)
     return {
+        "measurements": measurements,             # Phase 8 sp5: each with its value (null = unknown), num, den, words
         "world": ev.universe(),
         "home": {"cell": home["cell"], "epoch": home["epoch"], "namespace": home["namespace"]},   # P7 sp7
         "outbox": lag,

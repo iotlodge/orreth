@@ -236,7 +236,11 @@ drafts under your seat, the shelf's crafts, a graph drawn from its declaration w
 the cut held at the interlock, its own agent `workshop` on your words; Phase 8 sp4: an agent's cut OPENS THE
 EXPERIMENT — a trial life in an experiment room, the grader's and the critic's signed verdicts, THE EXPERIMENT
 card with its proposal, the stamped promotion that seats the agent's next life where you say, and the ladder
-rest · decommission · restore) are the same truth from the same doors, and every row is a door.
+rest · decommission · restore; Phase 8 sp5: THE OPERATING STATE — JB's five measurements on the Monitor pull, unknown
+until there is something to measure, watched by the kernel and owned by one intention beside Resiliency; the grader
+hearing every live reply and signing its verdict; 👍 👎 under every reply; the critic's proposals landing under a body's
+owner; "summon critic"; a repo'd graph run inside the hull by an import node) are the same truth from the same doors, and
+every row is a door.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/monitor-dark.jpg">

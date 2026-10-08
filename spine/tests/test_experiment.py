@@ -212,7 +212,7 @@ def test_the_reviewers_sign_their_verdicts_and_the_promotion_seats_the_agent(pg,
     [v] = xp.verdicts(pg, xid)
     assert (v["reviewer"], v["by"], v["by_name"]) == ("grader", grader.identity.did, "grader")
     assert v["verdict"] == {"current": None, "candidate": "A", "verdict": "candidate"} and len(v["sig"]) == 128
-    assert grader.identity.sign({"experiment": xid, "reviewer": "grader", "verdict": v["verdict"], "by": grader.identity.did}) == v["sig"]
+    assert grader.identity.sign({"experiment": xid, "reviewer": "grader", "verdict": v["verdict"], "by": grader.identity.did, "on_ask": None}) == v["sig"]
     [vf] = _facts(pg, xp.VERDICT, u)
     assert vf["authority_chain"] == [grader.identity.did] and vf["payload"]["sig"] == v["sig"]
     journey = " / ".join(j["payload"]["note"] for j in _facts(pg, resident.JOURNEY, u) if j["payload"]["ref"] == g_ask)

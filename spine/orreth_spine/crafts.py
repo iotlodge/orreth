@@ -83,7 +83,7 @@ FORMATS = {
     "prompt": "orreth-prompt/1",
     "skill": "orreth-skill/1",
 }
-NODE_KINDS = ("think", "echo")                       # v0: the metered mind · the words back
+NODE_KINDS = ("think", "echo", "import")                   # Phase 8 sp5: `import` runs a repo'd graph (a source) inside the hull                       # v0: the metered mind · the words back
 WHEN_KEYS = ("edge", "ask", "reply")                 # sp3: what a way out may be conditioned on
 EDGES = ("chat", "work", "event")                    # the hull's three edges = the three modes of agent interoperability
 STRUCTURAL = ("objective", "intention", "thought", "action", "observation")   # markers.SEED's structural group
@@ -225,6 +225,8 @@ def validate_graph(g) -> dict:
         if "tools" in n and n["tools"] is not None and (
                 not isinstance(n["tools"], list) or not all(isinstance(t, str) and t.strip() for t in n["tools"])):
             return {"ok": False, "reason": f"node {n['id']!r}: `tools` is a list of tool names"}
+        if n.get("kind") == "import" and (not isinstance(n.get("source"), str) or not n["source"].strip()):
+            return {"ok": False, "reason": f"node {n['id']!r}: an import node names its `source` — the repo'd source on the shelf (repo · commit · entry)"}
         ids.append(n["id"])
     entry = g.get("entry")
     if entry not in ids:

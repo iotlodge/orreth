@@ -370,3 +370,15 @@ the same files, unchanged — before any module earns the word "ported".
     THOUGHT under a non-structural parent is an EVENT (the grader asked under an experiment's marker).
   - `schema_version` 7 · `schema_tables` 46 (schema-v0) — `spine_experiments`, `spine_verdicts` and
     `spine_body_seats` join at Phase 8 sp4; `beat_lock` (loops-v0) gains `experiment` 6 · `prune` 7.
+  - **Phase 8 sp5, THE OPERATING STATE (`operating-v0.json`, contract `orreth.operating/1`, 51 cases)** — `op_ratio` (a
+    coverage ratio, unknown while the denominator is empty) · `op_latency_class` (a serve's class by the hull's edge: chat
+    30 s · work and events 180 s) · `op_pass_grade` (A · B · C pass) · `op_measure_words` (each measurement in words; the
+    unknown said) · `op_routes_to` (the watch as the discriminator between THE OPERATING STATE and Resiliency) ·
+    `op_grade_of_live` (the grader's live verdict by the form `grade: <A–F> — <one line>`; stars tolerated; nothing guessed)
+    · `op_grade_ask` · `op_proposal_words` · `op_summon_words` · `op_measurement_watch` · `op_import_words` ·
+    `op_operating` (the intention as declared, the five, the target, the op, the passing grades). `watch_metrics` 15 → 20
+    (watch-v0); `craft_manifest` grows the `import` node (crafts-v0, 101 → 104); `tool_manifest` pins the `propose` tool
+    (tools-v0).
+  - `schema_version` 8 · `schema_tables` 49 (schema-v0) — `spine_feedback`, `spine_includes` and `spine_grading` join at
+    Phase 8 sp5; `beat_lock` (loops-v0) gains `grade` 8.
+

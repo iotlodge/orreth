@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, crafts, desk, dispatch, doors, envelope as ev, experiments, export, ground, harness, intent, levels,
+from orreth_spine import (body as _body, cells, crafts, desk, dispatch, doors, envelope as ev, experiments, export, ground, harness, intent, levels, operating,
                           levers, markers, mcp, mitl, monitor, placement, presence, profile, projector, proof, rails, resident,
                           scheduler, seat, services, stable, store, digest, tools)
 from orreth_spine.identity import Identity
@@ -242,6 +242,31 @@ def test_fixture(contract, case):
         assert d == exp["document"] and ev.content_hash(d) == exp["hash"]
     elif kind == "cut_words":
         assert crafts.cut_words(inp["name"], inp["kind"], inp["verb"], inp["version"]) == exp["words"]
+    elif kind == "op_ratio":                     # Phase 8 sp5: THE OPERATING STATE
+        assert operating.ratio(inp["num"], inp["den"]) == exp["value"]
+    elif kind == "op_latency_class":
+        assert list(operating.latency_class(inp["marker_kind"], inp["parent_kind"])) == [exp["edge"], exp["seconds"]]
+    elif kind == "op_pass_grade":
+        assert operating.pass_grade(inp["grade"]) == exp["passed"]
+    elif kind == "op_measure_words":
+        assert operating.measure_words(inp["name"], inp["value"], inp["num"], inp["den"]) == exp["words"]
+    elif kind == "op_routes_to":
+        assert operating.routes_to(inp["watches"], inp["metric"]) == exp["routes"]
+    elif kind == "op_grade_of_live":
+        assert operating.grade_of_live(inp["text"]) == exp["verdict"]
+    elif kind == "op_grade_ask":
+        assert operating.grade_ask(inp["ask_id"], inp["who"], inp["text"], inp["reply"]) == exp["words"]
+    elif kind == "op_proposal_words":
+        assert operating.proposal_words(inp["agent"], inp["name"], inp["kind"], inp["marker"]) == exp["words"]
+    elif kind == "op_summon_words":
+        assert operating.summon_words(inp["body"], inp["on"], inp["session"]) == exp["words"]
+    elif kind == "op_measurement_watch":
+        assert operating.measurement_watch(inp["name"]) == exp["watch"]
+    elif kind == "op_import_words":
+        assert operating.import_words(inp["source"], inp["commit"], inp["entry"]) == exp["words"]
+    elif kind == "op_operating":
+        assert (operating.OPERATING, list(operating.MEASUREMENTS), operating.SERVES, operating.TARGET, operating.WATCH_OP, list(operating.PASS_GRADES)) == \
+            (exp["intention"], exp["measurements"], exp["serves"], exp["target"], exp["op"], exp["pass"])
     elif kind == "exp_room":                     # Phase 8 sp4: THE EXPERIMENT AND THE CUT
         assert experiments.room_name(inp["agent"], inp["n"]) == exp["room"]
     elif kind == "exp_arms_plan":

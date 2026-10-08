@@ -2,7 +2,7 @@
  "contract": "orreth.crafts/1",
  "version": 0,
  "generated_by": "orreth_spine.crafts (the Python reference) - rearch Phase 8 sp2, THE SHELF WIDENED: the craft kinds on the one shelf, the graph declaration v0, the hull's edges, the wear rows, the cut's demand; Phase 8 sp3, THE WORKSHOP v0: the graph BRANCHES (an edge wears `when`: edge \u00b7 ask \u00b7 reply; one default at most; forward only), per-node refs typed, `graph_path` is the default line; the cut's gate (shelf | experiment) by Phase 8 sp4 THE EXPERIMENT AND THE CUT",
- "generated_at": "2026-10-07",
+ "generated_at": "2026-10-08",
  "cases": [
   {
    "name": "craft_name: librarian as a template",
@@ -396,7 +396,7 @@
    },
    "expect": {
     "ok": false,
-    "reason": "node 'a': a node's kind is one of think, echo \u2014 got 'fly'"
+    "reason": "node 'a': a node's kind is one of think, echo, import \u2014 got 'fly'"
    }
   },
   {
@@ -1991,6 +1991,77 @@
    "expect": {
     "ok": true,
     "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest: an import node names its source (Phase 8 sp5)",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "imp",
+     "entry": "run",
+     "nodes": [
+      {
+       "id": "run",
+       "kind": "import",
+       "source": "bob-src"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": true,
+    "reason": null
+   }
+  },
+  {
+   "name": "craft_manifest refuses: an import node without a source",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "imp",
+     "entry": "run",
+     "nodes": [
+      {
+       "id": "run",
+       "kind": "import"
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'run': an import node names its `source` \u2014 the repo'd source on the shelf (repo \u00b7 commit \u00b7 entry)"
+   }
+  },
+  {
+   "name": "craft_manifest refuses: an import node with an empty source",
+   "kind": "craft_manifest",
+   "input": {
+    "kind": "graph",
+    "manifest": {
+     "format": "orreth-graph/1",
+     "name": "imp",
+     "entry": "run",
+     "nodes": [
+      {
+       "id": "run",
+       "kind": "import",
+       "source": " "
+      }
+     ],
+     "edges": []
+    }
+   },
+   "expect": {
+    "ok": false,
+    "reason": "node 'run': an import node names its `source` \u2014 the repo'd source on the shelf (repo \u00b7 commit \u00b7 entry)"
    }
   },
   {

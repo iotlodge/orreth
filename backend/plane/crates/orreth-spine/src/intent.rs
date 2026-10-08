@@ -117,7 +117,7 @@ pub fn crew_shape_hash(shape: &[(String, Value)]) -> String {
     let list: Vec<Value> = pairs.into_iter().map(|(n, c)| json!([n, c])).collect();
     content_hash(&Value::Array(list))
 }
-pub const SERVES: [&str; 5] = ["business", "security", "resiliency", "compliance", "cost"];
+pub const SERVES: [&str; 6] = ["business", "security", "resiliency", "compliance", "cost", "operating-state"]; // Phase 8 sp5
 pub const KINDS: [&str; 3] = ["human", "role", "kernel"];
 /// P23: the ask wears its kind.
 pub const ASK_KINDS: [&str; 3] = ["thought", "objective", "intention"];

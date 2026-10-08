@@ -147,6 +147,47 @@
       "ground": true
     },
     {
+      "name": "propose",
+      "description": "Propose a change to a BODY's craft — a DRAFT saved under that body's OWNER, marked with the improvement it came from (Phase 8 sp5, THE OPERATING STATE: the improvement loop closes in the Workshop). Routine: a draft is unversioned and lives under the owner's seat alone, never on the shelf; raw feedback never reaches a body — a proposal does. Pass `for` (the body's name), the WHOLE declaration as `body` (the full object as it should stand after the change — never a fragment), the draft's `name` and `kind`, and `words` (one line: what changes and why). The owner opens it in the Workshop and cuts it; the Experiment judges it. Never offer to cut; never change anything yourself.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "for": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "template",
+              "prompt",
+              "skill",
+              "policy",
+              "graph",
+              "binding",
+              "golden"
+            ]
+          },
+          "body": {
+            "type": "object"
+          },
+          "words": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "for",
+          "name",
+          "kind",
+          "body"
+        ]
+      },
+      "consequence": "routine",
+      "ground": true
+    },
+    {
       "name": "services",
       "description": "Keep the shelf of services. action=register adds an MCP server (name: a short lowercase name; locator: its command line or URL, or env:NAME; secrets_with: the env NAMES it needs) and lists its tools onto the shelf. action=check probes one service by name, or every MCP server when no name is given. action=retire / restore move a service by name. action=changes reads what changed on the shelf since the last ask. action=list names what stands. Register, retire and restore hold for the human's yes at the interlock; check, changes and list run at once. When the human asks you to add, check, retire or restore, CALL this tool — never describe the act instead.",
       "input_schema": {

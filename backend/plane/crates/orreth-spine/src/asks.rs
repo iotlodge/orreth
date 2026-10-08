@@ -48,7 +48,7 @@ pub use crate::watch::WATCH_TURNED;
 /// (a body parked, a tool hop, a lease crossing the line, a lever pulled, a seat taken, a
 /// body at the join desk, an intention's life, the shelf's and the Stable's changes, a
 /// memory landed, the kernel's own heartbeat) now reaches THE PANEL as a pointer.
-pub const FEED_TOPICS: [&str; 45] = [
+pub const FEED_TOPICS: [&str; 49] = [
     ASK_RECEIVED,
     crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
@@ -100,6 +100,11 @@ pub const FEED_TOPICS: [&str; 45] = [
     crate::experiments::BODY_RESTED,
     crate::experiments::BODY_DECOMMISSIONED,
     crate::experiments::BODY_RESTORED,
+    // ---- Phase 8 sp5: THE OPERATING STATE — a thumb given, a body summoned · dismissed, a draft proposed ----
+    crate::operating::FEEDBACK_GIVEN,
+    crate::operating::INCLUDE_SUMMONED,
+    crate::operating::INCLUDE_DISMISSED,
+    crate::operating::DRAFT_PROPOSED,
 ];
 
 // ---- the fact, minted now ------------------------------------------------------------
@@ -344,7 +349,14 @@ pub async fn submit_ask(g: &mut Ground, w: &World, s: Submit) -> Result<Submitte
         let ask_id = format!("ask_{}", token_hex(8));
         let mut ask_kind = s.kind.clone().unwrap_or_else(|| "objective".into());
         let mut parent = s.parent_marker.clone();
-        if target.as_deref().is_some_and(|t| INCLUDES.contains(&t)) || ask_kind == "thought" {
+        // Phase 8 sp5: a body summoned into the session is an include too
+        let summoned_here = match (&target, &s.session) {
+            (Some(t), Some(sess)) if !INCLUDES.contains(&t.as_str()) => {
+                crate::operating_live::summoned(g.client(), &w.scope, Some(sess), None).await?.iter().any(|b| b == t)
+            }
+            _ => false,
+        };
+        if target.as_deref().is_some_and(|t| INCLUDES.contains(&t)) || ask_kind == "thought" || summoned_here {
             ask_kind = "thought".into();
             if parent.is_none() {
                 if let Some(session) = &s.session {

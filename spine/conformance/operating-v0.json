@@ -1,0 +1,659 @@
+{
+ "contract": "orreth.operating/1",
+ "version": 0,
+ "generated_by": "orreth_spine.operating (the Python reference) - rearch Phase 8 sp5, THE OPERATING STATE: the coverage ratio (unknown while empty), a serve's latency class by the hull's edge, a passing grade, each measurement in words, the watch as the discriminator, the grader's live verdict by its form, the kernel's ask of the grader, the critic's proposal words, a summons in words, the kernel's measurement watches, the import's words, the intention as declared",
+ "generated_at": "2026-10-08",
+ "cases": [
+  {
+   "name": "op_ratio: 0/0",
+   "kind": "op_ratio",
+   "input": {
+    "num": 0,
+    "den": 0
+   },
+   "expect": {
+    "value": null
+   }
+  },
+  {
+   "name": "op_ratio: 2/3",
+   "kind": "op_ratio",
+   "input": {
+    "num": 2,
+    "den": 3
+   },
+   "expect": {
+    "value": 0.6667
+   }
+  },
+  {
+   "name": "op_ratio: 3/3",
+   "kind": "op_ratio",
+   "input": {
+    "num": 3,
+    "den": 3
+   },
+   "expect": {
+    "value": 1.0
+   }
+  },
+  {
+   "name": "op_ratio: 1/4",
+   "kind": "op_ratio",
+   "input": {
+    "num": 1,
+    "den": 4
+   },
+   "expect": {
+    "value": 0.25
+   }
+  },
+  {
+   "name": "op_ratio: 0.5/2.0",
+   "kind": "op_ratio",
+   "input": {
+    "num": 0.5,
+    "den": 2.0
+   },
+   "expect": {
+    "value": 0.25
+   }
+  },
+  {
+   "name": "op_latency_class: objective under None",
+   "kind": "op_latency_class",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": null
+   },
+   "expect": {
+    "edge": "chat",
+    "seconds": 30.0
+   }
+  },
+  {
+   "name": "op_latency_class: thought under objective",
+   "kind": "op_latency_class",
+   "input": {
+    "marker_kind": "thought",
+    "parent_kind": "objective"
+   },
+   "expect": {
+    "edge": "chat",
+    "seconds": 30.0
+   }
+  },
+  {
+   "name": "op_latency_class: objective under intention",
+   "kind": "op_latency_class",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "intention"
+   },
+   "expect": {
+    "edge": "work",
+    "seconds": 180.0
+   }
+  },
+  {
+   "name": "op_latency_class: objective under improvement",
+   "kind": "op_latency_class",
+   "input": {
+    "marker_kind": "objective",
+    "parent_kind": "improvement"
+   },
+   "expect": {
+    "edge": "event",
+    "seconds": 180.0
+   }
+  },
+  {
+   "name": "op_latency_class: thought under experiment",
+   "kind": "op_latency_class",
+   "input": {
+    "marker_kind": "thought",
+    "parent_kind": "experiment"
+   },
+   "expect": {
+    "edge": "event",
+    "seconds": 180.0
+   }
+  },
+  {
+   "name": "op_latency_class: None under None",
+   "kind": "op_latency_class",
+   "input": {
+    "marker_kind": null,
+    "parent_kind": null
+   },
+   "expect": {
+    "edge": "chat",
+    "seconds": 30.0
+   }
+  },
+  {
+   "name": "op_pass_grade: 'A'",
+   "kind": "op_pass_grade",
+   "input": {
+    "grade": "A"
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "name": "op_pass_grade: 'b'",
+   "kind": "op_pass_grade",
+   "input": {
+    "grade": "b"
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "name": "op_pass_grade: 'C'",
+   "kind": "op_pass_grade",
+   "input": {
+    "grade": "C"
+   },
+   "expect": {
+    "passed": true
+   }
+  },
+  {
+   "name": "op_pass_grade: 'D'",
+   "kind": "op_pass_grade",
+   "input": {
+    "grade": "D"
+   },
+   "expect": {
+    "passed": false
+   }
+  },
+  {
+   "name": "op_pass_grade: 'F'",
+   "kind": "op_pass_grade",
+   "input": {
+    "grade": "F"
+   },
+   "expect": {
+    "passed": false
+   }
+  },
+  {
+   "name": "op_pass_grade: None",
+   "kind": "op_pass_grade",
+   "input": {
+    "grade": null
+   },
+   "expect": {
+    "passed": false
+   }
+  },
+  {
+   "name": "op_pass_grade: ''",
+   "kind": "op_pass_grade",
+   "input": {
+    "grade": ""
+   },
+   "expect": {
+    "passed": false
+   }
+  },
+  {
+   "name": "op_measure_words: trust None",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "trust",
+    "value": null,
+    "num": 0,
+    "den": 0
+   },
+   "expect": {
+    "words": "trust: unknown \u2014 no graded yet (never a silent 1.0)"
+   }
+  },
+  {
+   "name": "op_measure_words: trust 0.5",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "trust",
+    "value": 0.5,
+    "num": 1,
+    "den": 2
+   },
+   "expect": {
+    "words": "trust: 0.5000 \u2014 1 of 2 graded replies passed"
+   }
+  },
+  {
+   "name": "op_measure_words: recall 1.0",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "recall",
+    "value": 1.0,
+    "num": 7,
+    "den": 7
+   },
+   "expect": {
+    "words": "recall: 1.0000 \u2014 7 of 7 served asks replayable by their marker chain"
+   }
+  },
+  {
+   "name": "op_measure_words: efficiency 0.75",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "efficiency",
+    "value": 0.75,
+    "num": 3,
+    "den": 4
+   },
+   "expect": {
+    "words": "efficiency: 0.7500 \u2014 3 of 4 serves inside their latency class"
+   }
+  },
+  {
+   "name": "op_measure_words: experience None",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "experience",
+    "value": null,
+    "num": 0,
+    "den": 0
+   },
+   "expect": {
+    "words": "experience: unknown \u2014 no thumbs given yet (never a silent 1.0)"
+   }
+  },
+  {
+   "name": "op_measure_words: experience 0.6667",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "experience",
+    "value": 0.6667,
+    "num": 2,
+    "den": 3
+   },
+   "expect": {
+    "words": "experience: 0.6667 \u2014 2 of 3 thumbs up"
+   }
+  },
+  {
+   "name": "op_measure_words: cost 0.25",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "cost",
+    "value": 0.25,
+    "num": 0.5,
+    "den": 2.0
+   },
+   "expect": {
+    "words": "cost: 0.2500 \u2014 $0.5000 of $2.0000 spend a serving ask can be named for"
+   }
+  },
+  {
+   "name": "op_measure_words: cost None",
+   "kind": "op_measure_words",
+   "input": {
+    "name": "cost",
+    "value": null,
+    "num": 0.0,
+    "den": 0.0
+   },
+   "expect": {
+    "words": "cost: unknown \u2014 no spend yet (never a silent 1.0)"
+   }
+  },
+  {
+   "name": "op_routes_to: None outbox_pending",
+   "kind": "op_routes_to",
+   "input": {
+    "watches": null,
+    "metric": "outbox_pending"
+   },
+   "expect": {
+    "routes": true
+   }
+  },
+  {
+   "name": "op_routes_to: None trust",
+   "kind": "op_routes_to",
+   "input": {
+    "watches": null,
+    "metric": "trust"
+   },
+   "expect": {
+    "routes": false
+   }
+  },
+  {
+   "name": "op_routes_to: ['trust', 'cost'] trust",
+   "kind": "op_routes_to",
+   "input": {
+    "watches": [
+     "trust",
+     "cost"
+    ],
+    "metric": "trust"
+   },
+   "expect": {
+    "routes": true
+   }
+  },
+  {
+   "name": "op_routes_to: ['trust', 'cost'] recall",
+   "kind": "op_routes_to",
+   "input": {
+    "watches": [
+     "trust",
+     "cost"
+    ],
+    "metric": "recall"
+   },
+   "expect": {
+    "routes": false
+   }
+  },
+  {
+   "name": "op_routes_to: ['trust', 'cost'] outbox_pending",
+   "kind": "op_routes_to",
+   "input": {
+    "watches": [
+     "trust",
+     "cost"
+    ],
+    "metric": "outbox_pending"
+   },
+   "expect": {
+    "routes": false
+   }
+  },
+  {
+   "name": "op_routes_to: [] trust",
+   "kind": "op_routes_to",
+   "input": {
+    "watches": [],
+    "metric": "trust"
+   },
+   "expect": {
+    "routes": false
+   }
+  },
+  {
+   "name": "op_routes_to: [] parked",
+   "kind": "op_routes_to",
+   "input": {
+    "watches": [],
+    "metric": "parked"
+   },
+   "expect": {
+    "routes": true
+   }
+  },
+  {
+   "name": "op_grade_of_live: 'grade: B \u2014 plain and com'",
+   "kind": "op_grade_of_live",
+   "input": {
+    "text": "grade: B \u2014 plain and complete"
+   },
+   "expect": {
+    "verdict": {
+     "grade": "B",
+     "line": "plain and complete"
+    }
+   }
+  },
+  {
+   "name": "op_grade_of_live: 'I decline.'",
+   "kind": "op_grade_of_live",
+   "input": {
+    "text": "I decline."
+   },
+   "expect": {
+    "verdict": {
+     "grade": null,
+     "line": null
+    }
+   }
+  },
+  {
+   "name": "op_grade_of_live: '**Grade: a**'",
+   "kind": "op_grade_of_live",
+   "input": {
+    "text": "**Grade: a**"
+   },
+   "expect": {
+    "verdict": {
+     "grade": "A",
+     "line": null
+    }
+   }
+  },
+  {
+   "name": "op_grade_of_live: '  grade : F \u2014 it answere'",
+   "kind": "op_grade_of_live",
+   "input": {
+    "text": "  grade : F \u2014 it answered another question\nmore"
+   },
+   "expect": {
+    "verdict": {
+     "grade": "F",
+     "line": "it answered another question"
+    }
+   }
+  },
+  {
+   "name": "op_grade_of_live: 'grade: C - short'",
+   "kind": "op_grade_of_live",
+   "input": {
+    "text": "grade: C - short"
+   },
+   "expect": {
+    "verdict": {
+     "grade": "C",
+     "line": "short"
+    }
+   }
+  },
+  {
+   "name": "op_grade_ask",
+   "kind": "op_grade_ask",
+   "input": {
+    "ask_id": "ask_1",
+    "who": "echo",
+    "text": "hello",
+    "reply": "hello"
+   },
+   "expect": {
+    "words": "grader, grade the reply ask_1 by echo. The ask: 'hello'. The reply: 'hello'. Grade the reply against the ask \u2014 did it do the right thing, completely and plainly? Answer in exactly this form, one line: `grade: <A-F> \u2014 <one line of reason>`. Never grade your own words."
+   }
+  },
+  {
+   "name": "op_proposal_words",
+   "kind": "op_proposal_words",
+   "input": {
+    "agent": "bob",
+    "name": "bob",
+    "kind": "template",
+    "marker": "mk_1"
+   },
+   "expect": {
+    "words": "proposed by the critic from marker mk_1 \u2014 for bob: the bob template"
+   }
+  },
+  {
+   "name": "op_summon_words: critic True ses_1",
+   "kind": "op_summon_words",
+   "input": {
+    "body": "critic",
+    "on": true,
+    "session": "ses_1"
+   },
+   "expect": {
+    "words": "critic summoned \u2014 it joins this session's crew: address it as \u201ccritic, \u2026\u201d; say \u201cdismiss critic\u201d to let it go \u00b7 recorded"
+   }
+  },
+  {
+   "name": "op_summon_words: critic False ses_1",
+   "kind": "op_summon_words",
+   "input": {
+    "body": "critic",
+    "on": false,
+    "session": "ses_1"
+   },
+   "expect": {
+    "words": "critic dismissed \u2014 it leaves this session's crew \u00b7 recorded, never deleted; say \u201csummon critic\u201d to call it back"
+   }
+  },
+  {
+   "name": "op_summon_words: bob True None",
+   "kind": "op_summon_words",
+   "input": {
+    "body": "bob",
+    "on": true,
+    "session": null
+   },
+   "expect": {
+    "words": "bob summoned \u2014 it joins your crew: address it as \u201cbob, \u2026\u201d; say \u201cdismiss bob\u201d to let it go \u00b7 recorded"
+   }
+  },
+  {
+   "name": "op_summon_words: bob False None",
+   "kind": "op_summon_words",
+   "input": {
+    "body": "bob",
+    "on": false,
+    "session": null
+   },
+   "expect": {
+    "words": "bob dismissed \u2014 it leaves your crew \u00b7 recorded, never deleted; say \u201csummon bob\u201d to call it back"
+   }
+  },
+  {
+   "name": "op_measurement_watch: trust",
+   "kind": "op_measurement_watch",
+   "input": {
+    "name": "trust"
+   },
+   "expect": {
+    "watch": {
+     "name": "trust",
+     "metric": "trust",
+     "op": "<",
+     "threshold": 1.0
+    }
+   }
+  },
+  {
+   "name": "op_measurement_watch: recall",
+   "kind": "op_measurement_watch",
+   "input": {
+    "name": "recall"
+   },
+   "expect": {
+    "watch": {
+     "name": "recall",
+     "metric": "recall",
+     "op": "<",
+     "threshold": 1.0
+    }
+   }
+  },
+  {
+   "name": "op_measurement_watch: efficiency",
+   "kind": "op_measurement_watch",
+   "input": {
+    "name": "efficiency"
+   },
+   "expect": {
+    "watch": {
+     "name": "efficiency",
+     "metric": "efficiency",
+     "op": "<",
+     "threshold": 1.0
+    }
+   }
+  },
+  {
+   "name": "op_measurement_watch: experience",
+   "kind": "op_measurement_watch",
+   "input": {
+    "name": "experience"
+   },
+   "expect": {
+    "watch": {
+     "name": "experience",
+     "metric": "experience",
+     "op": "<",
+     "threshold": 1.0
+    }
+   }
+  },
+  {
+   "name": "op_measurement_watch: cost",
+   "kind": "op_measurement_watch",
+   "input": {
+    "name": "cost"
+   },
+   "expect": {
+    "watch": {
+     "name": "cost",
+     "metric": "cost",
+     "op": "<",
+     "threshold": 1.0
+    }
+   }
+  },
+  {
+   "name": "op_import_words",
+   "kind": "op_import_words",
+   "input": {
+    "source": "bob-src",
+    "commit": "a1b2c3d4e5f6a7b8",
+    "entry": "bob.graph:build"
+   },
+   "expect": {
+    "words": "ran the imported graph bob-src at a1b2c3d4e5f6 \u2014 entry bob.graph:build"
+   }
+  },
+  {
+   "name": "op_operating: the kernel's second intention, as declared",
+   "kind": "op_operating",
+   "input": {},
+   "expect": {
+    "intention": {
+     "words": "keep this world's operating state at 1.0 \u2014 Trust \u00b7 Recall \u00b7 Efficiency \u00b7 Experience \u00b7 Cost: when a measurement goes red, get it green",
+     "serves": "operating-state",
+     "interests": [
+      "watch-red"
+     ],
+     "planner": "planner",
+     "runner": "critic",
+     "watches": [
+      "trust",
+      "recall",
+      "efficiency",
+      "experience",
+      "cost"
+     ]
+    },
+    "measurements": [
+     "trust",
+     "recall",
+     "efficiency",
+     "experience",
+     "cost"
+    ],
+    "serves": "operating-state",
+    "target": 1.0,
+    "op": "<",
+    "pass": [
+     "A",
+     "B",
+     "C"
+    ]
+   }
+  }
+ ]
+}

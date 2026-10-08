@@ -30,6 +30,7 @@ COMMAND_HEADS = (
     "librarian's fuel", "echo, every", "propose a watch", "watch for",
     "open the workshop", "close the workshop", "load ", "workshop,",            # Phase 8 sp3: THE WORKSHOP
     "promote ", "decline the ", "rest ", "decommission ",                       # Phase 8 sp4: THE EXPERIMENT AND THE CUT
+    "dismiss ", "register the source",                                           # Phase 8 sp5: THE OPERATING STATE
 )
 # lines the glass hears through a body or a door, not a parser — named, never silently skipped
 BODY_OR_DOOR = (

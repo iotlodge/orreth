@@ -469,6 +469,24 @@ def _draft_tool(args: dict, conn) -> str:
             + f"; the cut is the human's: say “cut the {name} draft”")
 
 
+def _propose_tool(args: dict, conn) -> str:
+    """Phase 8 sp5, THE OPERATING STATE: the critic's one tool — a DRAFT proposed under the OWNER of the
+    body it is for, marked with the marker it came from ("proposed by the critic from marker X").
+    Routine (L1): a draft is private state under the owner's seat; the owner opens it in the Workshop
+    and cuts it; the Experiment judges it. Raw feedback never reaches a body — a proposal does."""
+    from . import crafts, operating
+    body = args.get("body")
+    if isinstance(body, str):
+        body = json.loads(body)
+    made = operating.propose(conn, by=args.get("_by") or "the critic", agent=str(args.get("for") or ""),
+                             kind=str(args.get("kind") or ""), name=str(args.get("name") or ""), body=body or {},
+                             words=args.get("words"), marker=args.get("_parent"))
+    v = crafts.validate(str(args.get("kind") or ""), made["draft"]["body"])
+    return (f"proposed the {args.get('name')} {args.get('kind')} draft ({made['draft']['draft_id']}) under {made['owner']}'s seat — "
+            + ("it reads whole" if v["ok"] else f"not whole yet: {v['reason']}")
+            + f"; {made['words']}; the owner opens it in the Workshop and cuts it; the Experiment judges it")
+
+
 def _seal_record(args: dict) -> str:
     """A deliberately consequential test act: 'seal' a note so it can
     never be edited — the interlock's proving ground."""
@@ -510,6 +528,8 @@ _BODIES: dict[str, dict] = {
     },
     # Phase 8 sp3: the Workshop agent's one tool — a draft under the human's seat (routine, L1)
     "draft": {"fn": _draft_tool},
+    # Phase 8 sp5: the critic's one tool — a draft proposed under the agent's owner (routine, L1)
+    "propose": {"fn": _propose_tool},
     # P6.5 sp2: the Tools keeper's one tool — the shelf tended on the human's word
     "services": {"fn": _services_tool, "words_by": _services_words},        # W30: the interlock names the act
     # P6.5 sp3: the Stable keeper's one tool — the minds tended on the human's word

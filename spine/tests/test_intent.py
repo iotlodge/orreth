@@ -273,8 +273,11 @@ def test_the_intent_doors_and_the_rail_in_the_rig(pg, rig):
         time.sleep(0.2)                                              # on a fresh ground
     print(f"\nthe rail declared Resiliency {time.perf_counter() - t0:.1f}s after the rig was ready")
     assert ints, "the intent rail never declared Resiliency in the rig's world"
-    [res] = ints
-    assert res["words"].startswith("keep this world resilient") and res["active"] and res["runner"] == "librarian"
+    res = next(i for i in ints if i["words"].startswith("keep this world resilient"))   # Phase 8 sp5: THE OPERATING STATE stands beside it
+    assert res["active"] and res["runner"] == "librarian" and res["watches"] is None
+    ops = next(i for i in ints if i["serves"] == "operating-state")
+    assert ops["words"].startswith("keep this world's operating state at 1.0") and ops["runner"] == "critic"
+    assert ops["watches"] == ["trust", "recall", "efficiency", "experience", "cost"]
     origins = get("/analyzer")["origins"]
     [o] = [o for o in origins if o["ref"] == res["intention_id"]]
     assert o["kind"] == "intention" and o["origin_kind"] == "kernel" and o["active"] is True

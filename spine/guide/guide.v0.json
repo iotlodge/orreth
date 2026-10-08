@@ -1,6 +1,6 @@
 {
  "format": "orreth-guide/1",
- "version": "0.9.0",
+ "version": "0.10.0",
  "title": "THE GUIDE · what you can say here, and what happens",
  "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
  "sections": [
@@ -549,6 +549,34 @@
     {
      "say": "restore bob",
      "does": "A NEW life from the shelf's standing version of bob's template, on its seat — never a revival; held at L2. Refused while the template is retired (say “restore the bob template” first)."
+    }
+   ]
+  },
+  {
+   "id": "operating-state",
+   "when": "monitor",
+   "title": "The Operating State — the five measurements, the kernel's watches and intention on them, thumbs, summon, the critic's proposals, a repo'd graph",
+   "lead": "THE OPERATING STATE is the kernel's scorecard: five measurements, each 1.0 at the ideal, read live and shown on the MONITOR pull as MEASUREMENTS — TRUST (graded live replies that passed), RECALL (served asks replayable by their marker chain), EFFICIENCY (serves inside their latency class: a chat ask 30 s, work and events 180 s), EXPERIENCE (thumbs up over thumbs given), COST (spend a serving ask can be named for). These are v0 coverage ratios, said as such. A measurement reads UNKNOWN while nothing is there to measure — never a silent 1.0 — and an unknown turns no watch red. The kernel watches each (red below 1.0) and holds ONE intention on them, THE OPERATING STATE, beside Resiliency: the watch is the discriminator — the measurements' reds reach the Operating State, every other red Resiliency. The grader hears every live reply: a few per minute, under a grading marker beneath the reply's own ask, and signs its verdict — Trust reads it. Raw feedback never reaches a body: your thumbs feed Experience and the grader's evidence; an improvement marked on a body's reply reaches the critic, whose PROPOSE tool lands a draft under that body's owner, who cuts it in the Workshop and lets the Experiment judge it.",
+   "entries": [
+    {
+     "say": "show the measurements · open the monitor",
+     "does": "The MEASUREMENTS card on the Monitor pull: each of the five with its value (or unknown) and its words — how many of what over how many of what."
+    },
+    {
+     "say": "(click 👍 or 👎 under a reply)",
+     "does": "A thumb on that reply — routine, recorded under your seat (a fact). It feeds the Experience measurement and the grader's evidence; it never reaches the body that answered."
+    },
+    {
+     "say": "summon critic · dismiss critic · summon bob",
+     "does": "Summon generalized from MITL's toggle: any body whose template declares `summonable: true` (the planner, the critic and the grader do; an agent's template may) joins this session's crew on your word and leaves it on your word — both recorded. A summoned body's asks are an include's thoughts under the session's objective. MITL keeps its own word (“summon MITL”); a helper is never summoned."
+    },
+    {
+     "say": "load my echo draft in the workshop",
+     "does": "When the critic proposed a draft for a body you own, the chat says so and the draft stands under YOUR DRAFTS, marked “proposed by the critic from marker …”. Read it, cut it (“cut the echo draft”), and — for an agent — the Experiment judges it."
+    },
+    {
+     "say": "register the source bob-src from https://github.com/x/bob at a1b2c3d4e5f6 entry bob.graph:build",
+     "does": "A repo'd source on the shelf (through the shelf door, as any service). A graph node of kind `import` naming it runs the repo's entry inside the hull — fetched once under the body's home at that commit; a compiled LangGraph or a callable of the words — in a dev universe only (a prod universe refuses in words)."
     }
    ]
   }
