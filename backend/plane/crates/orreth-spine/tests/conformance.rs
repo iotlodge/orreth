@@ -11,6 +11,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: `schema_version` · `schema_tables` (the migrator's contract) · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp3: THE ERA — `VERSION` and the crate wear one number · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: `watch_metrics` · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): `seats_budget` · `seat_honor` · `ground_watch` · 2026-10-08
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W92: not_a_plan pinned · 2026-10-02
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: the levels' eleven kinds (levels-v0) · 2026-10-05
 //! The Rust conformance runner (canon 0008 · P7 sp1): every fixture under
@@ -90,6 +91,10 @@ const PORTED_KINDS: &[&str] = &[
     "verdict",
     "profile",
     "honor",
+    // the ground connections cure (2026-10-08): the seats budget, the seat rule, the kernel's sixth watch
+    "seats_budget",
+    "seat_honor",
+    "ground_watch",
     "rail_names",
     // Phase 8 sp1, THE PATH (levels-v0)
     "path_parse",
@@ -774,6 +779,28 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 "honored · reasons"
             );
             same!(placement::why_here(&prof, &ground), s(&exp["why"]), "why");
+        }
+        // ---- the ground connections cure (2026-10-08): the seats budget and the seat rule ----
+        "seats_budget" => {
+            let got = placement::seats_budget(
+                inp["ceiling"].as_i64().unwrap(),
+                inp["reserve"].as_i64().unwrap(),
+                inp["per_body"].as_i64().unwrap(),
+            );
+            same!(json!(got), exp["seats"], "seats");
+        }
+        "seat_honor" => {
+            let c = placement::Connections::from_value(&inp["connections"]).map_err(|e| e.to_string())?;
+            let (ok, reasons) = placement::seat_honor(&c, inp["seated"].as_i64().unwrap());
+            same!(
+                (ok, reasons),
+                (exp["honored"].as_bool().unwrap(), strings(&exp["reasons"])),
+                "honored · reasons"
+            );
+        }
+        "ground_watch" => {
+            let c = placement::Connections::from_value(&inp["connections"]).map_err(|e| e.to_string())?;
+            same!(operating::ground_watch(&c), exp["watch"], "the ground's watch");
         }
         // ---- orreth.rails/1 (P7 sp2): the rails' names and shapes — what the ground and rails stand on ----
         // ---- Phase 8 sp2, THE SHELF WIDENED: the crafts' laws (crafts-v0) ----

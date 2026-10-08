@@ -85,8 +85,8 @@ def test_the_five_are_measured_watched_and_owned_by_the_operating_state(pg, monk
     m = op.measure(pg)
     assert [m[k]["value"] for k in op.MEASUREMENTS] == [None, None, None, None, None]
     assert m["experience"]["words"] == "experience: unknown — no thumbs given yet (never a silent 1.0)"
-    # the kernel's five watches and THE OPERATING STATE, once per world
-    assert op.watches_at_light(pg) == list(op.MEASUREMENTS) and op.watches_at_light(pg) == []
+    # the kernel's five watches — and the ground's (the cure, 2026-10-08) — and THE OPERATING STATE, once per world
+    assert op.watches_at_light(pg) == list(op.MEASUREMENTS) + [op.GROUND_WATCH] and op.watches_at_light(pg) == []
     res = intent.declared(pg, intent.RESILIENCY["words"], serves="resiliency", kind="kernel", by="the kernel",
                           interests=intent.RESILIENCY["interests"], planner="planner", runner="librarian")
     ops = op.intention_at_light(pg)

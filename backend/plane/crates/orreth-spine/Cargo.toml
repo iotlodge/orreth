@@ -93,6 +93,10 @@ required-features = ["bridge"]
 name = "operating"
 required-features = ["bridge"]
 
+[[test]]
+name = "connections"
+required-features = ["bridge"]
+
 # re-base sp2 (2026-09-29): the kernel's binary is `orrethd` — the old `orrethd` crate retired, the name re-based here.
 [[bin]]
 name = "orrethd"

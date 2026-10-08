@@ -12,6 +12,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — schema 4: an ask's resent_at (W91 THE BENCH SWEEP) · 2026-10-02
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a body's own scope path (`scope`), its join and facts wearing it, the crew read within the universe, the seat words naming the level · 2026-10-05
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp2 THE SHELF WIDENED: THE HULL — hear → recall → route → chat · work · event → the work node, the template's `graph` component finally read; the wear rows at the join · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (JB's word 2026-10-08): a body holds a ground line only while it SERVES (`hold_line` · `release_line`), its working memory's line with it; the lease kept on a cadence; the seat budget honoured at the join · 2026-10-08
 """The resident body v0 (canon 0004): one governed body for every mind.
 
 Born from a versioned TEMPLATE artifact; the SAME identity in every life
@@ -357,13 +358,22 @@ class Resident:
         # back to its deterministic graph — there is no unmetered door
         self.gateway = gateway if self.template.get("mind") else None
         self._serve_conn = None
+        # the cure (2026-10-08): THE LINE — the ground connection this body holds while it serves and
+        # for a short idle after, opened when a command lands on its bench, let go by `release_line`;
+        # an idle body holds none (the ground's connections follow the SERVES, never the seats)
+        self._line = None            # the held psycopg connection, or None
+        self._line_dsn = None
+        self._line_last = 0.0        # monotonic: when the line last served
+        self._lease_at = 0.0         # monotonic: when the lease was last renewed
         self._current_ask = None
         self._current_marker = None  # the ask's marker: WHY this serve (0006)
         self._experiment = None      # Phase 8 sp4: the Experiment this serve reviews, when it does
         self._grading = None         # Phase 8 sp5: the live reply this serve grades, when it does
         self._current_chain = None   # the chain the serve command arrived with (AG-7)
         self._state = "in"
-        self._ckpt_graph = None      # the checkpointed graph, one per life
+        self._ckpt_graph = None      # the checkpointed graph, one per LINE (the cure: its connection opens and closes with the serve window)
+        self._ckpt_conn = None       # the working memory's own connection, closed with the line
+        self._ckpt_setup = False     # the saver's migrations run once per life — the rows outlive every line
         # on_delta(ask_id, text): the rig wires this to the glass feed —
         # words stream to the human as they form; glass-bound only, the
         # broker never carries a delta, the door still serves the truth
@@ -395,8 +405,15 @@ class Resident:
         # P6 sp4: placement is policy — the ground declares what it is and
         # a body it cannot seat is REFUSED with the reason, a recorded fact,
         # never started; the same self stands refused (rule 1)
-        ground = _placement.ground_declares()
+        ground = _placement.ground_declares(conn=conn)
         ok, reasons = _placement.honor(self.placement, ground)
+        if ok:
+            # the cure (2026-10-08): THE SEAT BUDGET — the ground declares how many bodies may stand on it
+            # so that every one could serve at once; the next past that is refused here, in words, never
+            # started (the same recorded refusal). This self's own standing lease never counts against it.
+            from . import presence as _presence
+            ok, reasons = _placement.seat_honor(ground["connections"],
+                                                _presence.seated_now(conn, exclude_did=self.identity.did))
         if not ok:
             _placement.refuse(conn, self, self.placement, ground, reasons)
             raise PlacementRefused(self.name, reasons)
@@ -1043,15 +1060,84 @@ class Resident:
             return
         import psycopg
         from langgraph.checkpoint.postgres import PostgresSaver
+        # the cure (2026-10-08): the saver's line is opened for THIS serve window and closed with
+        # the body's line (`release_line`); the checkpoints are rows and outlive every line — only
+        # the connection comes and goes. The migrations run once per life.
         own = psycopg.connect(conn.info.dsn, password=conn.info.password,
-                              autocommit=True)
+                              autocommit=True, application_name=f"orreth body {self.name} memory")
         saver = PostgresSaver(own)
-        own.execute("SELECT pg_advisory_lock(742199)")      # the DDL guard, session-
-        try:                                                # scoped: the saver's
-            saver.setup()                                   # migrations commit on
-        finally:                                            # their own
-            own.execute("SELECT pg_advisory_unlock(742199)")
+        if not self._ckpt_setup:
+            own.execute("SELECT pg_advisory_lock(742199)")      # the DDL guard, session-
+            try:                                                # scoped: the saver's
+                saver.setup()                                   # migrations commit on
+            finally:                                            # their own
+                own.execute("SELECT pg_advisory_unlock(742199)")
+            self._ckpt_setup = True
+        self._ckpt_conn = own
         self._ckpt_graph = self._build_graph(saver)
+
+    # ---- the line (the ground connections cure, 2026-10-08) ------------------------------
+
+    def hold_line(self, dsn: str | None = None):
+        """The ground connection this body serves on — opened now if it holds none (named on the
+        ground as `orreth body <name>`), the same one while it stands. A body holds a line only
+        while it serves: the ground's connections follow the SERVES, never the seated crew."""
+        import psycopg
+        if self._line is not None and not self._line.closed:
+            self._line_last = time.monotonic()
+            return self._line
+        self._line_dsn = dsn or self._line_dsn
+        if not self._line_dsn:
+            from .rails import PG_DSN
+            self._line_dsn = PG_DSN
+        self._line = psycopg.connect(self._line_dsn, autocommit=True, application_name=f"orreth body {self.name}")
+        self._line_last = time.monotonic()
+        return self._line
+
+    def holds_line(self) -> bool:
+        return self._line is not None and not self._line.closed
+
+    def release_line(self, idle_s: float = 0.0) -> bool:
+        """Let the line go once it has served nothing for `idle_s` (0: now) — and the working
+        memory's line with it. True when a line was closed. The next command opens a fresh one."""
+        if not self.holds_line():
+            return False
+        if idle_s > 0 and time.monotonic() - self._line_last < idle_s:
+            return False
+        for c in (self._ckpt_conn, self._line):
+            try:
+                if c is not None:
+                    c.close()
+            except Exception:                              # noqa: BLE001 — a line already gone is gone
+                pass
+        self._ckpt_conn, self._ckpt_graph = None, None
+        self._line = None
+        if self._serve_conn is not None and getattr(self._serve_conn, "closed", False):
+            self._serve_conn = None
+        return True
+
+    def keep_lease(self, dsn: str | None = None, every_s: float | None = None) -> bool:
+        """The body's presence, kept on a cadence (M2): renewed every `every_s` (`presence.RENEW_S`)
+        — on the held line while the body serves, else on a line opened for the renew and closed
+        with it, so an idle body holds nothing between renews. True when renewed now."""
+        import psycopg
+        from . import presence
+        every = presence.RENEW_S if every_s is None else float(every_s)
+        now = time.monotonic()
+        if now - self._lease_at < every:
+            return False
+        if self.holds_line():
+            presence.renew(self._line, self.identity.did, self.name, self.kind, scope=self.scope)
+        else:
+            dsn = dsn or self._line_dsn
+            if not dsn:
+                from .rails import PG_DSN
+                dsn = PG_DSN
+            self._line_dsn = dsn
+            with psycopg.connect(dsn, autocommit=True, application_name=f"orreth body {self.name} lease") as brief:
+                presence.renew(brief, self.identity.did, self.name, self.kind, scope=self.scope)
+        self._lease_at = now
+        return True
 
     # ---- service --------------------------------------------------------------
 
@@ -1259,10 +1345,9 @@ class Resident:
                  "Cancelled — nothing was done. Cancel is always the "
                  "default here."), full_chain, status="cancelled")
 
-    def serve_once(self, conn, *, rabbit_url: str | None = None,
-                   idle_s: float = 5.0, max_commands: int = 50) -> dict:
-        """Consume the invocation rail: effect + events in one
-        transaction through the durable inbox, ACK only after commit."""
+    def _stand_on(self, conn) -> None:
+        """Every ground ensured on this connection (once per ground, per process — `outbox.once`),
+        the serving connection remembered, the working memory prepared on it."""
         ensure_schema(conn)
         inbox.ensure_schema(conn)
         outbox.ensure_schema(conn)
@@ -1279,6 +1364,21 @@ class Resident:
             self.prepare(conn)         # MEM-2: working memory on the ground
         except Exception:
             self._ckpt_graph = None    # a ground without it still serves
+
+    def serve_once(self, conn=None, *, rabbit_url: str | None = None,
+                   idle_s: float = 5.0, max_commands: int = 50) -> dict:
+        """Consume the invocation rail: effect + events in one
+        transaction through the durable inbox, ACK only after commit.
+
+        `conn` None (the cure, 2026-10-08): the body polls its bench holding NO
+        ground connection and takes its line (`hold_line`) only when a command
+        lands — the ground's connections follow the serves. A connection given
+        is stood on as before (the reference's tests, the harness)."""
+        if conn is not None:
+            self._stand_on(conn)
+        elif self.holds_line():
+            conn = self._line
+            self._stand_on(conn)
         rc = pika.BlockingConnection(
             pika.URLParameters(rabbit_url or RABBIT_URL))
         tally = {"served": 0, "absorbed": 0}
@@ -1307,6 +1407,10 @@ class Resident:
                     time.sleep(0.05)
                     continue
                 deadline = time.monotonic() + idle_s
+                if conn is None:                            # the cure: a command landed — the line is held now
+                    conn = self.hold_line()
+                    self._stand_on(conn)
+                self._line_last = time.monotonic()
                 env = ev.decode(body)
                 ask_id = str((env.get("payload") or {}).get("ref") or "")
                 chain = env.get("authority_chain") or []

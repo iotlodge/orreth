@@ -1,5 +1,6 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15, W54: the default cell means wherever this ground stands · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (JB's word 2026-10-08): the ground's CONNECTIONS budget — `seats_budget` · `seat_honor` — the pure half of the seat rule · 2026-10-08
 //! `orreth.placement/1` — the pure half of `orreth_spine.placement`: a
 //! template's placement with the defaults applied, the honor rule (honored
 //! iff the cell is this ground's, the metal is here or `any`, and every named
@@ -14,6 +15,15 @@ use std::fmt;
 pub const METALS: [&str; 3] = ["any", "cpu", "gpu"];
 pub const DEFAULT_CELL: &str = "local";
 pub const DEFAULT_METAL: &str = "any";
+// the ground connections cure (2026-10-08) — `placement.CEILING_DEFAULT` · `RESERVE_DEFAULT` · `LINES_PER_BODY`
+/// Postgres's stock `max_connections` — what a ground answers before anyone tunes it.
+pub const CEILING_DEFAULT: i64 = 100;
+/// The kernel's own lines: a door pool of 16 · the rails' loops · Postgres's 3 for its superuser · a person's tools.
+pub const RESERVE_DEFAULT: i64 = 30;
+/// A SERVING body holds its serve line and its working memory's line; an idle body holds none.
+pub const LINES_PER_BODY: i64 = 2;
+pub const CONNECTIONS_DIAL: &str = "SPINE_GROUND_CONNECTIONS";
+pub const RESERVE_DIAL: &str = "SPINE_GROUND_RESERVE";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PlacementError {
@@ -139,6 +149,92 @@ pub fn profile(template: &Value) -> Result<Profile, PlacementError> {
     Ok(p)
 }
 
+/// The ground's CONNECTIONS budget as it declares it (the cure, 2026-10-08) — `placement.connections_declared`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Connections {
+    pub ceiling: i64,
+    pub reserve: i64,
+    pub per_body: i64,
+    pub seats: i64,
+}
+
+impl Connections {
+    /// The budget from a ceiling and a reserve (the seats follow).
+    pub fn new(ceiling: i64, reserve: i64) -> Connections {
+        Connections {
+            ceiling,
+            reserve,
+            per_body: LINES_PER_BODY,
+            seats: seats_budget(ceiling, reserve, LINES_PER_BODY),
+        }
+    }
+
+    /// The budget the dials and the ground's own ceiling declare: the LESSER of
+    /// `SPINE_GROUND_CONNECTIONS` and `max_connections` when both are said (a dial may narrow
+    /// the ground, never widen it), else 100; the reserve `SPINE_GROUND_RESERVE`, else 30.
+    pub fn declared(max_connections: Option<i64>) -> Connections {
+        let dial = |name: &str| {
+            std::env::var(name)
+                .ok()
+                .and_then(|v| v.trim().parse::<i64>().ok())
+                .filter(|n| *n > 0)
+        };
+        let said: Vec<i64> = [dial(CONNECTIONS_DIAL), max_connections.filter(|n| *n > 0)]
+            .into_iter()
+            .flatten()
+            .collect();
+        let ceiling = said.into_iter().min().unwrap_or(CEILING_DEFAULT);
+        Connections::new(ceiling, dial(RESERVE_DIAL).unwrap_or(RESERVE_DEFAULT))
+    }
+
+    pub fn to_value(&self) -> Value {
+        json!({"ceiling": self.ceiling, "reserve": self.reserve, "per_body": self.per_body, "seats": self.seats})
+    }
+
+    pub fn from_value(v: &Value) -> Result<Connections, PlacementError> {
+        let int = |field: &str| {
+            get(v, field)
+                .as_i64()
+                .ok_or_else(|| PlacementError::Shape(format!("{field} is a number")))
+        };
+        Ok(Connections {
+            ceiling: int("ceiling")?,
+            reserve: int("reserve")?,
+            per_body: int("per_body")?,
+            seats: int("seats")?,
+        })
+    }
+}
+
+/// THE SEATS (`placement.seats_budget`): how many bodies may stand here so that every one of
+/// them could serve at once — the ceiling less the kernel's reserve, in lines per serving body;
+/// never below zero.
+pub fn seats_budget(ceiling: i64, reserve: i64, per_body: i64) -> i64 {
+    ((ceiling - reserve) / per_body.max(1)).max(0)
+}
+
+/// The seat rule (`placement.seat_honor`): a body may be seated iff fewer bodies than the
+/// budget stand alive here now; the one reason in a newcomer's words.
+pub fn seat_honor(c: &Connections, seated: i64) -> (bool, Vec<String>) {
+    if seated < c.seats {
+        return (true, Vec::new());
+    }
+    (
+        false,
+        vec![format!(
+            "the ground seats {} bod{} at once — its ceiling of {} connections less the kernel's {}, {} lines per \
+             serving body — and {} {} seated already",
+            c.seats,
+            if c.seats == 1 { "y" } else { "ies" },
+            c.ceiling,
+            c.reserve,
+            c.per_body,
+            seated,
+            if seated == 1 { "is" } else { "are" }
+        )],
+    )
+}
+
 /// The rule: honored iff the cell is this ground's, the metal is here (or
 /// `any`), and every named secret is reachable. Every unmet clause is named,
 /// cell then metal then each secret — the owner learns why.
@@ -216,6 +312,19 @@ mod tests {
             PlacementError::NotAPlacement
         );
         assert!(profile(&json!({"placement": {"affinity": "echo"}})).is_err());
+    }
+
+    #[test]
+    fn the_seats_follow_the_ceiling() {
+        assert_eq!(seats_budget(100, 30, 2), 35);
+        assert_eq!(seats_budget(20, 30, 2), 0);
+        let c = Connections::new(32, 30);
+        assert_eq!(c.seats, 1);
+        assert_eq!(seat_honor(&c, 0), (true, vec![]));
+        assert_eq!(
+            seat_honor(&c, 1),
+            (false, vec!["the ground seats 1 body at once — its ceiling of 32 connections less the kernel's 30, 2 lines per serving body — and 1 is seated already".to_string()])
+        );
     }
 
     #[test]

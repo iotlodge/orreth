@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE LEASE FACTS — `orreth.lease.lapsed.v1` · `orreth.lease.seated.v1` minted by the sweep, noted on the ground (`noted_alive`) · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W85): ONE NAME, ONE SELF — the roster folded one row per name, the earlier selves counted · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a lease wears the body's level; the roster and the sweep see every level within the universe · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): `RENEW_S` — a body renews on a cadence, not every pass; `seated_now` counts the bodies alive for the seat budget · 2026-10-08
 """Presence leases (canon 0002 M2): a body is ALIVE while its lease is
 fresh — it renews as it serves; a body that stops renewing goes DORMANT
 in seconds and stays listed (the roster breathes; nothing is deleted).
@@ -16,6 +17,8 @@ LEASE_LAPSED = "orreth.lease.lapsed.v1"       # alive → dormant: the body stop
 LEASE_SEATED = "orreth.lease.seated.v1"       # dormant → alive: the body serves again (or first seated)
 KERNEL = "the kernel"
 SWEEP_S = 5                                   # the sweep's cadence — a third of the lease's life
+RENEW_S = 5                                   # the cure (2026-10-08): a body renews every RENEW_S, never every pass — an idle body
+                                              # opens a line for the renew and closes it; a serving body renews on its serve line
 
 
 def ensure_schema(conn) -> None:
@@ -47,6 +50,17 @@ def renew(conn, did: str, name: str, kind: str, ttl_s: int = TTL_S, scope: str |
             " ON CONFLICT (did) DO UPDATE SET until = EXCLUDED.until,"
             " renewed_at = now(), name = EXCLUDED.name, kind = EXCLUDED.kind",
             (did, name, kind, scope or ev.scope(), ttl_s))
+
+
+def seated_now(conn, exclude_did: str | None = None) -> int:
+    """The bodies ALIVE in this universe right now — the selves whose lease is fresh — less
+    one self when asked (a body re-joining as its next life never counts itself). The seat
+    budget's denominator (the cure, 2026-10-08)."""
+    ensure_schema(conn)
+    cur = conn.cursor()
+    cur.execute(f"SELECT count(*) FROM spine_leases WHERE {ev.WITHIN} AND until > now() AND did <> %s",
+                (*ev.within_params(ev.universe()), exclude_did or ""))
+    return int(cur.fetchone()[0])
 
 
 def roster(conn) -> list[dict]:

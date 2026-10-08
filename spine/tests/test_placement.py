@@ -130,7 +130,8 @@ def test_a_body_the_ground_cannot_seat_is_refused_with_the_reason_and_the_rest_s
     [fact] = _events(pg, body.identity.did)
     assert fact["type"] == placement.REFUSED and fact["authority_chain"] == ["the kernel"]
     assert fact["payload"]["reasons"] == e.value.reasons and fact["payload"]["name"] == "gpu-body"
-    assert fact["payload"]["placement"] == body.placement and fact["payload"]["ground"] == {"cell": "local", "metal": "cpu"}
+    assert fact["payload"]["placement"] == body.placement and fact["payload"]["ground"] == {
+        "cell": "local", "metal": "cpu", "seats": placement.connections_declared(conn=pg)["seats"]}   # the cure: the seats said
     assert fact["marker"]["kind"] == "observation" and fact["marker"]["by"] == "the kernel"
     assert markers.get(pg, fact["marker"]["id"])["note"].startswith("gpu-body refused at birth — cell")
     # the same self stands refused twice (rule 1) — two facts, one DID

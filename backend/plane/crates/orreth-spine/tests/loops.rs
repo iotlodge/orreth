@@ -25,6 +25,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 3c: the planner reads the dossier · 2026-09-27
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: the pool reuses its lines · the doors timed on both kernels · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: the proof's world pruned from the ground at its end (`ground::prune_scope`) · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): re-pinned to the two kernel intentions sp5 declares (Resiliency · the Operating State) · 2026-10-08
 
 #![cfg(feature = "bridge")]
 
@@ -310,13 +311,19 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
     // ---- Resiliency: declared once per world, by whichever kernel came first
     let (_, ints) = get(rs_port, "/intentions?kind=kernel").await;
     let kernel_ints: Vec<&Value> = ints["intentions"].as_array().unwrap().iter().collect();
+    // Phase 8 sp5: TWO kernel intentions — Resiliency and THE OPERATING STATE — each declared once per
+    // world by whichever kernel came first, never doubled (re-pinned with the ground connections cure, 2026-10-08)
     assert_eq!(
         kernel_ints.len(),
-        1,
-        "one Resiliency, never doubled: {ints}"
+        2,
+        "Resiliency and the Operating State, never doubled: {ints}"
     );
-    let res_id = kernel_ints[0]["intention_id"].as_str().unwrap().to_string();
-    assert!(kernel_ints[0]["words"]
+    let resiliency = kernel_ints
+        .iter()
+        .find(|i| i["serves"] == json!("resiliency"))
+        .unwrap_or_else(|| panic!("Resiliency stands among the kernel's intentions: {ints}"));
+    let res_id = resiliency["intention_id"].as_str().unwrap().to_string();
+    assert!(resiliency["words"]
         .as_str()
         .unwrap()
         .starts_with("keep this world resilient"));
@@ -509,16 +516,39 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
     let (s, mon) = get(rs_port, "/monitor").await;
     assert_eq!(s, 200);
     let (_, mon_py) = get(py_port, "/monitor").await;
+    // the ground connections cure (2026-10-08): `ground_connections` is read at the instant of each knock and the
+    // reference opens a connection per knock — that one value moves between two reads; every other watch is equal
+    let still = |ws: &Value| -> Vec<Value> {
+        ws.as_array()
+            .unwrap()
+            .iter()
+            .filter(|w| w["metric"] != json!("ground_connections"))
+            .cloned()
+            .collect()
+    };
     assert_eq!(
-        mon["watches"], mon_py["watches"],
+        still(&mon["watches"]),
+        still(&mon_py["watches"]),
         "the watches, equal on both doors"
+    );
+    assert!(
+        mon["watches"].as_array().unwrap().iter().any(|w| w["metric"] == json!("ground_connections"))
+            && mon_py["watches"].as_array().unwrap().iter().any(|w| w["metric"] == json!("ground_connections")),
+        "the ground's watch stands on both doors"
     );
     assert_eq!(
         mon["values"]["bodies_alive"],
         mon_py["values"]["bodies_alive"]
     );
     assert_eq!(mon["world"], json!(world.scope));
-    let w0 = &mon["watches"][0];
+    // Phase 8 sp5 declares the kernel's own watches at light, so this proof's watch is no longer the first row:
+    // it is found by its metric (re-pinned with the ground connections cure, 2026-10-08)
+    let w0 = mon["watches"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|w| w["metric"] == json!("bodies_alive"))
+        .unwrap_or_else(|| panic!("the proof's own watch stands: {}", mon["watches"]));
     assert_eq!(
         (w0["state"].clone(), w0["red"].clone()),
         (json!("red"), json!(true))
@@ -545,9 +575,11 @@ async fn shadow_two_kernels_beat_on_one_ground_one_beat_at_a_time() {
         pool["borrowed_total"].as_u64().unwrap(),
         pool["ceiling"].as_u64().unwrap(),
     );
+    // the cure (2026-10-08): a line shed when idle is opened again on the next knock — counted, never past the ceiling at once
+    let shed = pool["shed_total"].as_u64().unwrap_or(0);
     assert!(
-        opened <= ceiling && borrowed > opened,
-        "lines reused: opened {opened} of {ceiling}, borrowed {borrowed}"
+        opened <= ceiling + shed && borrowed > opened,
+        "lines reused: opened {opened} of {ceiling} (+{shed} shed), borrowed {borrowed}"
     );
     assert_eq!(pool["waiting"], json!(0));
     assert!(

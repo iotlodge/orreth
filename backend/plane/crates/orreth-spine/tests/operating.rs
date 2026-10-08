@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE WORKSHOP sp5, THE OPERATING STATE: the proof on the rig · 2026-10-08
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): the kernel's sixth watch beside the five · 2026-10-08
 //! THE OPERATING STATE'S PROOF (canon 0010 §7 · 0005 Phase 8 sp5), on the dev rig, by name:
 //!
 //!     cargo test -p orreth-spine --features bridge --test operating -- --nocapture
@@ -155,11 +156,16 @@ async fn the_operating_state_is_measured_watched_and_the_grader_hears_live_repli
     assert_eq!(ops["runner"], json!("critic"));
     let res = ints["intentions"].as_array().unwrap().iter().find(|i| i["serves"] == json!("resiliency")).unwrap();
     assert!(res["watches"].is_null());
+    // the ground connections cure (2026-10-08): the kernel's SIXTH watch, the ground's, stands beside the five
     let snap = wait_for(port, "/monitor", &jb_wire, Duration::from_secs(60), |v| {
-        v["watches"].as_array().is_some_and(|a| a.iter().filter(|w| w["added_by"] == json!("the kernel")).count() == 5)
+        v["watches"].as_array().is_some_and(|a| a.iter().filter(|w| w["added_by"] == json!("the kernel")).count() == 6)
     })
     .await;
-    let five: Vec<&Value> = snap["watches"].as_array().unwrap().iter().filter(|w| w["added_by"] == json!("the kernel")).collect();
+    let kernels: Vec<&Value> = snap["watches"].as_array().unwrap().iter().filter(|w| w["added_by"] == json!("the kernel")).collect();
+    let ground = kernels.iter().find(|w| w["metric"] == json!("ground_connections")).expect("the ground's watch stands");
+    assert!(ground["op"] == json!(">=") && ground["red"] == json!(false) && ground["value"].as_i64().is_some_and(|n| n >= 1), "{ground}");
+    let five: Vec<&Value> = kernels.iter().copied().filter(|w| w["metric"] != json!("ground_connections")).collect();
+    assert_eq!(five.len(), 5);
     assert!(five.iter().all(|w| w["red"] == json!(false) && w["value"].is_null() && w["op"] == json!("<")), "{five:?}");
     assert!(five.iter().any(|w| w["reads"].as_str().unwrap() == "red when trust < 1.0 · now unknown (nothing to measure yet) → green"), "{five:?}");
     assert!(snap["measurements"]["trust"]["value"].is_null() && snap["values"]["cost"].is_null(), "{}", snap["measurements"]);

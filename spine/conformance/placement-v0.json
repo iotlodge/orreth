@@ -1,7 +1,7 @@
 {
  "contract": "orreth.placement/1",
  "version": 0,
- "generated_by": "orreth_spine.placement + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp4",
+ "generated_by": "orreth_spine.placement + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 sp4 \u00b7 the ground connections cure (seats_budget \u00b7 seat_honor)",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -358,6 +358,128 @@
      "cell 'gpu-east' is not this ground ('two')"
     ],
     "why": "refused: cell 'gpu-east' is not this ground ('two')"
+   }
+  },
+  {
+   "name": "seats_budget: ceiling 100 less the kernel's 30, 2 lines per serving body (the ground connections cure, 2026-10-08)",
+   "kind": "seats_budget",
+   "input": {
+    "ceiling": 100,
+    "reserve": 30,
+    "per_body": 2
+   },
+   "expect": {
+    "seats": 35
+   }
+  },
+  {
+   "name": "seats_budget: ceiling 32 less the kernel's 30, 2 lines per serving body (the ground connections cure, 2026-10-08)",
+   "kind": "seats_budget",
+   "input": {
+    "ceiling": 32,
+    "reserve": 30,
+    "per_body": 2
+   },
+   "expect": {
+    "seats": 1
+   }
+  },
+  {
+   "name": "seats_budget: ceiling 20 less the kernel's 30, 2 lines per serving body (the ground connections cure, 2026-10-08)",
+   "kind": "seats_budget",
+   "input": {
+    "ceiling": 20,
+    "reserve": 30,
+    "per_body": 2
+   },
+   "expect": {
+    "seats": 0
+   }
+  },
+  {
+   "name": "seats_budget: ceiling 100 less the kernel's 30, 1 line per serving body (the ground connections cure, 2026-10-08)",
+   "kind": "seats_budget",
+   "input": {
+    "ceiling": 100,
+    "reserve": 30,
+    "per_body": 1
+   },
+   "expect": {
+    "seats": 70
+   }
+  },
+  {
+   "name": "seat_honor: 34 seated of 35 \u2014 seated (the ground connections cure, 2026-10-08)",
+   "kind": "seat_honor",
+   "input": {
+    "connections": {
+     "ceiling": 100,
+     "reserve": 30,
+     "per_body": 2,
+     "seats": 35
+    },
+    "seated": 34
+   },
+   "expect": {
+    "honored": true,
+    "reasons": []
+   }
+  },
+  {
+   "name": "seat_honor: 35 seated of 35 \u2014 refused in words (the ground connections cure, 2026-10-08)",
+   "kind": "seat_honor",
+   "input": {
+    "connections": {
+     "ceiling": 100,
+     "reserve": 30,
+     "per_body": 2,
+     "seats": 35
+    },
+    "seated": 35
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "the ground seats 35 bodies at once \u2014 its ceiling of 100 connections less the kernel's 30, 2 lines per serving body \u2014 and 35 are seated already"
+    ]
+   }
+  },
+  {
+   "name": "seat_honor: 1 seated of 1 \u2014 refused in words (the ground connections cure, 2026-10-08)",
+   "kind": "seat_honor",
+   "input": {
+    "connections": {
+     "ceiling": 32,
+     "reserve": 30,
+     "per_body": 2,
+     "seats": 1
+    },
+    "seated": 1
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "the ground seats 1 body at once \u2014 its ceiling of 32 connections less the kernel's 30, 2 lines per serving body \u2014 and 1 is seated already"
+    ]
+   }
+  },
+  {
+   "name": "seat_honor: 0 seated of 0 \u2014 refused in words (the ground connections cure, 2026-10-08)",
+   "kind": "seat_honor",
+   "input": {
+    "connections": {
+     "ceiling": 20,
+     "reserve": 30,
+     "per_body": 2,
+     "seats": 0
+    },
+    "seated": 0
+   },
+   "expect": {
+    "honored": false,
+    "reasons": [
+     "the ground seats 0 bodies at once \u2014 its ceiling of 20 connections less the kernel's 30, 2 lines per serving body \u2014 and 0 are seated already"
+    ]
    }
   }
  ]

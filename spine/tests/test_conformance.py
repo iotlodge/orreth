@@ -19,6 +19,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3, the doors' arms: door_name · door_fold · door_slowest · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: schema_version · schema_tables (the migrator's contract) · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass: watch_metrics · 2026-09-29
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): seats_budget · seat_honor · ground_watch · 2026-10-08
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W92: not_a_plan pinned · 2026-10-02
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: path_parse · path_child · mode_tighten · mode_dial · experiment_room · level_absolute · cascade_fold · rollup_merge · rollup_report · rollup_tier_score · level_fact · 2026-10-05
 """The conformance suite (canon 0008): language-neutral fixtures the
@@ -435,6 +436,14 @@ def test_fixture(contract, case):
         ok, reasons = placement.honor(inp["profile"], inp["ground"])
         assert (ok, reasons) == (exp["honored"], exp["reasons"])
         assert placement.why_here(inp["profile"], inp["ground"]) == exp["why"]
+    # ---- the ground connections cure (2026-10-08): the seats budget and the seat rule ----
+    elif kind == "seats_budget":
+        assert placement.seats_budget(inp["ceiling"], inp["reserve"], inp["per_body"]) == exp["seats"]
+    elif kind == "seat_honor":
+        assert list(placement.seat_honor(inp["connections"], inp["seated"])) == [exp["honored"], exp["reasons"]]
+    elif kind == "ground_watch":                 # the kernel's sixth watch (watch-v0)
+        from orreth_spine import operating as _op
+        assert _op.ground_watch(inp["connections"]) == exp["watch"]
     # ---- orreth.rails/1 (P7 sp2): the rails' NAMES and SHAPES the Rust ground and rails stand on ----
     elif kind == "rail_names":                   # queues wear the namespace, facts wear the world
         with _dials(SPINE_QUEUE_NS=inp["ns"], SPINE_SCOPE=inp["scope"]):

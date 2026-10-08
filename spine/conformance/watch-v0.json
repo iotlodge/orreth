@@ -1,7 +1,7 @@
 {
  "contract": "orreth.watch/1",
  "version": 0,
- "generated_by": "orreth_spine.monitor + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W14 \u00b7 P6 cure sp2 (glass), walk #7 (the monitor's offer)",
+ "generated_by": "orreth_spine.monitor + orreth_spine.envelope (Python reference), canon 0008 \u00b7 P6 cure sp1 (kernel), walk #7 W14 \u00b7 P6 cure sp2 (glass), walk #7 (the monitor's offer) \u00b7 the ground connections cure (ground_watch)",
  "generated_at": "2026-09-21",
  "cases": [
   {
@@ -218,7 +218,7 @@
    }
   },
   {
-   "name": "watch_metrics: the vocabulary both kernels measure - fifteen names in one order; a name here is a value the snapshot carries, never a zero by omission (the honest glass, 2026-09-29) (twenty since Phase 8 sp5: the five measurements)",
+   "name": "watch_metrics: the vocabulary both kernels measure - fifteen names in one order; a name here is a value the snapshot carries, never a zero by omission (the honest glass, 2026-09-29) (twenty since Phase 8 sp5: the five measurements; twenty-one since the ground connections cure, 2026-10-08: ground_connections)",
    "kind": "watch_metrics",
    "input": {},
    "expect": {
@@ -242,8 +242,49 @@
      "recall",
      "efficiency",
      "experience",
-     "cost"
+     "cost",
+     "ground_connections"
     ]
+   }
+  },
+  {
+   "name": "ground_watch: the kernel's sixth watch \u2014 red when the ground's lines reach its ceiling less the kernel's reserve (the ground connections cure, 2026-10-08)",
+   "kind": "ground_watch",
+   "input": {
+    "connections": {
+     "ceiling": 100,
+     "reserve": 30,
+     "per_body": 2,
+     "seats": 35
+    }
+   },
+   "expect": {
+    "watch": {
+     "name": "ground_connections",
+     "metric": "ground_connections",
+     "op": ">=",
+     "threshold": 70.0
+    }
+   }
+  },
+  {
+   "name": "ground_watch: a ground narrower than the reserve still watches at 1 \u2014 never a zero threshold",
+   "kind": "ground_watch",
+   "input": {
+    "connections": {
+     "ceiling": 20,
+     "reserve": 30,
+     "per_body": 2,
+     "seats": 0
+    }
+   },
+   "expect": {
+    "watch": {
+     "name": "ground_connections",
+     "metric": "ground_connections",
+     "op": ">=",
+     "threshold": 1.0
+    }
    }
   }
  ]

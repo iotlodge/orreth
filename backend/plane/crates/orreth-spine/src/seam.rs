@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7, cells · partition · isolation · hardening · 2026-09-25
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): the seam's beat on a borrowed line, never a connection held for life · 2026-10-08
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the routed ask carries the asker's profile slice (W58) · 2026-09-26
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86 · W87): a peer let go is neither greeted nor routed to, and the pin at light names it again; `stop_ask` widened to a LOCAL ask left waiting (rule 11) · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W89: the stop's words name the ask · 2026-10-02
@@ -1175,29 +1176,21 @@ impl Seam {
         Ok(())
     }
 
-    /// The seam's standing task: a beat every two seconds, or at once when woken;
-    /// a rail's refusal stands the beat again on a fresh connection.
-    pub async fn run(&self, stop: &std::sync::atomic::AtomicBool) {
+    /// The seam's standing task: a beat every two seconds, or at once when woken — each beat
+    /// on a line borrowed from the kernel's beats' pool (the ground connections cure, 2026-10-08:
+    /// the seam held a connection for life before; a line that ends is forgotten by the pool).
+    pub async fn run(&self, stop: &std::sync::atomic::AtomicBool, beats: std::sync::Arc<crate::pool::Pool>) {
         use std::sync::atomic::Ordering;
         while !stop.load(Ordering::Relaxed) {
-            match Ground::connect(&self.world.pg_dsn).await {
+            match beats.borrow().await {
                 Ok(mut g) => {
-                    while !stop.load(Ordering::Relaxed) {
-                        if let Err(e) = self.beat(&mut g).await {
-                            eprintln!("the seam's beat stumbled: {e}");
-                            if matches!(e, RoadError::Rail(_)) {
-                                break;
-                            }
-                        }
-                        let _ = tokio::time::timeout(Duration::from_secs(2), self.wake.notified())
-                            .await;
+                    if let Err(e) = self.beat(&mut g).await {
+                        eprintln!("the seam's beat stumbled: {e}");
                     }
                 }
                 Err(e) => eprintln!("the seam could not reach the ground: {e}"),
             }
-            if !stop.load(Ordering::Relaxed) {
-                tokio::time::sleep(Duration::from_millis(500)).await;
-            }
+            let _ = tokio::time::timeout(Duration::from_secs(2), self.wake.notified()).await;
         }
     }
 }

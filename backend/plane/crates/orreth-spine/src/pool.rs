@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: THE POOL — a connection pool at every door · 2026-09-28
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (JB's word 2026-10-08): a pool SHEDS the lines idle past `SPINE_POOL_IDLE_S`; a PRIVATE pool for the kernel's beats (one registry, the doors' alone); every line named on the ground · 2026-10-08
 //! THE POOL — lines to the ground, held by the kernel, borrowed by every door
 //! (canon 0005 row 4, JB's lock 1 of "the kernel that lasts": *today each
 //! door opens a fresh ground connection per knock; the gate proof exhausted
@@ -18,6 +19,15 @@
 //! The reading (`read`) is this pool's; [`read_all`] sums every pool alive in
 //! this process for the Monitoring (`monitor::snapshot` → `pool` and
 //! `values.pool_busy` · `values.pool_waiting`).
+//!
+//! THE GROUND CONNECTIONS CURE (2026-10-08): a line idle past
+//! [`idle_from_env`] (`SPINE_POOL_IDLE_S`, default 60 s) is SHED — closed and
+//! forgotten — when [`Pool::shed`] is called (the presence sweep calls it every
+//! five seconds), so a kernel nobody knocks on holds no door lines at all; the
+//! next knock opens one. The kernel's standing beats borrow from a PRIVATE pool
+//! of two lines ([`Pool::private`], unlisted — the Monitoring's `pool` stays the
+//! doors') instead of each holding a connection for life. Every line is named
+//! on the ground (`application_name`), so `pg_stat_activity` reads who holds what.
 
 use crate::ground::Ground;
 use crate::world::RoadError;
@@ -25,7 +35,7 @@ use serde_json::{json, Value};
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, LazyLock, Mutex, OnceLock, Weak};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tokio::sync::{OwnedSemaphorePermit, Semaphore};
 
 /// `SPINE_POOL` — the most lines a pool holds open at once (default 16).
@@ -39,11 +49,29 @@ pub fn ceiling_from_env() -> usize {
         .unwrap_or(CEILING_DEFAULT)
 }
 
+/// `SPINE_POOL_IDLE_S` — how long an idle door line is kept before it is shed (default 60 s).
+pub const IDLE_DEFAULT_S: u64 = 60;
+
+pub fn idle_from_env() -> Duration {
+    Duration::from_secs(
+        std::env::var("SPINE_POOL_IDLE_S")
+            .ok()
+            .and_then(|v| v.trim().parse::<u64>().ok())
+            .unwrap_or(IDLE_DEFAULT_S),
+    )
+}
+
+/// The beats' private pool holds this many lines at most.
+pub const BEATS_CEILING: usize = 2;
+
 /// The doors' lines to one ground.
 pub struct Pool {
     dsn: String,
+    /// The name every line of this pool wears on the ground (`application_name`).
+    name: String,
     ceiling: usize,
-    idle: Mutex<Vec<Ground>>,
+    /// The idle lines, each with the moment it came back.
+    idle: Mutex<Vec<(Ground, Instant)>>,
     permits: Arc<Semaphore>,
     /// The ground a line is born on (its key); a line that moved is dropped.
     key: OnceLock<String>,
@@ -57,17 +85,31 @@ pub struct Pool {
     busy: AtomicU64,
     /// The longest a knock waited for a line, in microseconds.
     wait_max_us: AtomicU64,
+    /// Lines shed for standing idle (the cure).
+    shed: AtomicU64,
     born: Instant,
 }
 
 static POOLS: LazyLock<Mutex<Vec<Weak<Pool>>>> = LazyLock::new(|| Mutex::new(Vec::new()));
 
 impl Pool {
-    /// A pool for `dsn`, at most `ceiling` lines; registered for the Monitoring.
+    /// The doors' pool for `dsn`, at most `ceiling` lines, each named `orrethd door`;
+    /// registered for the Monitoring.
     pub fn new(dsn: &str, ceiling: usize) -> Arc<Pool> {
+        let pool = Self::private(dsn, ceiling, "orrethd door");
+        let mut pools = POOLS.lock().unwrap_or_else(|p| p.into_inner());
+        pools.retain(|w| w.strong_count() > 0);
+        pools.push(Arc::downgrade(&pool));
+        pool
+    }
+
+    /// A pool the Monitoring does not list (the cure): the kernel's beats borrow their lines
+    /// here — `name` is what each line wears on the ground.
+    pub fn private(dsn: &str, ceiling: usize, name: &str) -> Arc<Pool> {
         let ceiling = ceiling.max(1);
-        let pool = Arc::new(Pool {
+        Arc::new(Pool {
             dsn: dsn.to_string(),
+            name: name.to_string(),
             ceiling,
             idle: Mutex::new(Vec::new()),
             permits: Arc::new(Semaphore::new(ceiling)),
@@ -77,12 +119,21 @@ impl Pool {
             waiting: AtomicU64::new(0),
             busy: AtomicU64::new(0),
             wait_max_us: AtomicU64::new(0),
+            shed: AtomicU64::new(0),
             born: Instant::now(),
-        });
-        let mut pools = POOLS.lock().unwrap_or_else(|p| p.into_inner());
-        pools.retain(|w| w.strong_count() > 0);
-        pools.push(Arc::downgrade(&pool));
-        pool
+        })
+    }
+
+    /// THE SHED (the cure, 2026-10-08): every idle line that came back longer than `max_idle`
+    /// ago is closed and forgotten; the count shed now. A kernel nobody knocks on holds no
+    /// door lines; the next knock opens one.
+    pub fn shed(&self, max_idle: Duration) -> usize {
+        let mut idle = self.idle.lock().unwrap_or_else(|p| p.into_inner());
+        let before = idle.len();
+        idle.retain(|(_, back)| back.elapsed() < max_idle);
+        let n = before - idle.len();
+        self.shed.fetch_add(n as u64, Ordering::Relaxed);
+        n
     }
 
     pub fn ceiling(&self) -> usize {
@@ -102,13 +153,13 @@ impl Pool {
         let mut g = loop {
             let idle = self.idle.lock().unwrap_or_else(|p| p.into_inner()).pop();
             match idle {
-                Some(g) if !g.client().is_closed() => break Some(g),
+                Some((g, _)) if !g.client().is_closed() => break Some(g),
                 Some(_) => continue, // its connection ended while idle: forgotten
                 None => break None,
             }
         };
         if g.is_none() {
-            let fresh = Ground::connect(&self.dsn).await?;
+            let fresh = Ground::connect_as(&self.dsn, &self.name).await?;
             self.opened.fetch_add(1, Ordering::Relaxed);
             let _ = self.key.set(fresh.key().to_string());
             g = Some(fresh);
@@ -135,6 +186,7 @@ impl Pool {
             "opened_total": self.opened.load(Ordering::Relaxed),
             "borrowed_total": self.borrowed.load(Ordering::Relaxed),
             "wait_max_ms": self.wait_max_us.load(Ordering::Relaxed) as f64 / 1000.0,
+            "shed_total": self.shed.load(Ordering::Relaxed),
             "up_s": self.born.elapsed().as_secs(),
         })
     }
@@ -146,7 +198,10 @@ impl Pool {
         if self.key.get().is_some_and(|k| k != g.key()) {
             return; // it stands on another ground now: not this pool's
         }
-        self.idle.lock().unwrap_or_else(|p| p.into_inner()).push(g);
+        self.idle
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .push((g, Instant::now()));
     }
 }
 
@@ -159,7 +214,7 @@ pub fn read_all() -> Option<Value> {
         return None;
     }
     let mut sum = json!({"ceiling": 0, "open": 0, "idle": 0, "busy": 0, "waiting": 0,
-                         "opened_total": 0, "borrowed_total": 0, "wait_max_ms": 0.0, "up_s": 0});
+                         "opened_total": 0, "borrowed_total": 0, "shed_total": 0, "wait_max_ms": 0.0, "up_s": 0});
     for p in live {
         let r = p.read();
         for k in [
@@ -170,6 +225,7 @@ pub fn read_all() -> Option<Value> {
             "waiting",
             "opened_total",
             "borrowed_total",
+            "shed_total",
         ] {
             sum[k] = json!(sum[k].as_u64().unwrap_or(0) + r[k].as_u64().unwrap_or(0));
         }

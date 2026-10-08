@@ -3,6 +3,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp3, the ask road: the road's six tags at birth · 2026-09-22
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: THE MIGRATOR (lock 2) — the single writer, the version on the ground, the later kernel waits and verifies · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2: THE GROUND'S PRUNE — one world's rows gone across every table with a scope column (`prune_scope`; a proof's teardown) · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): `connect_as` — every line wears its name on the ground · 2026-10-08
 //! The ground — mirrors `orreth_spine.ground` and the memo half of
 //! `orreth_spine.outbox` (`once` · `ground_key` · `mark_ground_done`).
 //!
@@ -130,7 +131,15 @@ pub struct Ground {
 impl Ground {
     /// Open a connection and learn its ground (DSN + `search_path`).
     pub async fn connect(dsn: &str) -> Result<Ground, RailError> {
-        let (client, connection) = tokio_postgres::connect(dsn, NoTls).await?;
+        Self::connect_as(dsn, "orrethd").await
+    }
+
+    /// Open a connection that wears `name` on the ground (`application_name` — the cure,
+    /// 2026-10-08: `pg_stat_activity` reads who holds every line) and learn its ground.
+    pub async fn connect_as(dsn: &str, name: &str) -> Result<Ground, RailError> {
+        let mut cfg: tokio_postgres::Config = dsn.parse()?;
+        cfg.application_name(name);
+        let (client, connection) = cfg.connect(NoTls).await?;
         tokio::spawn(async move {
             if let Err(e) = connection.await {
                 eprintln!("the ground's connection ended: {e}");

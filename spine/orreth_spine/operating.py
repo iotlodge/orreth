@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE WORKSHOP sp5, THE OPERATING STATE · 2026-10-08
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): the kernel's sixth watch at light — `ground_connections >= ceiling − reserve` — beside the five · 2026-10-08
 """THE OPERATING STATE (canon 0010 §7 · 0005 Phase 8 sp5; JB's Kernel Strategic Measurements,
 2026-10-05): the kernel's top-level scorecard, five measurements each 1.0 at the ideal, read
 LIVE off the ground and WATCHED like any metric —
@@ -244,10 +245,22 @@ def values(conn) -> dict:
 
 # ---- the watches and the intention at light ----------------------------------------------------
 
+GROUND_WATCH = "ground_connections"      # the cure (2026-10-08): the kernel's sixth watch
+
+
+def ground_watch(connections: dict) -> dict:
+    """THE GROUND'S WATCH (the cure, 2026-10-08): red when the lines the ground holds reach its
+    ceiling less the kernel's reserve — the bodies' share spent, only the kernel's own left — so
+    Resiliency sees the ground filling before Postgres refuses the next line (conformance `ground_watch`)."""
+    return {"name": GROUND_WATCH, "metric": GROUND_WATCH, "op": ">=",
+            "threshold": float(max(1, int(connections["ceiling"]) - int(connections["reserve"])))}
+
+
 def watches_at_light(conn) -> list[str]:
-    """The kernel's five watches, once per world: `trust < 1.0` … — red when a measurement falls
-    below the ideal; an unknown turns none red. Returns the names declared now."""
-    from . import monitor
+    """The kernel's watches, once per world: the five `trust < 1.0` … — red when a measurement
+    falls below the ideal; an unknown turns none red — and the ground's (`ground_connections >=
+    ceiling − reserve`, the cure). Returns the names declared now."""
+    from . import monitor, placement
     monitor.ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT name FROM spine_watches WHERE scope = %s AND added_by = %s", (ev.universe(), KERNEL))
@@ -259,6 +272,10 @@ def watches_at_light(conn) -> list[str]:
         w = measurement_watch(name)
         monitor.add_watch(conn, w["name"], w["metric"], w["op"], w["threshold"], KERNEL)
         made.append(name)
+    if GROUND_WATCH not in have:
+        w = ground_watch(placement.connections_declared(conn=conn))
+        monitor.add_watch(conn, w["name"], w["metric"], w["op"], w["threshold"], KERNEL)
+        made.append(GROUND_WATCH)
     return made
 
 

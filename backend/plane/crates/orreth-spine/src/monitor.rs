@@ -5,6 +5,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the topic's depth read on ONE held broker client — never a fresh client (a full-metadata fetch) per snapshot · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): the farm's six values and THE STABLE's face ported from the reference (the pulse read $0 over a metered crew — nine values where the reference carries fifteen); the meter read BY WORLD on both; the roster folded one row per name · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): THE WATCH'S REST — `rest_watch` recorded on the row (schema 3), the judge and the snapshot read the ACTIVE watches; the asks left WAITING listed in the snapshot for their stop · 2026-09-29
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): `ground_connections` watchable · the snapshot's `ground` (the lines held now, the ceiling, the kernel's reserve, the seats) · 2026-10-08
 //! The Monitoring workspace's ground — `orreth_spine.monitor` (canon 0001:
 //! "if it's monitoring, it goes here"): the live snapshot of the Operating
 //! State — rails, benches, bodies, asks, the last harness run — and the
@@ -222,6 +223,41 @@ fn as_f64(v: &Value) -> f64 {
     v.as_f64().unwrap_or(0.0)
 }
 
+/// `monitor.ground_connections` (the cure, 2026-10-08): the lines the ground holds right now for
+/// THIS database — the kernel's loops and pool, every serving body's two, a person's psql.
+pub async fn ground_connections(g: &Ground) -> Result<i64, RoadError> {
+    Ok(g
+        .client()
+        .query_one(
+            "SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()",
+            &[],
+        )
+        .await?
+        .get(0))
+}
+
+/// `placement.connections_declared(conn)`: the budget the ground declares — its own
+/// `max_connections` read, the dials weighed (`placement::Connections::declared`).
+pub async fn connections_declared(g: &Ground) -> Result<crate::placement::Connections, RoadError> {
+    let max: Option<i64> = g
+        .client()
+        .query_opt("SHOW max_connections", &[])
+        .await
+        .ok()
+        .flatten()
+        .and_then(|r| r.get::<_, String>(0).trim().parse::<i64>().ok());
+    Ok(crate::placement::Connections::declared(max))
+}
+
+/// THE GROUND's face (`monitor.ground_card`): the connections now, the budget (ceiling · the
+/// kernel's reserve · lines per serving body · the seats) and how many bodies stand.
+pub async fn ground_card(g: &Ground, bodies_alive: usize) -> Result<Value, RoadError> {
+    let mut card = connections_declared(g).await?.to_value();
+    card["connections"] = json!(ground_connections(g).await?);
+    card["seated"] = json!(bodies_alive);
+    Ok(card)
+}
+
 /// P6.5 sp3's farm metrics, ported (the honest glass, 2026-09-29): the Stable's numbers off
 /// THIS world's ground — minds standing and unhealthy, dollars today, route failures in the
 /// last hour, the meter's rate over ten minutes, bodies out of fuel. Field for field the
@@ -349,6 +385,9 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
             values[k] = v["value"].clone();
         }
     }
+    // the cure (2026-10-08): the ground's lines and its budget, watchable as `ground_connections`
+    let ground_view = ground_card(g, alive).await?;
+    values["ground_connections"] = ground_view["connections"].clone();
     let stable_view = stable_face(g, scope).await;
     let rows = g
         .client()
@@ -437,6 +476,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "stable": stable_view,
         "doors": doors,
         "pool": pool,
+        "ground": ground_view, // the cure (2026-10-08): connections now · ceiling · reserve · per_body · seats · seated
         "parked": parked,
     }))
 }

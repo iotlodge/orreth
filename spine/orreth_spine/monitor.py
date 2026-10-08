@@ -9,6 +9,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass (JB's screenshots 2026-09-29): one watch vocabulary on both kernels · the meter read by world · the roster folded one row per name · a watch's REST · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the honest glass sp2 (W86): THE WATCH'S REST — `rest_watch` recorded on the row (schema 3), the judge and the snapshot read the ACTIVE watches; the asks left WAITING listed in the snapshot for their stop · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): `ground_connections` watchable (METRICS 20 → 21) · the snapshot's `ground` — the lines held now, the ceiling, the kernel's reserve, the seats · 2026-10-08
 """The Monitoring workspace's ground (canon 0001: "if it's monitoring, it
 goes here"): the live snapshot of the Operating State — rails, benches,
 bodies, asks, the last harness run — and the WATCHES: named checks the
@@ -49,7 +50,10 @@ METRICS = ("outbox_pending", "oldest_outbox_age_s", "asks_received",
            "parked",
            # Phase 8 sp5: THE OPERATING STATE — JB's five Kernel Strategic Measurements at v0, each 1.0 at the
            # ideal, unknown (null) while its denominator is empty — never a silent 1.0 (operating.py)
-           "trust", "recall", "efficiency", "experience", "cost")
+           "trust", "recall", "efficiency", "experience", "cost",
+           # THE GROUND CONNECTIONS CURE (2026-10-08): the lines the ground holds right now — every kernel's, every
+           # body's, every person's — so a watch sees the ground filling BEFORE Postgres refuses the next one
+           "ground_connections")
 OPS = {"<=": lambda v, t: v <= t, ">=": lambda v, t: v >= t,
        "<": lambda v, t: v < t, ">": lambda v, t: v > t, "==": lambda v, t: v == t}
 
@@ -287,6 +291,8 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     from . import operating                       # Phase 8 sp5: THE OPERATING STATE — the five, measured live
     measurements = operating.measure(conn)
     values.update({k: v["value"] for k, v in measurements.items()})
+    ground_view = ground_card(conn, len(alive))       # the cure (2026-10-08): the ground's lines and its budget
+    values["ground_connections"] = ground_view["connections"]
     stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
                 " FROM spine_watches WHERE scope = %s AND active ORDER BY added_at", (ev.universe(),))  # sp2: the active alone
@@ -325,6 +331,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "stable": stable_view,                        # P6.5 sp3: the farm's face in the Monitoring
         "doors": doors_read,                          # panel sp3: per-door p50 · p95 · max over the window
         "pool": None,                                 # panel sp3: the reference has no pool — a connection per knock, said plainly
+        "ground": ground_view,                        # the cure (2026-10-08): connections now · ceiling · reserve · per_body · seats · seated
         "parked": parked,                             # re-base sp1: the poison events held at, newest first
     }
 
@@ -368,6 +375,22 @@ def judge(conn) -> list[dict]:
         outbox.commit_with_outbox(conn, ev.encode(e), e["message_id"], domain)
         turned.append(dict(w, to=to, **{"from": frm}))
     return turned
+
+
+def ground_connections(conn) -> int:
+    """The lines the ground holds right now for THIS database — pg_stat_activity's count (the
+    kernel's loops and pool, every serving body's two, a person's psql, the suite beside it)."""
+    cur = conn.cursor()
+    cur.execute("SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()")
+    return int(cur.fetchone()[0])
+
+
+def ground_card(conn, bodies_alive: int) -> dict:
+    """THE GROUND's face (the cure, 2026-10-08): the connections now, the budget the ground declares
+    (ceiling · the kernel's reserve · lines per serving body · the seats) and how many bodies stand."""
+    from . import placement
+    budget = placement.connections_declared(conn=conn)
+    return {"connections": ground_connections(conn), **budget, "seated": int(bodies_alive)}
 
 
 def _has_table(conn, name: str) -> bool:

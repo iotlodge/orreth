@@ -1,6 +1,7 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement policy v0 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp7 walk #15, W54: the default cell means wherever this ground stands · 2026-09-25
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: refusals read at every level of the universe · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (JB's word 2026-10-08): the ground declares how many bodies it can seat at once; a body past the budget is refused at birth · 2026-10-08
 """Placement policy v0 (canon 0001 P10 · 0004 · 0005 P6 sp4): where a body
 may run is a rule of the world, never an accident.
 
@@ -21,6 +22,17 @@ ADVISORY (recorded and shown, not enforced — a second cell arrives with
 P7); a secret is "reachable" iff its NAME is set in the ground's
 environment — the only honest check one host can make — and a secret's
 VALUE is printed nowhere, ever.
+
+THE GROUND CONNECTIONS CURE (2026-10-08): the ground also declares its
+CONNECTIONS — the ceiling Postgres holds (`SHOW max_connections`, or the
+dial `SPINE_GROUND_CONNECTIONS`, the lesser), the lines the kernel keeps for
+itself (`SPINE_GROUND_RESERVE`: its door pool, its loops, Postgres's own
+superuser seats, a person's psql), and the lines one SERVING body holds
+(two: its serve line and its working memory's). From these the SEATS: how
+many bodies may stand on this ground so that every one of them could serve
+at once and the ground still answer. A body past the budget is refused at
+birth in words — the same recorded refusal, never started — so the ground
+never learns of a crew too large by dying of "too many clients".
 """
 from __future__ import annotations
 
@@ -33,6 +45,11 @@ REFUSED = "orreth.body.refused.v1"
 METALS = ("any", "cpu", "gpu")
 DEFAULT = {"cell": "local", "affinity": [], "secrets_with": [], "metal": "any"}
 CELL_DIAL, METAL_DIAL = "SPINE_CELL", "SPINE_METAL"
+# the ground connections cure: the ceiling (else Postgres's own, else 100), the kernel's reserve, the lines a serving body holds
+CONNECTIONS_DIAL, RESERVE_DIAL = "SPINE_GROUND_CONNECTIONS", "SPINE_GROUND_RESERVE"
+CEILING_DEFAULT = 100          # Postgres's stock max_connections — what a ground answers before anyone tunes it
+RESERVE_DEFAULT = 30           # the kernel's own: a door pool of 16 · the rails' loops · Postgres's 3 for its superuser · a person's tools
+LINES_PER_BODY = 2             # a SERVING body holds its serve line and its working memory's line; an idle body holds none
 
 
 class PlacementRefused(RuntimeError):
@@ -63,13 +80,70 @@ def profile(template: dict) -> dict:
     return p
 
 
-def ground_declares(env: dict | None = None) -> dict:
-    """What THIS ground is: its one cell, its metal, and the secret names
-    it can reach (names only — the values never leave the environment)."""
+def ground_declares(env: dict | None = None, conn=None) -> dict:
+    """What THIS ground is: its one cell, its metal, the secret names it can
+    reach (names only — the values never leave the environment) and, given a
+    connection, its CONNECTIONS budget (the cure, 2026-10-08) — without one the
+    budget is read from the dials alone."""
     env = os.environ if env is None else env
     return {"cell": env.get(CELL_DIAL) or DEFAULT["cell"],
             "metal": env.get(METAL_DIAL) or "cpu",
-            "secrets": sorted(k for k, v in env.items() if v)}
+            "secrets": sorted(k for k, v in env.items() if v),
+            "connections": connections_declared(env, conn)}
+
+
+# ---- the ground's connections (the cure, 2026-10-08) ------------------------------------------------
+
+def _dial_int(env: dict, name: str) -> int | None:
+    raw = str(env.get(name) or "").strip()
+    try:
+        n = int(raw)
+    except ValueError:
+        return None
+    return n if n > 0 else None
+
+
+def max_connections(conn) -> int | None:
+    """Postgres's own ceiling — `SHOW max_connections` — or None when the ground does not say."""
+    try:
+        cur = conn.cursor()
+        cur.execute("SHOW max_connections")
+        return int(cur.fetchone()[0])
+    except Exception:                                  # noqa: BLE001 — an unreadable ceiling is the dial's
+        return None
+
+
+def seats_budget(ceiling: int, reserve: int, per_body: int = LINES_PER_BODY) -> int:
+    """THE SEATS: how many bodies may stand here so that every one of them could serve at once —
+    the ceiling less the kernel's reserve, in lines per serving body; never below zero
+    (conformance `seats_budget`)."""
+    per = max(1, int(per_body))
+    return max(0, (int(ceiling) - int(reserve)) // per)
+
+
+def connections_declared(env: dict | None = None, conn=None) -> dict:
+    """The budget as the ground declares it: {ceiling, reserve, per_body, seats}. The ceiling is the
+    dial `SPINE_GROUND_CONNECTIONS` and Postgres's `max_connections`, the LESSER of those said (a dial
+    may narrow the ground, never widen it); the reserve is `SPINE_GROUND_RESERVE` (default 30)."""
+    env = os.environ if env is None else env
+    said = [n for n in (_dial_int(env, CONNECTIONS_DIAL), max_connections(conn) if conn is not None else None) if n]
+    ceiling = min(said) if said else CEILING_DEFAULT
+    reserve = _dial_int(env, RESERVE_DIAL) or RESERVE_DEFAULT
+    return {"ceiling": ceiling, "reserve": reserve, "per_body": LINES_PER_BODY,
+            "seats": seats_budget(ceiling, reserve, LINES_PER_BODY)}
+
+
+def seat_honor(connections: dict, seated: int) -> tuple[bool, list[str]]:
+    """The seat rule: a body may be seated iff fewer bodies than the budget stand alive here now.
+    The one reason, in words a newcomer reads — what the ground can seat, why, and how many stand
+    (conformance `seat_honor`)."""
+    seats, seated = int(connections["seats"]), int(seated)
+    if seated < seats:
+        return True, []
+    return False, [f"the ground seats {seats} bod{'y' if seats == 1 else 'ies'} at once — its ceiling of "
+                   f"{int(connections['ceiling'])} connections less the kernel's {int(connections['reserve'])}, "
+                   f"{int(connections['per_body'])} lines per serving body — and {seated} "
+                   f"{'is' if seated == 1 else 'are'} seated already"]
 
 
 def honor(prof: dict, ground: dict) -> tuple[bool, list[str]]:
@@ -148,7 +222,8 @@ def refuse(conn, body, prof: dict, ground: dict, reasons: list[str]) -> dict:
     ref = body.identity.did
     payload = {"ref": ref, "hash": ev.content_hash(prof), "name": body.name, "kind": body.kind,
                "template": body.template_hash, "placement": prof,
-               "ground": {"cell": ground["cell"], "metal": ground["metal"]},
+               "ground": {"cell": ground["cell"], "metal": ground["metal"],
+                          **({"seats": ground["connections"]["seats"]} if ground.get("connections") else {})},
                "reasons": list(reasons)}
     e = ev.make_envelope(
         kind="event", type=REFUSED, universe_id=ev.universe(), scope_path=ev.scope(),

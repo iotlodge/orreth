@@ -2,6 +2,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 2, the one-shot `--seed-shelf` rite retires: the Rust kernel seeds and probes the shelf itself · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: lock 4's last poll — a body's JOIN is a fact (orreth.body.joined.v1), so the roster follows the feed · 2026-09-28
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: a seat's `at` · the manifest's levels · `seat_scope` · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (JB's word 2026-10-08): a body's birth takes a connection and lets it go; its life holds a ground line only while it serves (`SPINE_BODY_IDLE_S`) · 2026-10-08
 """THE SDK-SIDE BODY (canon 0004 · 0008's end shape · 0005 P7 sp6, THE BODIES'
 SEAM).
 
@@ -82,6 +83,20 @@ FAKE_REPLY_DIAL = "SPINE_FAKE_REPLY"                # a proof scripts what the f
 KERNEL_DOOR_DIAL = "SPINE_KERNEL_DOOR"            # where a spawned body streams its words (http://127.0.0.1:<port>)
 EPHEMERAL_DIAL = "SPINE_BODY_EPHEMERAL"           # tests only: an ephemeral self (home=None)
 SHELF_PREFIX = "shelf:"                           # Phase 8 sp4: a seat whose template is the shelf's standing version
+IDLE_DIAL = "SPINE_BODY_IDLE_S"                   # the cure (2026-10-08): how long a body keeps its ground line after its last serve
+IDLE_DEFAULT_S = 5.0
+
+
+def idle_s(env: dict | None = None) -> float:
+    """How long a body holds its line after the last command it served (`SPINE_BODY_IDLE_S`, default
+    5 s): long enough that a conversation's next turn finds the line warm, short enough that an idle
+    crew leaves the ground holding the kernel's lines alone."""
+    env = os.environ if env is None else env
+    try:
+        v = float(str(env.get(IDLE_DIAL) or "").strip())
+    except ValueError:
+        return IDLE_DEFAULT_S
+    return v if v >= 0 else IDLE_DEFAULT_S
 
 
 # ---- the pure laws (fixture bodies-v0) ------------------------------------------------------------
@@ -360,16 +375,25 @@ def serve(template, binding, policy, *, stop: threading.Event, ready: threading.
                          f"{made['files']} files" + (f"; missing {made['missing']}" if made["missing"] else ""))
             except Exception as e:                          # noqa: BLE001
                 _say(f"mitl could not acquire the ontology: {type(e).__name__}: {e}")
+        presence.renew(conn, r.identity.did, r.name, r.kind)   # M2: alive from birth — the first renew on the birth line
+        r._lease_at = time.monotonic()
         if ready is not None:
             ready.set()
-        while not stop.is_set():
-            try:
-                presence.renew(conn, r.identity.did, r.name, r.kind)     # M2: alive while I serve
-                r.serve_once(conn, idle_s=1.0, max_commands=50)
-            except Exception as e:                          # noqa: BLE001 — a rail's hiccup never kills a body
-                if not stop.is_set():
-                    _say(f"{r.name}'s serve stumbled: {type(e).__name__}: {str(e)[:200]}")
-                    time.sleep(0.5)
+    # the birth's connection is closed here: THE LIFE holds a ground line only while it serves (the cure,
+    # 2026-10-08) — the bench is polled with none, the line taken when a command lands, let go after
+    # SPINE_BODY_IDLE_S of nothing served; the lease renewed on its cadence (on the line, else briefly)
+    hold_s = idle_s()
+    while not stop.is_set():
+        try:
+            r.keep_lease(PG_DSN)                            # M2: alive while I stand — every RENEW_S, never every pass
+            r.serve_once(None, idle_s=1.0, max_commands=50)
+            r.release_line(hold_s)                          # the line let go once idle: the ground forgets me until the next command
+        except Exception as e:                              # noqa: BLE001 — a rail's hiccup never kills a body
+            if not stop.is_set():
+                _say(f"{r.name}'s serve stumbled: {type(e).__name__}: {str(e)[:200]}")
+                r.release_line()                            # a line that stumbled is not kept
+                time.sleep(0.5)
+    r.release_line()
     if sink is not None:
         sink.close()
     _say(f"{r.name} stopped whole.")

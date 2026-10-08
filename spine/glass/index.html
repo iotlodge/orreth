@@ -3353,7 +3353,11 @@ async function loadMonitor(){
        kv("outbox pending", s.outbox.pending, s.outbox.pending ? "red" : "ok") +
        kv("oldest unpublished", s.outbox.oldest_age_s != null ? s.outbox.oldest_age_s.toFixed(1) + " s" : "—") +
        kv("ask.received topic depth", s.topic_depth ?? "?") + benches +
-       kv("ground pool", s.pool ? `${s.pool.busy} of ${s.pool.ceiling} lines busy · ${s.pool.waiting} waiting · longest wait ${ms(Number(s.pool.wait_max_ms))}` : "none — a connection per knock", s.pool && s.pool.waiting ? "red" : "ok") +
+       kv("ground pool", s.pool ? `${s.pool.busy} of ${s.pool.ceiling} lines busy · ${s.pool.waiting} waiting · longest wait ${ms(Number(s.pool.wait_max_ms))}` + (s.pool.shed_total ? ` · ${s.pool.shed_total} idle lines shed` : "") : "none — a connection per knock", s.pool && s.pool.waiting ? "red" : "ok") +
+       // the ground connections cure (2026-10-08): the lines the ground holds NOW against the ceiling it declares; the seats
+       // it can fill so that every body could serve at once (a body holds lines only while it serves)
+       (s.ground ? kv("ground connections", `${s.ground.connections} of ${s.ground.ceiling} held · ${s.ground.reserve} the kernel's · ${s.ground.seated} of ${s.ground.seats} seats taken (${s.ground.per_body} lines per serving body; an idle body holds none)`,
+                      s.ground.connections >= s.ground.ceiling - s.ground.reserve ? "red" : "ok") : "") +
        kv("poison held at (the rail waits for a person)", v.parked || 0, v.parked ? "red" : "ok") +
        (s.parked || []).map(pk => line({label: esc(pk.words), sub: `parked:${pk.parked_id} · ${pk.bytes} bytes · ${esc(String(pk.hash).slice(0, 23))}… · since ${hm(pk.parked_at)}`,
          lever: lever("advance", pk.parked_id, "advance past it", "the operator's explicit decision: the dispatcher commits past this event and goes on — recorded in your name")})).join("") +
@@ -3896,14 +3900,16 @@ function panelMonitorOrgan(){                      // the MONITOR organ and the 
   document.getElementById("d-presence").textContent = `${alive} of ${bodies.length} leases alive`;
   document.getElementById("o-ground-s").textContent = `${Object.values(a).reduce((x, y) => x + y, 0)} asks in this world` + (a["awaiting-confirm"] ? ` · ${a["awaiting-confirm"]} held at the interlock` : "");
   const pool = s.pool;                             // panel sp3: THE POOL — the lines to the ground (the reference has none: null, said plainly)
-  document.getElementById("p-ground").textContent = (pool ? `pool ${pool.busy} of ${pool.ceiling} lines busy${pool.waiting ? ` · ${pool.waiting} WAITING for a line` : ""} · ${pool.opened_total} opened for ${pool.borrowed_total} knocks` : "no pool — a connection per knock") +
+  const gr = s.ground;                             // the ground connections cure (2026-10-08): the lines the ground holds now, of its ceiling
+  document.getElementById("p-ground").textContent = (gr ? `${gr.connections} of ${gr.ceiling} connections held · ${gr.seated} of ${gr.seats} seats · ` : "") +
+    (pool ? `pool ${pool.busy} of ${pool.ceiling} lines busy${pool.waiting ? ` · ${pool.waiting} WAITING for a line` : ""} · ${pool.opened_total} opened for ${pool.borrowed_total} knocks` : "no pool — a connection per knock") +
     ` · outbox ${ob.pending ?? "?"} pending · oldest ${ob.oldest_age_s != null ? Number(ob.oldest_age_s).toFixed(1) + " s" : "—"}`;
   document.getElementById("p-monitor").textContent = `${w.length} watch${w.length === 1 ? "" : "es"} judged every 3 s` + doorLine(["/monitor", "/levers", "/harness"]);
   const pd = document.getElementById("p-desk"); pd.textContent = (pd.dataset.seat || "—") + doorLine(["/seat", "/enroll", "/join"]);
   const benches = Object.entries(s.benches || {}).filter(([k, n]) => k !== "error" && n != null);
   if (benches.length) document.getElementById("d-dispatcher").textContent += ` · ${benches.reduce((x, [, n]) => x + Number(n || 0), 0)} queued on ${benches.length} bench${benches.length === 1 ? "" : "es"}`;
   panelDoors(s.doors || []);
-  lampRest("l-ground", pool && pool.waiting ? "red" : "on");
+  lampRest("l-ground", (pool && pool.waiting) || (gr && gr.connections >= gr.ceiling - gr.reserve) ? "red" : "on");
 }
 /* ---- panel sp3: THE DOORS — how long every door takes (the kernel's clock at every door, folded to a p50 and a p95 over
    the last ten minutes) and THE POOL (the lines to the ground, borrowed per knock) — the PERFORMANCE layer on the same blocks ---- */

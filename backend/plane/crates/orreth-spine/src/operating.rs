@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE WORKSHOP sp5, THE OPERATING STATE: the pure laws · 2026-10-08
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): the kernel's sixth watch — `ground_connections >= ceiling − reserve` · 2026-10-08
 //! THE OPERATING STATE (canon 0010 §7 · 0005 Phase 8 sp5), PURE — the laws
 //! `orreth_spine.operating` keeps, word for word (fixture `operating-v0.json`): the five
 //! measurements (Trust · Recall · Efficiency · Experience · Cost) as coverage ratios, unknown
@@ -141,6 +142,17 @@ pub fn summon_words(body: &str, on: bool, session: Option<&str>) -> String {
 }
 
 /// `operating.measurement_watch`: the kernel's own watch on a measurement.
+/// The cure (2026-10-08): the kernel's sixth watch — `operating.GROUND_WATCH`.
+pub const GROUND_WATCH: &str = "ground_connections";
+
+/// THE GROUND'S WATCH (`operating.ground_watch`): red when the lines the ground holds reach its
+/// ceiling less the kernel's reserve — the bodies' share spent, only the kernel's own left — so
+/// Resiliency sees the ground filling before Postgres refuses the next line.
+pub fn ground_watch(c: &crate::placement::Connections) -> Value {
+    json!({"name": GROUND_WATCH, "metric": GROUND_WATCH, "op": ">=",
+           "threshold": (c.ceiling - c.reserve).max(1) as f64})
+}
+
 pub fn measurement_watch(name: &str) -> Value {
     json!({"name": name, "metric": name, "op": WATCH_OP, "threshold": TARGET})
 }

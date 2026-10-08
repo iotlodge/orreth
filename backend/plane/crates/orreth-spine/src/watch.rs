@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp1, the bytes · 2026-09-22
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): METRICS +1 — `ground_connections` · 2026-10-08
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, the loops: the turned fact as bytes · 2026-09-23
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp3: door_p95_ms · pool_busy · pool_waiting watchable · 2026-09-28
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp1: POISON-PARKING — the dispatcher parks a poison with its evidence and HOLDS at it until a person advances it · 2026-09-28
@@ -18,7 +19,7 @@ use std::sync::LazyLock;
 
 /// The metrics this world measures — ONE vocabulary on both kernels, in one order (fixture
 /// `watch_metrics`); a name here is a name the snapshot carries, never a zero by omission.
-pub const METRICS: [&str; 20] = [
+pub const METRICS: [&str; 21] = [
     "outbox_pending",
     "oldest_outbox_age_s",
     "asks_received",
@@ -44,6 +45,9 @@ pub const METRICS: [&str; 20] = [
     "efficiency",
     "experience",
     "cost",
+    // THE GROUND CONNECTIONS CURE (2026-10-08): the lines the ground holds right now, so a watch sees it
+    // filling BEFORE Postgres refuses the next one
+    "ground_connections",
 ];
 /// A watch changed state: red ↔ green.
 pub const WATCH_TURNED: &str = "orreth.watch.turned.v1";

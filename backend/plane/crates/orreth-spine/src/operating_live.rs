@@ -1,4 +1,5 @@
 // PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE WORKSHOP sp5, THE OPERATING STATE: the ground half · 2026-10-08
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (2026-10-08): the ground's watch declared at light beside the five · 2026-10-08
 //! THE OPERATING STATE on the ground — `orreth_spine.operating` ported (canon 0010 §7 · 0005
 //! Phase 8 sp5), schema 8: the five measurements read LIVE off the ground (the grader's verdicts
 //! on live replies, the served asks and their markers, the serves' latency against their class,
@@ -108,7 +109,8 @@ pub async fn measure<C: GenericClient>(c: &C, scope: &str) -> Result<Value, Road
 
 // ---- the watches and the intention at light ----
 
-/// `operating.watches_at_light`: the kernel's five watches, once per world.
+/// `operating.watches_at_light`: the kernel's five watches — and the ground's (the cure,
+/// 2026-10-08: `ground_connections >= ceiling − reserve`) — once per world.
 pub async fn watches_at_light(g: &Ground, scope: &str) -> Result<Vec<String>, RoadError> {
     let have: Vec<String> = g
         .client()
@@ -125,6 +127,11 @@ pub async fn watches_at_light(g: &Ground, scope: &str) -> Result<Vec<String>, Ro
         let w = operating::measurement_watch(name);
         crate::monitor::add_watch(g, scope, name, name, operating::WATCH_OP, w["threshold"].as_f64().unwrap_or(1.0), KERNEL).await?;
         made.push(name.to_string());
+    }
+    if !have.iter().any(|h| h == operating::GROUND_WATCH) {
+        let w = operating::ground_watch(&crate::monitor::connections_declared(g).await?);
+        crate::monitor::add_watch(g, scope, operating::GROUND_WATCH, operating::GROUND_WATCH, ">=", w["threshold"].as_f64().unwrap_or(70.0), KERNEL).await?;
+        made.push(operating::GROUND_WATCH.to_string());
     }
     Ok(made)
 }

@@ -63,6 +63,18 @@ on the panel that lights when a fact passes:
 | **presence** | Keeps the bodies' leases while they serve; a lease that lapses reads dormant within seconds and the station goes dashed. |
 | **intent** | Turns every intention: observes what it is interested in, asks its planner, files the objective, hears the runner, re-plans. |
 
+**The ground's lines follow the work, never the crew** (the ground connections cure, 2026-10-08). A
+body holds a connection to the ground only while it serves — taken when a command lands on its
+bench, its working memory's line with it, let go a few seconds after the last serve — and keeps its
+lease on a cadence with a line it opens and closes; an idle crew of any size leaves the ground
+holding the kernel's lines alone. The kernel's own are a named handful: the relay's, the
+dispatcher's, and two the beats borrow in turn; the doors' pool sheds lines idle past a minute.
+The ground declares how many bodies it can seat so that every one of them could serve at once
+(its ceiling less the kernel's reserve, two lines per serving body — 35 on a stock Postgres), and
+placement refuses the body past that budget at birth, in words, recorded. The lines held right now
+are a watchable metric (`ground_connections`); the kernel watches it from light, beside its five
+measurements, so the Monitor shows the ground filling before Postgres refuses anyone.
+
 **The four boxes** are the transports underneath: the **ground** (Postgres) where truth lives, the
 **invocation rail** (RabbitMQ) where work waits for the one body that claims it, the **events rail**
 (Kafka) where facts are published for anyone to replay, and the **gateway** (LiteLLM) every thought

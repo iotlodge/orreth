@@ -11,6 +11,7 @@
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, the perf cure before sp2 (JB's word 2026-09-29): the RETENTION beat (hourly, one kernel) · 2026-09-29
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — W91 THE BENCH SWEEP: the bench beat · 2026-10-02
 // Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: `GET /levels` · `GET /levels/context` · `POST /levels/open` (held at L2) · the manifest's levels declared at light · the mode said at light · 2026-10-05
+// Amended: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (JB's word 2026-10-08): the kernel's beats borrow from ONE private two-line pool instead of each holding a connection for life; the doors' pool sheds idle lines; the relay and the dispatcher name theirs · 2026-10-08
 //! The Rust bridge — the doors and the feed of `orreth_spine.glass` +
 //! `bridgefeed` on axum, lit in SHADOW on :4601 beside the Python Bridge on
 //! :4600, both on one ground. It serves the SAME page (`spine/glass/index.html`
@@ -229,7 +230,7 @@ impl Lit {
 /// standing tasks. `port` 0 picks a free one (tests).
 pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     let w = cfg.world.clone();
-    let mut g = Ground::connect(&w.pg_dsn).await?;
+    let mut g = Ground::connect_as(&w.pg_dsn, "orrethd light").await?;
     let schema = g.ensure_all().await?; // THE MIGRATOR: one writer; the rest wait and verify
     eprintln!("  [kernel] {}", schema.words());
     markers_live::seed(&g, &w.scope).await?;
@@ -345,6 +346,13 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             })
             .unwrap_or_default(),
     };
+    // THE GROUND CONNECTIONS CURE (2026-10-08): the doors' pool (shed when idle) and THE BEATS' POOL —
+    // two lines at most, borrowed per beat by every standing loop below (the scheduler, the presence
+    // sweep, retention, the Workshop's beats, the bench sweep, the intent rail, the keepers) where
+    // each used to hold a connection for its whole life. The relay and the dispatcher keep their own
+    // standing lines (they block on the rails). An idle kernel holds four lines; a lit crew adds none.
+    let door_pool = Pool::new(&w.pg_dsn, crate::pool::ceiling_from_env());
+    let beats = Pool::private(&w.pg_dsn, crate::pool::BEATS_CEILING, "orrethd beat");
     let app = Arc::new(App {
         cfg: cfg.clone(),
         kernel,
@@ -358,7 +366,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         gateway: gateway.clone(),
         templates,
         gate: seat_live::Ceilings::new(),
-        pool: Pool::new(&w.pg_dsn, crate::pool::ceiling_from_env()),
+        pool: door_pool.clone(),
         lit_at: crate::envelope::now_iso(),
         schema,
     });
@@ -418,7 +426,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             }
         }));
         // the keepers' beats (P6.5 sp2 · sp3), on the kernel that holds the keepers' bodies
-        let (w3, stop3, gw3) = (w.clone(), stop.clone(), gateway.clone());
+        let (w3, stop3, gw3, beats3) = (w.clone(), stop.clone(), gateway.clone(), beats.clone());
         tasks.push(tokio::spawn(async move {
             let mut next_tool = tokio::time::Instant::now()
                 + Duration::from_secs_f64(crate::mcp_live::tool_check_s());
@@ -432,11 +440,11 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                 let now = tokio::time::Instant::now();
                 if now >= next_tool {
                     next_tool = now + Duration::from_secs_f64(crate::mcp_live::tool_check_s());
-                    keeper_beat(&w3, "toolkeeper", None).await;
+                    keeper_beat(&beats3, &w3, "toolkeeper", None).await;
                 }
                 if now >= next_mind {
                     next_mind = now + Duration::from_secs_f64(stable_live::mind_check_s());
-                    keeper_beat(&w3, "stablekeeper", Some(&gw3)).await;
+                    keeper_beat(&beats3, &w3, "stablekeeper", Some(&gw3)).await;
                 }
             }
         }));
@@ -446,7 +454,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         let (w, stop) = (w.clone(), stop.clone());
         tasks.push(tokio::spawn(async move {
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
+                match Ground::connect_as(&w.pg_dsn, "orrethd relay").await {
                     Ok(g) => {
                         if let Err(e) = dispatcher::run_relay(&g, &w, stop.clone()).await {
                             eprintln!("the relay fell: {e}");
@@ -471,7 +479,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         );
         tasks.push(tokio::spawn(async move {
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
+                match Ground::connect_as(&w.pg_dsn, "orrethd dispatcher").await {
                     Ok(mut g) => {
                         if let Err(e) = dispatcher::run_dispatcher(
                             &mut g,
@@ -520,61 +528,48 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     }
     // P7 sp7: the seam's beat — the peers greeted, what waits carried, the answers carried home
     {
-        let (seam, stop) = (seam.clone(), stop.clone());
+        let (seam, stop, beats) = (seam.clone(), stop.clone(), beats.clone());
         tasks.push(tokio::spawn(async move {
-            seam.run(&stop).await;
+            seam.run(&stop, beats).await;
         }));
     }
-    // the scheduler's beat — every 5 s, claimed on the ground first
+    // the scheduler's beat — every 5 s, claimed on the ground first, on a line borrowed from the beats' pool
     {
-        let (w, stop, zone) = (w.clone(), stop.clone(), cfg.human_zone.clone());
+        let (w, stop, zone, beats) = (w.clone(), stop.clone(), cfg.human_zone.clone(), beats.clone());
         tasks.push(tokio::spawn(async move {
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
+                match beats.borrow().await {
                     Ok(mut g) => {
-                        while !stop.load(Ordering::Relaxed) {
-                            if let Err(e) = scheduler::tick(&mut g, &w, &zone).await {
-                                eprintln!("the scheduler's beat stumbled: {e}");
-                                if matches!(e, RoadError::Rail(_)) {
-                                    break; // stand again on a fresh connection
-                                }
-                            }
-                            sleep_unless_stopped(&stop, Duration::from_secs(5)).await;
+                        if let Err(e) = scheduler::tick(&mut g, &w, &zone).await {
+                            eprintln!("the scheduler's beat stumbled: {e}");
                         }
-                    }
+                    } // the line goes back here — a line whose connection ended is forgotten by the pool
                     Err(e) => eprintln!("the scheduler could not reach the ground: {e}"),
                 }
-                if !stop.load(Ordering::Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
+                sleep_unless_stopped(&stop, Duration::from_secs(5)).await;
             }
         }));
     }
     // row 4, panel sp2: the presence sweep — every 5 s; a lease that lapses or is seated
     // again becomes a fact on the feed (the note lives on the ground: no beat claim needed,
     // two kernels race for the row and one wins it)
+    // — and, the cure (2026-10-08), THE SHED on the same cadence: the doors' lines idle past
+    // SPINE_POOL_IDLE_S are closed, so a kernel nobody knocks on holds no door lines
     {
-        let (w, stop) = (w.clone(), stop.clone());
+        let (w, stop, beats, doors, idle) =
+            (w.clone(), stop.clone(), beats.clone(), door_pool.clone(), crate::pool::idle_from_env());
         tasks.push(tokio::spawn(async move {
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
+                match beats.borrow().await {
                     Ok(mut g) => {
-                        while !stop.load(Ordering::Relaxed) {
-                            if let Err(e) = presence::sweep(&mut g, &w).await {
-                                eprintln!("the presence sweep stumbled: {e}");
-                                if matches!(e, RoadError::Rail(_)) {
-                                    break; // stand again on a fresh connection
-                                }
-                            }
-                            sleep_unless_stopped(&stop, Duration::from_secs(presence::SWEEP_S))
-                                .await;
+                        if let Err(e) = presence::sweep(&mut g, &w).await {
+                            eprintln!("the presence sweep stumbled: {e}");
                         }
                     }
                     Err(e) => eprintln!("the presence sweep could not reach the ground: {e}"),
                 }
-                if !stop.load(Ordering::Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
+                doors.shed(idle);
+                sleep_unless_stopped(&stop, Duration::from_secs(presence::SWEEP_S)).await;
             }
         }));
     }
@@ -582,38 +577,28 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     // published rows past the keep window are pruned — the relay's poll stays O(pending) by the
     // partial index, the table stays a queue's size, the fact door keeps its window
     {
-        let (w, stop) = (w.clone(), stop.clone());
+        let (w, stop, beats) = (w.clone(), stop.clone(), beats.clone());
         tasks.push(tokio::spawn(async move {
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
-                    Ok(g) => {
-                        while !stop.load(Ordering::Relaxed) {
-                            match crate::beat::try_beat(&g, &w.scope, "retention").await {
-                                Ok(true) => {
-                                    match outbox::prune(&g, outbox::keep_days()).await {
-                                        Ok(n) if n > 0 => eprintln!(
-                                            "  [kernel] retention: {n} published outbox rows older than {} days pruned",
-                                            outbox::keep_days()
-                                        ),
-                                        Ok(_) => {}
-                                        Err(e) => eprintln!("the retention sweep stumbled: {e}"),
-                                    }
-                                    let _ = crate::beat::end_beat(&g, &w.scope, "retention").await;
-                                }
-                                Ok(false) => {}
-                                Err(e) => {
-                                    eprintln!("the retention beat could not be claimed: {e}");
-                                    break;
-                                }
+                match beats.borrow().await {
+                    Ok(g) => match crate::beat::try_beat(&g, &w.scope, "retention").await {
+                        Ok(true) => {
+                            match outbox::prune(&g, outbox::keep_days()).await {
+                                Ok(n) if n > 0 => eprintln!(
+                                    "  [kernel] retention: {n} published outbox rows older than {} days pruned",
+                                    outbox::keep_days()
+                                ),
+                                Ok(_) => {}
+                                Err(e) => eprintln!("the retention sweep stumbled: {e}"),
                             }
-                            sleep_unless_stopped(&stop, Duration::from_secs(3600)).await;
+                            let _ = crate::beat::end_beat(&g, &w.scope, "retention").await;
                         }
-                    }
+                        Ok(false) => {}
+                        Err(e) => eprintln!("the retention beat could not be claimed: {e}"),
+                    },
                     Err(e) => eprintln!("the retention sweep could not reach the ground: {e}"),
                 }
-                if !stop.load(Ordering::Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
+                sleep_unless_stopped(&stop, Duration::from_secs(3600)).await;
             }
         }));
     }
@@ -623,14 +608,14 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     // BEAT every minute under `grade` (the last hour's live replies handed to the grader under each reply's own marker);
     // THE PRUNE BEAT hourly under `prune` (the crafts nobody wears any more retired, never deleted, never at request time)
     {
-        let (w, stop, seats_bodies) = (w.clone(), stop.clone(), cfg.bodies);
+        let (w, stop, seats_bodies, beats) = (w.clone(), stop.clone(), cfg.bodies, beats.clone());
         tasks.push(tokio::spawn(async move {
             let mut next_grade = tokio::time::Instant::now() + Duration::from_secs(20);
             let mut next_prune = tokio::time::Instant::now() + Duration::from_secs(60);
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
+                match beats.borrow().await {
                     Ok(mut g) => {
-                        while !stop.load(Ordering::Relaxed) {
+                        loop {
                             // the experiment beat
                             match crate::beat::try_beat(&g, &w.scope, "experiment").await {
                                 Ok(true) => {
@@ -701,14 +686,12 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                                     }
                                 }
                             }
-                            sleep_unless_stopped(&stop, Duration::from_secs(3)).await;
+                            break; // one pass per borrowed line; the line goes back before the rest
                         }
                     }
                     Err(e) => eprintln!("the Workshop's beats could not reach the ground: {e}"),
                 }
-                if !stop.load(Ordering::Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
+                sleep_unless_stopped(&stop, Duration::from_secs(3)).await;
             }
         }));
     }
@@ -716,49 +699,41 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     // past SPINE_BENCH_SWEEP_S with no body serving it is dispatched again once, then rested with
     // words — no ask waits for days again
     {
-        let (w, stop) = (w.clone(), stop.clone());
+        let (w, stop, beats) = (w.clone(), stop.clone(), beats.clone());
         tasks.push(tokio::spawn(async move {
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
-                    Ok(mut g) => {
-                        while !stop.load(Ordering::Relaxed) {
-                            match crate::beat::try_beat(&g, &w.scope, "bench").await {
-                                Ok(true) => {
-                                    if let Err(e) =
-                                        crate::bench::sweep(&mut g, &w, crate::bench::sweep_after())
-                                            .await
-                                    {
-                                        eprintln!("the bench sweep stumbled: {e}");
-                                    }
-                                    let _ = crate::beat::end_beat(&g, &w.scope, "bench").await;
-                                }
-                                Ok(false) => {}
-                                Err(e) => {
-                                    eprintln!("the bench beat could not be claimed: {e}");
-                                    break;
-                                }
+                match beats.borrow().await {
+                    Ok(mut g) => match crate::beat::try_beat(&g, &w.scope, "bench").await {
+                        Ok(true) => {
+                            if let Err(e) =
+                                crate::bench::sweep(&mut g, &w, crate::bench::sweep_after()).await
+                            {
+                                eprintln!("the bench sweep stumbled: {e}");
                             }
-                            sleep_unless_stopped(&stop, Duration::from_secs(30)).await;
+                            let _ = crate::beat::end_beat(&g, &w.scope, "bench").await;
                         }
-                    }
+                        Ok(false) => {}
+                        Err(e) => eprintln!("the bench beat could not be claimed: {e}"),
+                    },
                     Err(e) => eprintln!("the bench sweep could not reach the ground: {e}"),
                 }
-                if !stop.load(Ordering::Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
+                sleep_unless_stopped(&stop, Duration::from_secs(30)).await;
             }
         }));
     }
-    // the intent rail's beat — Resiliency declared at boot, then a turn every 3 s
+    // the intent rail's beat — Resiliency declared at boot, then a turn every 3 s, each on a borrowed line
     {
-        let (w, stop) = (w.clone(), stop.clone());
+        let (w, stop, beats) = (w.clone(), stop.clone(), beats.clone());
         tasks.push(tokio::spawn(async move {
+            let mut declared = false;
             while !stop.load(Ordering::Relaxed) {
-                match Ground::connect(&w.pg_dsn).await {
+                match beats.borrow().await {
                     Ok(mut g) => {
                         let r = crate::intent::resiliency();
-                        let mut declared = false;
                         for attempt in 0..20 {
+                            if declared {
+                                break;
+                            }
                             match intent_live::declared(
                                 &mut g,
                                 &w,
@@ -786,6 +761,14 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                                     match crate::operating_live::watches_at_light(&g, &w.scope).await {
                                         Ok(made) => {
                                             for n in made {
+                                                if n == crate::operating::GROUND_WATCH {
+                                                    // the cure (2026-10-08): the ground's watch, in its own words
+                                                    if let Ok(c) = crate::monitor::connections_declared(&g).await {
+                                                        eprintln!("  [operating] the kernel watches {n} >= {} (the ground's ceiling {} less its reserve {}; {} seats)",
+                                                                  c.ceiling - c.reserve, c.ceiling, c.reserve, c.seats);
+                                                    }
+                                                    continue;
+                                                }
                                                 eprintln!("  [operating] the kernel watches {n} < {} (unknown turns nothing red)", crate::operating::TARGET);
                                             }
                                         }
@@ -801,22 +784,13 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                                 }
                             }
                         }
-                        let _ = declared;
-                        while !stop.load(Ordering::Relaxed) {
-                            if let Err(e) = intent_live::turn(&mut g, &w).await {
-                                eprintln!("the intent rail's turn stumbled: {e}");
-                                if matches!(e, RoadError::Rail(_)) {
-                                    break;
-                                }
-                            }
-                            sleep_unless_stopped(&stop, Duration::from_secs(3)).await;
+                        if let Err(e) = intent_live::turn(&mut g, &w).await {
+                            eprintln!("the intent rail's turn stumbled: {e}");
                         }
                     }
                     Err(e) => eprintln!("the intent rail could not reach the ground: {e}"),
                 }
-                if !stop.load(Ordering::Relaxed) {
-                    tokio::time::sleep(Duration::from_millis(500)).await;
-                }
+                sleep_unless_stopped(&stop, Duration::from_secs(3)).await;
             }
         }));
     }
@@ -857,8 +831,8 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
 
 /// One keeper's beat (`BridgeRig._keeper_beat` · `_stable_beat`): under the
 /// keeper's DID when the keeper is joined here; its words on the kernel's stderr.
-async fn keeper_beat(w: &World, keeper: &str, gw: Option<&Gateway>) {
-    let mut g = match Ground::connect(&w.pg_dsn).await {
+async fn keeper_beat(beats: &Arc<Pool>, w: &World, keeper: &str, gw: Option<&Gateway>) {
+    let mut g = match beats.borrow().await {
         Ok(g) => g,
         Err(e) => {
             eprintln!("the {keeper}'s beat could not reach the ground: {e}");

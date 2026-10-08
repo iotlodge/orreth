@@ -381,4 +381,11 @@ the same files, unchanged — before any module earns the word "ported".
     (tools-v0).
   - `schema_version` 8 · `schema_tables` 49 (schema-v0) — `spine_feedback`, `spine_includes` and `spine_grading` join at
     Phase 8 sp5; `beat_lock` (loops-v0) gains `grade` 8.
+  - THE GROUND CONNECTIONS CURE (2026-10-08): `seats_budget` (placement-v0) — `input.ceiling` · `input.reserve` ·
+    `input.per_body` → `expect.seats` (the ceiling less the kernel's reserve, in lines per serving body, never below zero);
+    `seat_honor` — `input.connections` (ceiling · reserve · per_body · seats) + `input.seated` (the bodies alive now) →
+    `expect.honored` · `expect.reasons` (the one refusal in words: "the ground seats N bodies at once — its ceiling of C
+    connections less the kernel's R, 2 lines per serving body — and S are seated already"); `ground_watch` (watch-v0) —
+    `input.connections` → `expect.watch` (the kernel's sixth watch: `ground_connections >= ceiling − reserve`, never below 1).
+    `watch_metrics` 20 → 21 (`ground_connections`).
 

@@ -1661,6 +1661,12 @@ class BridgeRig:
                     # Phase 8 sp5: THE OPERATING STATE beside Resiliency, and the kernel's five watches
                     _op.intention_at_light(conn)
                     for w in _op.watches_at_light(conn):
+                        if w == _op.GROUND_WATCH:       # the cure (2026-10-08): the ground's watch, in its own words
+                            budget = placement.connections_declared(conn=conn)
+                            print(f"  [operating] the kernel watches {w} >= {budget['ceiling'] - budget['reserve']} "
+                                  f"(the ground's ceiling {budget['ceiling']} less its reserve {budget['reserve']}; "
+                                  f"{budget['seats']} seats)", file=sys.stderr, flush=True)
+                            continue
                         print(f"  [operating] the kernel watches {w} < {_op.TARGET:g} (unknown turns nothing red)", file=sys.stderr, flush=True)
                     break
                 except Exception as e:
@@ -1702,18 +1708,27 @@ class BridgeRig:
                 except Exception as e:      # a body that cannot read the canon
                     print(f"mitl could not acquire the ontology: {type(e).__name__}: {e}",
                           file=sys.stderr, flush=True)      # still serves — and says so
-            self._sign_in(f"serve:{resident.name}")
-            while not self._stop.is_set() and not getattr(resident, "_rest", False):   # Phase 8 sp4: rested at a safe boundary
-                if self._yielding(f"serve:{resident.name}"):
-                    continue                # lock 5: the bench is a test's while the rig yields
-                try:
-                    presence.renew(conn, resident.identity.did, resident.name,
-                                   resident.kind, scope=resident.scope)   # M2: alive while I serve — at my level
-                    resident.serve_once(conn, idle_s=1.0, max_commands=50)
-                except Exception:
-                    pass
-            if getattr(resident, "_rest", False):
-                print(f"  [kernel] {resident.name} stopped whole — at rest on the human's word", file=sys.stderr, flush=True)
+            presence.renew(conn, resident.identity.did, resident.name, resident.kind, scope=resident.scope)
+            resident._lease_at = time.monotonic()           # M2: alive from birth
+        # the cure (2026-10-08): the birth's connection is closed above — the LIFE holds a ground line
+        # only while it serves (`hold_line` when a command lands · `release_line` after SPINE_BODY_IDLE_S
+        # idle), the lease kept on its cadence; an idle crew leaves the ground holding the loops' lines alone
+        hold_s = _body.idle_s()
+        self._sign_in(f"serve:{resident.name}")
+        while not self._stop.is_set() and not getattr(resident, "_rest", False):   # Phase 8 sp4: rested at a safe boundary
+            if self._park.is_set():
+                resident.release_line()     # lock 5: the bench is a test's while the rig yields — and the ground's line let go first
+            if self._yielding(f"serve:{resident.name}"):
+                continue
+            try:
+                resident.keep_lease(self.dsn)              # M2: alive while I stand — at my level, every RENEW_S
+                resident.serve_once(None, idle_s=1.0, max_commands=50)
+                resident.release_line(hold_s)
+            except Exception:
+                resident.release_line()
+        resident.release_line()
+        if getattr(resident, "_rest", False):
+            print(f"  [kernel] {resident.name} stopped whole — at rest on the human's word", file=sys.stderr, flush=True)
 
     # ---- lock 5: THE RIG YIELDS ---------------------------------------------------------
     # One rig per test session (canon 0005, JB's lock 5, 2026-09-27). The suite
