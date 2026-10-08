@@ -1,8 +1,8 @@
 {
  "contract": "orreth.crafts/1",
  "version": 0,
- "generated_by": "orreth_spine.crafts (the Python reference) - rearch Phase 8 sp2, THE SHELF WIDENED: the craft kinds on the one shelf, the graph declaration v0, the hull's edges, the wear rows, the cut's demand; Phase 8 sp3, THE WORKSHOP v0: the graph BRANCHES (an edge wears `when`: edge \u00b7 ask \u00b7 reply; one default at most; forward only), per-node refs typed, `graph_path` is the default line",
- "generated_at": "2026-10-06",
+ "generated_by": "orreth_spine.crafts (the Python reference) - rearch Phase 8 sp2, THE SHELF WIDENED: the craft kinds on the one shelf, the graph declaration v0, the hull's edges, the wear rows, the cut's demand; Phase 8 sp3, THE WORKSHOP v0: the graph BRANCHES (an edge wears `when`: edge \u00b7 ask \u00b7 reply; one default at most; forward only), per-node refs typed, `graph_path` is the default line; the cut's gate (shelf | experiment) by Phase 8 sp4 THE EXPERIMENT AND THE CUT",
+ "generated_at": "2026-10-07",
  "cases": [
   {
    "name": "craft_name: librarian as a template",
@@ -1058,6 +1058,30 @@
    }
   },
   {
+   "name": "hull_edge: marker thought under improvement is an EVENT (Phase 8 sp4 \u2014 an include dispatched by interest)",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "thought",
+    "parent_kind": "improvement"
+   },
+   "expect": {
+    "edge": "event",
+    "words": "routed to the event edge \u2014 a marker of kind improvement asked for a response"
+   }
+  },
+  {
+   "name": "hull_edge: marker thought under experiment is an EVENT (Phase 8 sp4 \u2014 an include dispatched by interest)",
+   "kind": "hull_edge",
+   "input": {
+    "marker_kind": "thought",
+    "parent_kind": "experiment"
+   },
+   "expect": {
+    "edge": "event",
+    "words": "routed to the event edge \u2014 a marker of kind experiment asked for a response"
+   }
+  },
+  {
    "name": "source_form: a locator by name",
    "kind": "source_form",
    "input": {
@@ -1173,6 +1197,7 @@
    "expect": {
     "ok": true,
     "level": "L2",
+    "gate": "shelf",
     "reason": null
    }
   },
@@ -1201,6 +1226,7 @@
    "expect": {
     "ok": true,
     "level": "L2",
+    "gate": "shelf",
     "reason": null
    }
   },
@@ -1220,6 +1246,7 @@
    "expect": {
     "ok": true,
     "level": "L3-code",
+    "gate": "shelf",
     "reason": null
    }
   },
@@ -1238,6 +1265,7 @@
    "expect": {
     "ok": true,
     "level": "L3-code",
+    "gate": "shelf",
     "reason": null
    }
   },
@@ -1257,6 +1285,7 @@
    "expect": {
     "ok": true,
     "level": "L2",
+    "gate": "shelf",
     "reason": null
    }
   },
@@ -1276,11 +1305,12 @@
    "expect": {
     "ok": false,
     "level": null,
+    "gate": null,
     "reason": "firmware is cut only in a dev universe \u2014 it reaches prod as a release"
    }
   },
   {
-   "name": "cut_demand: an agent template",
+   "name": "cut_demand: an agent template OPENS the Experiment (Phase 8 sp4)",
    "kind": "cut_demand",
    "input": {
     "kind": "template",
@@ -1293,9 +1323,10 @@
     "mode": "dev"
    },
    "expect": {
-    "ok": false,
-    "level": null,
-    "reason": "an agent's cut goes through the Experiment \u2014 two arms, the grader's verdict, the stamped promotion (spoonful 4)"
+    "ok": true,
+    "level": "L2",
+    "gate": "experiment",
+    "reason": null
    }
   },
   {
@@ -1309,6 +1340,7 @@
    "expect": {
     "ok": false,
     "level": null,
+    "gate": null,
     "reason": "a craft kind is one of template, prompt, skill, policy, graph, binding, golden \u2014 not 'tool'"
    }
   },

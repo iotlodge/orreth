@@ -81,6 +81,7 @@ BACKOFF_CAP_S = 30.0                              # the longest wait before a re
 FAKE_REPLY_DIAL = "SPINE_FAKE_REPLY"                # a proof scripts what the fake mind says when the gateway is dark
 KERNEL_DOOR_DIAL = "SPINE_KERNEL_DOOR"            # where a spawned body streams its words (http://127.0.0.1:<port>)
 EPHEMERAL_DIAL = "SPINE_BODY_EPHEMERAL"           # tests only: an ephemeral self (home=None)
+SHELF_PREFIX = "shelf:"                           # Phase 8 sp4: a seat whose template is the shelf's standing version
 
 
 # ---- the pure laws (fixture bodies-v0) ------------------------------------------------------------
@@ -295,6 +296,15 @@ def serve(template, binding, policy, *, stop: threading.Event, ready: threading.
     gateway, mind = _gateway()
     _tools.GATEWAY = gateway                               # the keepers' checks ping through the lane
     services.HOME = services.services_home(home)           # the services' seeds beside the agents'
+    if isinstance(template, str) and template.startswith(SHELF_PREFIX):
+        # Phase 8 sp4: a promoted AGENT wears the shelf's standing version of its template — the
+        # seat names `shelf:<name>.template`; the body reads it off the ground at birth
+        with psycopg.connect(PG_DSN, autocommit=True) as conn:
+            row = services.get(conn, template[len(SHELF_PREFIX):])
+        if row is None or row["state"] == "retired":
+            _say(f"{template} is not standing on the shelf — this body never starts")
+            return EXIT_REFUSED
+        template = dict(row["manifest"])
     r = Resident(template, gateway=gateway, home=home, binding=binding)
     if policy is None:
         return EXIT_NO_POLICY
@@ -366,13 +376,52 @@ def serve(template, binding, policy, *, stop: threading.Event, ready: threading.
     return EXIT_STOPPED
 
 
+def trial(experiment_id: str, policy) -> int:
+    """Phase 8 sp4: THE TRIAL LIFE as its own process — the Experiment's candidate instantiated
+    as a life of the agent's own self in the experiment room: it knocks at the kernel's desk like
+    any spawned body (its ticket admits it), joins at the room's scope, runs the golden set
+    through its own graph, records the run under the kernel's run id and stops whole."""
+    import psycopg
+    from . import experiments, ground, services, tools as _tools
+    from .rails import PG_DSN
+    home = _home()
+    gateway, mind = _gateway()
+    _tools.GATEWAY = gateway
+    services.HOME = services.services_home(home)
+    with psycopg.connect(PG_DSN, autocommit=True) as conn:
+        ground.ensure_all(conn)
+        exp = experiments.get(conn, experiment_id)
+        if exp is None:
+            _say(f"no experiment {experiment_id} on this ground — the trial never starts")
+            return EXIT_REFUSED
+        door = os.environ.get(KERNEL_DOOR_DIAL)
+        if door:
+            from . import desk
+            from .resident import Resident
+            probe = Resident(exp["candidate"], gateway=gateway, home=home, scope=exp["room"])
+            probe.load_policy(policy)
+            lease = desk.knock(door, probe.identity, name=probe.name, kind=probe.kind, template_hash=probe.template_hash,
+                               policy_hash=probe.policy["hash"], ticket=os.environ.get(desk.SPAWN_TICKET_DIAL), say=_say,
+                               scope=exp["room"])
+            if lease is None:
+                _say(f"{probe.name}'s trial life was turned away at the door — never started")
+                return EXIT_REFUSED
+        try:
+            experiments.trial(conn, exp, gateway=gateway, home=home, policy=policy, say=_say)
+        except Exception as e:                              # noqa: BLE001 — said, recorded by the beat as a skipped arm
+            _say(f"the trial life stumbled: {type(e).__name__}: {str(e)[:300]}")
+            return 1
+    return EXIT_STOPPED
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m orreth_spine.body",
                                  description="One body as its own process (P7 sp6, the bodies' seam).")
-    ap.add_argument("--template", help="the resident template (orreth-resident-template/1)")
+    ap.add_argument("--template", help="the resident template (orreth-resident-template/1), or shelf:<name>.template (Phase 8 sp4: a promoted agent)")
     ap.add_argument("--binding", help="a workspace binding (bindings/<pull>.v0.json)")
     ap.add_argument("--policy", default=str(SPINE / "policy" / "covenant-policy.v1.json"),
                     help="the covenant policy the body wears (no policy, no join)")
+    ap.add_argument("--experiment", help="Phase 8 sp4: run as the Experiment's trial life (the experiment's id) and stop whole")
     a = ap.parse_args(argv)
     stop = threading.Event()
 
@@ -381,6 +430,8 @@ def main(argv: list[str] | None = None) -> int:
     signal.signal(signal.SIGINT, _on_signal)
     signal.signal(signal.SIGTERM, _on_signal)
 
+    if a.experiment:
+        return trial(a.experiment, a.policy)
     if not a.template:
         ap.error("--template is required")
     return serve(a.template, a.binding, a.policy, stop=stop)

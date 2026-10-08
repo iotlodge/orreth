@@ -344,6 +344,14 @@ pub async fn cut_check<C: GenericClient>(c: &C, scope: &str, person: &str, draft
         return Err(refused(python_str(&dem["reason"])));
     }
     let sn = craft_name(&name, &kind).map_err(refused)?;
+    if dem["gate"] == json!("experiment") {
+        // Phase 8 sp4: an agent's cut OPENS the Experiment — checked now, in words
+        let w = World { scope: scope.to_string(), ..World::from_env() };
+        let x = crate::experiments_live::check_open(c, &w, person, draft_id).await?;
+        return Ok(json!({"draft": d, "shelf_name": sn, "verb": "experiment", "version": x["current_version"].as_i64().unwrap_or(0) + 1,
+                         "level": dem["level"], "mode": mode, "gate": "experiment", "room": x["room"], "cases": x["cases"],
+                         "current_version": x["current_version"]}));
+    }
     let (verb, version) = match services_live::get(c, scope, &sn).await? {
         None => ("register", 1),
         Some(row) if row["kind"] != json!(kind) => {
@@ -360,13 +368,19 @@ pub async fn cut_check<C: GenericClient>(c: &C, scope: &str, person: &str, draft
         }
         Some(row) => ("version", row["version"].as_i64().unwrap_or(1) + 1),
     };
-    Ok(json!({"draft": d, "shelf_name": sn, "verb": verb, "version": version, "level": dem["level"], "mode": mode}))
+    Ok(json!({"draft": d, "shelf_name": sn, "verb": verb, "version": version, "level": dem["level"], "mode": mode, "gate": "shelf"}))
 }
 
 /// `crafts.hold_cut`: the cut is the gate — held at the interlock as the kernel's own act at
 /// the level the class demands; the human's yes settles it. 202 `{held, level, class, shelf_name, verb, version}`.
 pub async fn hold_cut(g: &mut Ground, w: &World, person: &str, draft_id: &str, session: Option<&str>) -> Result<Value, RoadError> {
     let c = cut_check(g.client(), &w.scope, person, draft_id).await?;
+    if c["gate"] == json!("experiment") {
+        // Phase 8 sp4: the Experiment's opening is held instead (`experiment.open`, L2)
+        let made = crate::experiments_live::hold_open(g, w, person, draft_id, session).await?;
+        return Ok(json!({"held": made["held"], "level": made["level"], "class": CUT_CLASS, "shelf_name": c["shelf_name"],
+                         "verb": "experiment", "version": c["version"], "gate": "experiment", "room": c["room"], "cases": c["cases"]}));
+    }
     let (name, kind) = (python_str(&c["draft"]["name"]), python_str(&c["draft"]["kind"]));
     let level = python_str(&c["level"]);
     let held = crate::proof_live::hold_kernel_act(
@@ -382,7 +396,7 @@ pub async fn hold_cut(g: &mut Ground, w: &World, person: &str, draft_id: &str, s
         false,
     )
     .await?;
-    Ok(json!({"held": held, "level": level, "class": CUT_CLASS, "shelf_name": c["shelf_name"], "verb": c["verb"], "version": c["version"]}))
+    Ok(json!({"held": held, "level": level, "class": CUT_CLASS, "shelf_name": c["shelf_name"], "verb": c["verb"], "version": c["version"], "gate": "shelf"}))
 }
 
 /// `crafts.cut` inside `tx` (the settle arm): the draft lands on the shelf — registered, or

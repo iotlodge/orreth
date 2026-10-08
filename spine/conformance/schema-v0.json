@@ -1,19 +1,19 @@
 {
  "contract": "orreth.schema/1",
  "version": 0,
- "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2); version 5 by Phase 8 sp1 THE PATH",
- "generated_at": "2026-10-05",
+ "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2); version 7 by Phase 8 sp4 THE EXPERIMENT AND THE CUT",
+ "generated_at": "2026-10-07",
  "cases": [
   {
-   "name": "schema_version: both kernels carry the same number - 5: the levels (spine_levels, THE PATH, Phase 8 sp1, 2026-10-05), after 4: an ask's resent_at (W91), 3: a watch's rest and a peer's forgetting, 2: the indexes; bumped together whenever any DDL statement changes",
+   "name": "schema_version: both kernels carry the same number - 7: the experiments, the verdicts and the body seats (spine_experiments, spine_verdicts, spine_body_seats; THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07), after 6: the wear table and the draft shelf, 5: the levels, 4: an ask's resent_at (W91), 3: a watch's rest and a peer's forgetting, 2: the indexes; bumped together whenever any DDL statement changes",
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 6
+    "version": 7
    }
   },
   {
-   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 41 tables at schema 5 (spine_levels joins at Phase 8 sp1)",
+   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 46 tables at schema 7 (spine_experiments, spine_verdicts and spine_body_seats join at Phase 8 sp4)",
    "kind": "schema_tables",
    "input": {},
    "expect": {
@@ -21,9 +21,11 @@
      "spine_aggregate_cursor",
      "spine_asks",
      "spine_authenticators",
+     "spine_body_seats",
      "spine_desk",
      "spine_digests",
      "spine_drafts",
+     "spine_experiments",
      "spine_harness_runs",
      "spine_heartbeat",
      "spine_inbox",
@@ -58,11 +60,12 @@
      "spine_services",
      "spine_sessions",
      "spine_tool_calls",
+     "spine_verdicts",
      "spine_watches",
      "spine_wear",
      "spine_world"
     ],
-    "count": 43
+    "count": 46
    }
   }
  ]

@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, crafts, desk, dispatch, doors, envelope as ev, export, ground, harness, intent, levels,
+from orreth_spine import (body as _body, cells, crafts, desk, dispatch, doors, envelope as ev, experiments, export, ground, harness, intent, levels,
                           levers, markers, mcp, mitl, monitor, placement, presence, profile, projector, proof, rails, resident,
                           scheduler, seat, services, stable, store, digest, tools)
 from orreth_spine.identity import Identity
@@ -242,6 +242,45 @@ def test_fixture(contract, case):
         assert d == exp["document"] and ev.content_hash(d) == exp["hash"]
     elif kind == "cut_words":
         assert crafts.cut_words(inp["name"], inp["kind"], inp["verb"], inp["version"]) == exp["words"]
+    elif kind == "exp_room":                     # Phase 8 sp4: THE EXPERIMENT AND THE CUT
+        assert experiments.room_name(inp["agent"], inp["n"]) == exp["room"]
+    elif kind == "exp_arms_plan":
+        assert experiments.arms_plan(inp["current_version"]) == exp["words"]
+    elif kind == "exp_open_words":
+        assert experiments.open_words(inp["agent"], inp["room"], inp["current_version"], inp["golden_n"]) == exp["words"]
+    elif kind == "exp_grade":
+        assert experiments.grade_of(inp["text"]) == exp["verdict"]
+    elif kind == "exp_risk":
+        assert experiments.risk_of(inp["text"]) == exp["risk"]
+    elif kind == "exp_leaning":
+        assert experiments.leaning_of(inp["experiment"]) == exp["leaning"]
+    elif kind == "exp_proposal_words":
+        assert experiments.proposal_words(inp["experiment"]) == exp["words"]
+    elif kind == "exp_arm_words":
+        assert experiments.arm_words(inp["side"], inp["arm"], inp["experiment"]) == exp["words"]
+    elif kind == "promote_demand":
+        assert experiments.promote_demand(inp["template_kind"]) == exp
+    elif kind == "ladder_legal":
+        assert experiments.ladder_legal(inp["from"], inp["to"]) == exp["ok"]
+    elif kind == "ladder_refusal":
+        assert experiments.ladder_refusal(inp["name"], inp["from"], inp["to"]) == exp["words"]
+    elif kind == "ladder_words":
+        if inp["rung"] == "rested":
+            assert experiments.rest_words(inp["name"]) == exp["words"]
+        elif inp["rung"] == "decommissioned":
+            assert experiments.decom_words(inp["name"], inp["did"], inp["removed"], inp["kept"]) == exp["words"]
+        elif inp["rung"] == "promote":
+            assert experiments.promote_words(inp["name"], inp["version"], inp["at"]) == exp["words"]
+        else:
+            assert experiments.restore_words(inp["name"], inp["at"]) == exp["words"]
+    elif kind == "deploy_at":
+        if "error" in exp:
+            with pytest.raises(ValueError, match=re.escape(exp["error"])):
+                experiments.deploy_at(inp["universe"], inp["asked"], inp["standing"])
+        else:
+            assert experiments.deploy_at(inp["universe"], inp["asked"], inp["standing"]) == exp["path"]
+    elif kind == "prune_words":
+        assert experiments.prune_words(inp["name"], inp["kind"], inp["last_wearer"]) == exp["words"]
     elif kind == "worn_words":
         assert crafts.worn_words(inp["component"], inp["wearers"]) == exp["words"]
     elif kind == "schema_version":

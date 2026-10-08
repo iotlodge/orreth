@@ -514,6 +514,22 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
                                   parent_marker=row[3], confirmed_by=by)
                 result = (f"the {made['name']} is on the shelf as version {made['version']} ({made['state']}) — "
                           f"pin {made['manifest_hash'][7:19]}…; the draft is spent")
+            elif held["tool"] == "experiment.open":      # Phase 8 sp4: an agent's cut OPENS the Experiment — the room, the arms, the marker
+                from . import experiments
+                result = experiments.open_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
+            elif held["tool"] == "experiment.promote":   # Phase 8 sp4: THE STAMPED PROMOTION — the sibling version, the seat, the next life
+                from . import experiments
+                result = experiments.promote_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
+            elif held["tool"] == "body.rest":            # Phase 8 sp4: the ladder's first rung — the stop (rule 11)
+                from . import experiments
+                result = experiments.rest_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
+            elif held["tool"] == "body.decommission":    # the grave: live objects removed, the self and the record kept
+                from . import experiments, stable
+                result = experiments.decom_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3],
+                                              gw=stable.Gateway() if stable.Gateway().ready() else None)
+            elif held["tool"] == "body.restore":         # a new life from the shelf, never a revival
+                from . import experiments
+                result = experiments.restore_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
             elif held["tool"].startswith("mind."):        # P6.5 sp3: the Stable's acts — register · assign ·
                 from . import stable                     # unassign · refill · re-pin; the keeper proposed, the human cut
                 result = stable.settle(conn, held, asker=asker, ask_id=ask_id, parent_marker=row[3],
@@ -550,4 +566,7 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
             correlation_id=ask_id, authority_chain=chain, marker=marker,
             aggregate={"type": "ask", "id": ask_id, "sequence": _next_seq(cur, ask_id)})
         outbox.add_row(cur, ev.encode(r), r["message_id"])
+    from . import experiments as _xp                     # Phase 8 sp4: the kernel's hands owed by the act, AFTER the commit
+    for said in _xp.run_hands():
+        print(f"  [kernel] {said}", flush=True)
     return {"ask_id": ask_id, "status": status, "proof": proof, "reply": reply}

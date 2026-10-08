@@ -48,7 +48,7 @@ pub use crate::watch::WATCH_TURNED;
 /// (a body parked, a tool hop, a lease crossing the line, a lever pulled, a seat taken, a
 /// body at the join desk, an intention's life, the shelf's and the Stable's changes, a
 /// memory landed, the kernel's own heartbeat) now reaches THE PANEL as a pointer.
-pub const FEED_TOPICS: [&str; 38] = [
+pub const FEED_TOPICS: [&str; 45] = [
     ASK_RECEIVED,
     crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
@@ -91,6 +91,15 @@ pub const FEED_TOPICS: [&str; 38] = [
     crate::body::REFUSED,
     // ---- Phase 8 sp1: a floor or room opened — at light, by the manifest, on a person's word ----
     crate::levels::LEVEL_OPENED,
+    // ---- Phase 8 sp4: THE EXPERIMENT AND THE CUT — an experiment opened · proposed · settled, a reviewer's signed
+    // verdict, a body rested · decommissioned · restored ----
+    crate::experiments::EXPERIMENT_OPENED,
+    crate::experiments::EXPERIMENT_PROPOSED,
+    crate::experiments::EXPERIMENT_SETTLED,
+    crate::experiments::VERDICT,
+    crate::experiments::BODY_RESTED,
+    crate::experiments::BODY_DECOMMISSIONED,
+    crate::experiments::BODY_RESTORED,
 ];
 
 // ---- the fact, minted now ------------------------------------------------------------
@@ -858,6 +867,28 @@ pub async fn settle_kernel_act(
                 // Phase 8 sp2: THE CUT — the draft lands on the shelf as the ladder's own fact, the person on the chain
                 crate::crafts_live::cut_in(&tx, w, &held["args"], &asker).await?
             }
+            t if t == crate::experiments::OPEN_TOOL => {
+                // Phase 8 sp4: an agent's cut OPENS the Experiment — the room, the arms, the marker
+                crate::experiments_live::open_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
+            }
+            t if t == crate::experiments::PROMOTE_TOOL => {
+                // Phase 8 sp4: THE STAMPED PROMOTION — the sibling version, the seat, the next life
+                crate::experiments_live::promote_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
+            }
+            t if t == crate::experiments::REST_TOOL => {
+                // Phase 8 sp4: the ladder's first rung — the stop (rule 11)
+                crate::experiments_live::rest_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
+            }
+            t if t == crate::experiments::DECOM_TOOL => {
+                // the grave: live objects removed, the self and the record kept
+                let gw = crate::gateway::Gateway::from_env();
+                let ready = gw.ready().await;
+                crate::experiments_live::decom_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref(), if ready { Some(&gw) } else { None }).await?
+            }
+            t if t == crate::experiments::RESTORE_TOOL => {
+                // a new life from the shelf, never a revival
+                crate::experiments_live::restore_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
+            }
             "world.rehome" => {
                 // P7 sp7: the universe re-homed — its epoch advances, the old home may not commit
                 let to_cell = held["args"]["to_cell"]
@@ -969,6 +1000,8 @@ pub async fn settle_kernel_act(
     )
     .await?;
     tx.commit().await?;
+    // Phase 8 sp4: the kernel's hands the act owed — AFTER the commit (a body reads the shelf at birth)
+    crate::experiments_live::run_hands(g, w).await;
     Ok(json!({"ask_id": ask_id, "status": status, "proof": proof, "reply": reply}))
 }
 

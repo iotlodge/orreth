@@ -262,7 +262,8 @@ async fn the_shelf_widened_crafts_addressed_the_wear_rows_written_and_a_draft_cu
     assert_eq!(s, 201, "{a}");
     let (s, r) = knock(port, "POST", "/drafts/cut", Some(&json!({"draft_id": a["draft"]["draft_id"]})), &jb).await;
     assert_eq!(s, 400, "{r}");
-    assert!(r["error"].as_str().unwrap().contains("goes through the Experiment"), "{r}");
+    // Phase 8 sp4: an agent's cut OPENS the Experiment — and the Experiment's evidence is required
+    assert!(r["error"].as_str().unwrap().contains("bob has no golden set on the shelf"), "{r}");
     // the owner's own prompt: held at L2, nothing on the shelf before the yes
     let (s, d) = knock(port, "POST", "/drafts", Some(&json!({"kind": "prompt", "name": "greeting", "body": {"text": "Greet the human by name."}})), &jb).await;
     assert_eq!(s, 201, "{d}");

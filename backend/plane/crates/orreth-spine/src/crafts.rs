@@ -381,12 +381,16 @@ pub fn branches(g: &Value) -> Vec<String> {
 
 /// Which of the hull's three edges an ask takes, read off its marker.
 pub fn hull_edge(marker_kind: Option<&str>, parent_kind: Option<&str>) -> &'static str {
-    if marker_kind == Some("thought") {
-        return "chat";
-    }
+    // Phase 8 sp4: a THOUGHT under a non-structural parent is an EVENT — an include dispatched by interest
     match parent_kind {
         None | Some("") => "chat",
-        Some(k) if STRUCTURAL.contains(&k) => "work",
+        Some(k) if STRUCTURAL.contains(&k) => {
+            if marker_kind == Some("thought") {
+                "chat"
+            } else {
+                "work"
+            }
+        }
         Some(_) => "event",
     }
 }
@@ -427,14 +431,15 @@ pub fn source_form(manifest: &Value) -> Value {
     json!({"ok": true, "form": "repo", "reason": null})
 }
 
-/// What a cut demands, by the craft's class (0010 lock 4) — `{ok, level, reason}`.
+/// What a cut demands, by the craft's class (0010 lock 4) — `{ok, level, gate, reason}`; Phase 8 sp4: the
+/// gate is `shelf` (the cut lands the version) or `experiment` (an agent's cut OPENS the Experiment, L2).
 pub fn cut_demand(kind: &str, manifest: &Value, mode: &str) -> Value {
     if !is_craft(kind) {
-        return json!({"ok": false, "level": null,
+        return json!({"ok": false, "level": null, "gate": null,
                       "reason": format!("a craft kind is one of {} — not {}", kinds_words(), repr_str(kind))});
     }
     if kind != "template" {
-        return json!({"ok": true, "level": "L2", "reason": null});
+        return json!({"ok": true, "level": "L2", "gate": "shelf", "reason": null});
     }
     let tk = manifest
         .as_object()
@@ -442,12 +447,11 @@ pub fn cut_demand(kind: &str, manifest: &Value, mode: &str) -> Value {
         .and_then(Value::as_str)
         .unwrap_or("resident");
     match tk {
-        "firmware" if mode == "prod" => json!({"ok": false, "level": null,
+        "firmware" if mode == "prod" => json!({"ok": false, "level": null, "gate": null,
             "reason": "firmware is cut only in a dev universe — it reaches prod as a release"}),
-        "firmware" => json!({"ok": true, "level": "L2", "reason": null}),
-        "agent" => json!({"ok": false, "level": null,
-            "reason": "an agent's cut goes through the Experiment — two arms, the grader's verdict, the stamped promotion (spoonful 4)"}),
-        _ => json!({"ok": true, "level": "L3-code", "reason": null}),
+        "firmware" => json!({"ok": true, "level": "L2", "gate": "shelf", "reason": null}),
+        "agent" => json!({"ok": true, "level": "L2", "gate": "experiment", "reason": null}),
+        _ => json!({"ok": true, "level": "L3-code", "gate": "shelf", "reason": null}),
     }
 }
 

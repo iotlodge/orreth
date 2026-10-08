@@ -46,7 +46,7 @@ pub async fn row<C: GenericClient>(c: &C, path: &str) -> Result<Option<Value>, R
 
 /// The row and its fact, inside the caller's transaction.
 #[allow(clippy::too_many_arguments)]
-async fn insert(
+pub(crate) async fn insert(
     tx: &tokio_postgres::Transaction<'_>,
     path: &str,
     mode: &str,

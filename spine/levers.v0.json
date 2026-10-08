@@ -149,8 +149,53 @@
     },
     {
       "name": "craft.cut",
-      "description": "Cut a draft onto the shelf as a versioned craft - a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp2, THE SHELF WIDENED). The gate of the draft shelf: a registered craft at version 1, or the next version of one already there; the draft is spent. Consequential (L2); a resident's template asks the code (L3); firmware cuts only in a dev universe; an agent's template waits for the Experiment. Never a remedy.",
+      "description": "Cut a draft onto the shelf as a versioned craft - a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp2, THE SHELF WIDENED). The gate of the draft shelf: a registered craft at version 1, or the next version of one already there; the draft is spent. Consequential (L2); a resident's template asks the code (L3); firmware cuts only in a dev universe; an agent's template OPENS the Experiment (experiment.open). Never a remedy.",
       "needs": {"draft_id": "the draft, the person's own", "person": "its author - the seat that cuts"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "experiment.open",
+      "description": "Open the Experiment on an agent's draft - the cut of an AGENT's template (Phase 8 sp4, THE EXPERIMENT AND THE CUT): an experiment room opens on a floor of the path, two arms run there (the standing version, and the candidate as a trial life), the grader and the critic write signed verdicts, the verdict is a proposal. Consequential (L2); never a remedy.",
+      "needs": {"draft_id": "the agent template draft, the person's own", "person": "its author - the seat that cuts"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "experiment.promote",
+      "description": "Promote a proposed experiment's candidate - the human's stamped act: the sibling version lands on the shelf, the draft is spent, the agent's seat is written where its next life stands (floor and room are fields here), the body restarts into its next life. Consequential (L2 for an agent; a resident asks the code, L3); never a remedy.",
+      "needs": {"experiment_id": "the proposed experiment", "person": "the seat that promotes", "at": "where the next life stands - a floor's or room's path (unsaid: where it stands now, else the universe)"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "body.rest",
+      "description": "Rest a promoted agent - the ladder's first rung, the stop (rule 11): its life stops at a safe boundary, its self kept, its wear closed; restore brings a new life. Consequential (L2); never a remedy.",
+      "needs": {"name": "the body's name"},
+      "consequence": "consequential",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "body.decommission",
+      "description": "Decommission a RESTED agent - the grave: its live objects removed (the lease, the bench, the gateway key, the mind assignment; its schedules, watches and intentions rested; its wear links closed); its DID, its joins and its record kept; the components nobody wears any more are pruned by the beat. Grave (L3, the code); never a remedy.",
+      "needs": {"name": "the body's name"},
+      "consequence": "grave",
+      "for": [],
+      "doors": ["python", "rust"],
+      "settles_s": 0
+    },
+    {
+      "name": "body.restore",
+      "description": "Restore a rested or decommissioned agent - a NEW life from the shelf's standing version of its template, on its seat; never a revival. Consequential (L2); never a remedy.",
+      "needs": {"name": "the body's name"},
       "consequence": "consequential",
       "for": [],
       "doors": ["python", "rust"],

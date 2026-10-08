@@ -30,7 +30,7 @@ use crate::envelope::{self, Mint};
 use crate::ground::Ground;
 use crate::world::{RoadError, World};
 use serde_json::{json, Value};
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -225,6 +225,15 @@ struct Inner {
     /// P7 sp8 row 3b: the one-time SPAWN TICKET each life carries to the join desk — the
     /// kernel's own word for a body it spawned (the crew manifest is the human's), spent once.
     tickets: HashMap<String, String>,
+    /// Phase 8 sp4: a TRIAL life's template hash under the body's name while the trial runs —
+    /// WHAT the Experiment's candidate says it is, checked at the desk like any spawned body.
+    trial_hashes: HashMap<String, String>,
+    /// Phase 8 sp4: the bodies at REST on the human's word (the ladder's first rung) — their exit
+    /// is no death; the governor waits for the restore.
+    rested: HashSet<String>,
+    /// Phase 8 sp4: a body re-seated into its NEXT LIFE (a promotion, a restore) — its exit is no
+    /// death; it restarts at once wearing the shelf's standing version.
+    relight: HashSet<String>,
 }
 
 /// The crew a kernel governs.
@@ -236,8 +245,11 @@ pub struct Bodies {
     pub ephemeral: bool,
     inner: Mutex<Inner>,
     stop: AtomicBool,
-    wake: HashMap<String, Arc<Notify>>,
+    wake: Mutex<HashMap<String, Arc<Notify>>>,
     tasks: Mutex<Vec<tokio::task::JoinHandle<()>>>,
+    /// Phase 8 sp4: the seats the kernel wrote at a promotion (`spine_body_seats`) — a promoted
+    /// agent's body, seated from the shelf's standing version (`shelf:<name>.template`).
+    extra: Mutex<Vec<Seat>>,
 }
 
 fn now() -> String {
@@ -270,13 +282,156 @@ impl Bodies {
                 states,
                 pids: HashMap::new(),
                 tickets: HashMap::new(),
+                trial_hashes: HashMap::new(),
+                rested: HashSet::new(),
+                relight: HashSet::new(),
             }),
             stop: AtomicBool::new(false),
-            wake,
+            wake: Mutex::new(wake),
             tasks: Mutex::new(Vec::new()),
+            extra: Mutex::new(Vec::new()),
         });
         *HANDLE.write().unwrap_or_else(|p| p.into_inner()) = Some(Arc::downgrade(&me));
         me
+    }
+
+    /// Every seat this kernel governs — the crew manifest's, then the ones it wrote at a promotion.
+    pub fn all_seats(&self) -> Vec<Seat> {
+        let mut out = self.seats.clone();
+        out.extend(self.extra.lock().unwrap_or_else(|p| p.into_inner()).iter().cloned());
+        out
+    }
+
+    /// A seat by its body's name, as it stands now (a promoted agent's seat changes with its version).
+    pub fn seat_named(&self, name: &str) -> Option<Seat> {
+        self.all_seats().into_iter().find(|s| s.name == name)
+    }
+
+    fn wake_of(&self, name: &str) -> Arc<Notify> {
+        self.wake
+            .lock()
+            .unwrap_or_else(|p| p.into_inner())
+            .entry(name.to_string())
+            .or_insert_with(|| Arc::new(Notify::new()))
+            .clone()
+    }
+
+    fn signal(&self, name: &str, sig: libc::c_int) -> bool {
+        let pid = self.inner.lock().unwrap_or_else(|p| p.into_inner()).pids.get(name).copied();
+        match pid {
+            Some(p) => {
+                unsafe {
+                    libc::kill(p as libc::pid_t, sig);
+                }
+                true
+            }
+            None => false,
+        }
+    }
+
+    /// Phase 8 sp4: a promoted agent SEATED from the shelf's standing version — a new life when none
+    /// of it stands, its NEXT life when one does (the standing life stops at its boundary and the
+    /// governor restarts it at once, wearing the version the shelf holds now).
+    pub fn seat_agent(self: &Arc<Self>, name: &str, at: &str, manifest: Value) {
+        let seat = Seat {
+            name: name.to_string(),
+            kind: manifest["kind"].as_str().unwrap_or("agent").to_string(),
+            template: PathBuf::from(format!("shelf:{}", crate::crafts::craft_name(name, "template").unwrap_or_default())),
+            binding: None,
+            template_json: manifest,
+            at: Some(at.to_string()),
+        };
+        {
+            let mut x = self.extra.lock().unwrap_or_else(|p| p.into_inner());
+            x.retain(|s| s.name != name);
+            x.push(seat.clone());
+        }
+        let (had_state, live) = {
+            let mut i = self.inner.lock().unwrap_or_else(|p| p.into_inner());
+            i.rested.remove(name);
+            let had = i.states.contains_key(name);
+            if !had {
+                i.states.insert(name.to_string(), BodyState::new(&seat));
+            }
+            (had, i.pids.contains_key(name))
+        };
+        if had_state && live {
+            self.inner.lock().unwrap_or_else(|p| p.into_inner()).relight.insert(name.to_string());
+            eprintln!("  [kernel] {name} restarts into its next life — the shelf's standing version");
+            self.signal(name, libc::SIGINT);
+            return;
+        }
+        if had_state {
+            self.wake_of(name).notify_one(); // the governor waits (rested · parked · refused): a new life
+            return;
+        }
+        let me = self.clone();
+        let h = tokio::spawn(async move { me.govern(seat).await });
+        self.tasks.lock().unwrap_or_else(|p| p.into_inner()).push(h);
+        eprintln!("  [kernel] {name} seated on {at} from the shelf");
+    }
+
+    /// Phase 8 sp4: the ladder's first rung — the body's life stops at a safe boundary and the
+    /// governor holds it at rest (its self kept) until the restore.
+    pub fn rest(&self, name: &str) {
+        self.inner.lock().unwrap_or_else(|p| p.into_inner()).rested.insert(name.to_string());
+        if !self.signal(name, libc::SIGINT) {
+            self.set(name, |s| {
+                s.state = "rested";
+                s.words = format!("{name} is at rest on the human's word");
+            });
+        }
+    }
+
+    /// Phase 8 sp4: the Experiment's TRIAL LIFE — the candidate run as `body --experiment <id>` in
+    /// the experiment room: a ticket under the body's name, the candidate's hash as WHAT it says it
+    /// is at the desk, its words on the kernel's stderr, done when it stops whole.
+    pub fn spawn_trial(self: &Arc<Self>, exp: &Value) -> Result<(), String> {
+        let name = exp["agent"].as_str().unwrap_or_default().to_string();
+        let room = exp["room"].as_str().unwrap_or_default().to_string();
+        let exp_id = exp["experiment_id"].as_str().unwrap_or_default().to_string();
+        if name.is_empty() || room.is_empty() || exp_id.is_empty() {
+            return Err("an experiment names its agent, its room and its id".into());
+        }
+        let hash = crate::hash::content_hash(&exp["candidate"]);
+        let ticket = crate::world::token_hex(16);
+        {
+            let mut i = self.inner.lock().unwrap_or_else(|p| p.into_inner());
+            i.tickets.insert(name.clone(), ticket.clone());
+            i.trial_hashes.insert(name.clone(), hash);
+        }
+        let seat = Seat {
+            name: name.clone(),
+            kind: "agent".into(),
+            template: PathBuf::from("experiment"),
+            binding: None,
+            template_json: exp["candidate"].clone(),
+            at: Some(room.clone()),
+        };
+        let args = vec!["--experiment".to_string(), exp_id.clone()];
+        let mut child = self
+            .command(&args, &ticket, &seat)
+            .spawn()
+            .map_err(|e| format!("the trial life could not be started: {e} — SPINE_PYTHON names another interpreter"))?;
+        let me = self.clone();
+        let h = tokio::spawn(async move {
+            if let Some(err) = child.stderr.take() {
+                let mut lines = BufReader::new(err).lines();
+                while let Ok(Some(l)) = lines.next_line().await {
+                    eprintln!("  [trial {name}] {l}");
+                }
+            }
+            let status = child.wait().await;
+            let mut i = me.inner.lock().unwrap_or_else(|p| p.into_inner());
+            i.trial_hashes.remove(&name);
+            i.tickets.remove(&name);
+            eprintln!(
+                "  [kernel] the trial life of {name} for {exp_id} ended ({})",
+                status.ok().and_then(|s| s.code()).map(|c| format!("exit {c}")).unwrap_or_else(|| "by a signal".into())
+            );
+        });
+        self.tasks.lock().unwrap_or_else(|p| p.into_inner()).push(h);
+        Ok(())
     }
 
     /// The scope path a seat's body wears: the universe, or the declared level within it.
@@ -506,11 +661,12 @@ impl Bodies {
     }
 
     /// The template this kernel spawned a seat from, by its hash — WHAT the body says it is, checked at the desk.
+    /// Phase 8 sp4: a TRIAL life answers with the Experiment's candidate while it runs.
     pub fn template_hash_of(&self, name: &str) -> Option<String> {
-        self.seats
-            .iter()
-            .find(|s| s.name == name)
-            .map(|s| crate::hash::content_hash(&s.template_json))
+        if let Some(h) = self.inner.lock().unwrap_or_else(|p| p.into_inner()).trial_hashes.get(name) {
+            return Some(h.clone());
+        }
+        self.seat_named(name).map(|s| crate::hash::content_hash(&s.template_json))
     }
 
     fn set_pid(&self, name: &str, pid: Option<u32>) {
@@ -538,11 +694,21 @@ impl Bodies {
     }
 
     /// One body's whole governed life, life after life.
-    async fn govern(self: Arc<Self>, seat: Seat) {
-        let wake = self.wake.get(&seat.name).cloned().unwrap_or_default();
+    async fn govern(self: Arc<Self>, seat0: Seat) {
+        let wake = self.wake_of(&seat0.name);
         loop {
             if self.stop.load(Ordering::Relaxed) {
                 break;
+            }
+            // Phase 8 sp4: the seat as it stands NOW — a promoted agent's next life wears the shelf's standing version
+            let seat = self.seat_named(&seat0.name).unwrap_or_else(|| seat0.clone());
+            if self.inner.lock().unwrap_or_else(|p| p.into_inner()).rested.contains(&seat.name) {
+                self.set(&seat.name, |s| {
+                    s.state = "rested";
+                    s.words = format!("{} is at rest on the human's word — its self kept; restore it for a new life", seat.name);
+                });
+                wake.notified().await;
+                continue;
             }
             let mut args = vec![
                 "--template".to_string(),
@@ -628,6 +794,32 @@ impl Bodies {
                     s.words = format!("{} stopped whole on the kernel's word", seat.name);
                 });
                 break;
+            }
+            // Phase 8 sp4: an exit the human asked for is no death — at rest (the governor waits for the
+            // restore), or a relight into the next life (restarted at once, the deaths forgotten)
+            let (rested, relight) = {
+                let mut i = self.inner.lock().unwrap_or_else(|p| p.into_inner());
+                (i.rested.contains(&seat.name), i.relight.remove(&seat.name))
+            };
+            if rested {
+                self.set(&seat.name, |s| {
+                    s.state = "rested";
+                    s.exit = code;
+                    s.deaths.clear();
+                    s.words = format!("{} stopped whole — at rest on the human's word; its self kept", seat.name);
+                });
+                eprintln!("  [kernel] {} stopped whole — at rest on the human's word", seat.name);
+                wake.notified().await;
+                continue;
+            }
+            if relight {
+                self.set(&seat.name, |s| {
+                    s.state = "starting";
+                    s.exit = code;
+                    s.deaths.clear();
+                    s.words = format!("{} restarts into its next life on the human's word", seat.name);
+                });
+                continue;
             }
             match code {
                 Some(EXIT_REFUSED) => {
@@ -770,7 +962,7 @@ impl Bodies {
                 crate::py::repr_str(name)
             ))),
             Some("parked") | Some("refused") => {
-                if let Some(w) = self.wake.get(name) {
+                if let Some(w) = self.wake.lock().unwrap_or_else(|p| p.into_inner()).get(name) {
                     w.notify_one();
                 }
                 Ok(
@@ -783,10 +975,11 @@ impl Bodies {
         }
     }
 
-    /// Every body's state, for the door.
+    /// Every body's state, for the door — the crew's seats, then the promoted agents' (Phase 8 sp4).
     pub fn view(&self) -> Vec<Value> {
+        let seats = self.all_seats();
         let i = self.inner.lock().unwrap_or_else(|p| p.into_inner());
-        self.seats
+        seats
             .iter()
             .filter_map(|s| i.states.get(&s.name))
             .map(BodyState::to_value)
@@ -807,7 +1000,7 @@ impl Bodies {
     /// governor to see its exit, then SIGKILL for one that would not stop.
     pub async fn stop(&self) {
         self.stop.store(true, Ordering::Relaxed);
-        for w in self.wake.values() {
+        for w in self.wake.lock().unwrap_or_else(|p| p.into_inner()).values() {
             w.notify_one();
         }
         let pids: Vec<u32> = self
@@ -853,7 +1046,7 @@ impl Bodies {
 
     /// The templates by body name (the crew card's LLM line reads a body's `mind`).
     pub fn templates(&self) -> HashMap<String, Value> {
-        self.seats
+        self.all_seats()
             .iter()
             .map(|s| (s.name.clone(), s.template_json.clone()))
             .collect()

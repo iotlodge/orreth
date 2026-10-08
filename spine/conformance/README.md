@@ -355,3 +355,18 @@ the same files, unchanged — before any module earns the word "ported".
     line. The run-time pick (the first `when` that holds, else the default, else the line ends) is the hull's and
     Python's alone — the Rust kernel runs no graph. The `draft` tool: routine, ground — the Workshop agent's one
     tool, a draft under the human whose ask it serves.
+  - **Phase 8 sp4, THE EXPERIMENT AND THE CUT (`experiments-v0.json`, contract `orreth.experiments/1`, 61 cases)** —
+    `exp_room` (`exp-<agent>-<n>`) · `exp_arms_plan` (two arms, or one — the candidate alone) · `exp_open_words`
+    (the held act's words: the room, the arms, the golden set's size, the reviewers) · `exp_grade` (the grader's
+    verdict read by the FORM — `current: <A–F>` · `candidate: <A–F>` · `verdict: candidate | current | neither`;
+    `none` and markdown stars tolerated; nothing guessed) · `exp_risk` (`risk: low | medium | high`) · `exp_leaning`
+    (promote · hold · unsure — a failed case, a grader naming the current, a high risk or a red is hold) ·
+    `exp_proposal_words` (the arms, every reviewer by name, the empty slots said, resiliency, the leaning, the two
+    words) · `exp_arm_words` · `promote_demand` (L2 an agent · L3-code a resident · firmware never) · `ladder_legal`
+    (active → rested → decommissioned; restore from either) · `ladder_refusal` · `ladder_words` (rest · decom ·
+    restore · promote) · `deploy_at` (the path asked, else the standing seat's, else the universe; another
+    universe refused) · `prune_words`. `crafts-v0.json` 99 → 101: `cut_demand` answers a GATE (`shelf` ·
+    `experiment`; an agent's template opens the Experiment at L2) and `hull_edge` holds that an include's
+    THOUGHT under a non-structural parent is an EVENT (the grader asked under an experiment's marker).
+  - `schema_version` 7 · `schema_tables` 46 (schema-v0) — `spine_experiments`, `spine_verdicts` and
+    `spine_body_seats` join at Phase 8 sp4; `beat_lock` (loops-v0) gains `experiment` 6 · `prune` 7.

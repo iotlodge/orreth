@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 6; // 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
+pub const SCHEMA_VERSION: i32 = 7; // 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -443,8 +443,28 @@ pub const CRAFTS_DDL: &[&str] = &[
     "CREATE INDEX IF NOT EXISTS spine_drafts_person ON spine_drafts (scope, person, updated_at DESC)",
 ];
 
+/// Phase 8 sp4, THE EXPERIMENT AND THE CUT (`experiments_live`): the experiments (an agent's candidate against its
+/// standing version in an experiment room), the reviewers' signed verdicts, and the body seats the kernel writes
+/// at a promotion (where a promoted agent's life stands, and its rung on the decom ladder).
+pub const EXPERIMENTS_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_experiments ( experiment_id text PRIMARY KEY, scope text NOT NULL, person text \
+     NOT NULL, draft_id text NOT NULL, agent text NOT NULL, template text NOT NULL, current_version int, candidate \
+     text NOT NULL, candidate_hash text NOT NULL, golden text NOT NULL, room text NOT NULL, state text NOT NULL, arms \
+     text NOT NULL, reviewers text NOT NULL, resiliency text, proposal text, leaning text, ask text, marker text, \
+     opened_at timestamptz NOT NULL DEFAULT now(), proposed_at timestamptz, settled_at timestamptz, settled_by text, \
+     at_path text)",
+    "CREATE INDEX IF NOT EXISTS spine_experiments_scope ON spine_experiments (scope, state, opened_at DESC)",
+    "CREATE TABLE IF NOT EXISTS spine_verdicts ( verdict_id text PRIMARY KEY, scope text NOT NULL, experiment_id text \
+     NOT NULL, by_did text NOT NULL, by_name text NOT NULL, reviewer text NOT NULL, ask text, verdict text NOT NULL, \
+     words text NOT NULL, sig text NOT NULL, at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_verdicts_experiment ON spine_verdicts (experiment_id, at)",
+    "CREATE TABLE IF NOT EXISTS spine_body_seats ( name text NOT NULL, scope text NOT NULL, template text NOT NULL, \
+     at_path text NOT NULL, state text NOT NULL, version int, by_did text NOT NULL, since timestamptz NOT NULL DEFAULT \
+     now(), changed_at timestamptz NOT NULL DEFAULT now(), ask text, PRIMARY KEY (name, scope))",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 23] = [
+pub const ROAD: [(&str, &[&str]); 24] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -470,6 +490,7 @@ pub const ROAD: [(&str, &[&str]); 23] = [
     ("tools", TOOLS_DDL),
     ("levels", LEVELS_DDL), // Phase 8 sp1: THE PATH — the levels of this universe (schema 5)
     ("crafts", CRAFTS_DDL), // Phase 8 sp2: THE SHELF WIDENED — the wear table and the draft shelf (schema 6)
+    ("experiments", EXPERIMENTS_DDL), // Phase 8 sp4: THE EXPERIMENT AND THE CUT — the experiments, the verdicts, the body seats (schema 7)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

@@ -25,13 +25,28 @@
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, desk, doors, envelope, export, intent,
     kernel_self, levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services,
-    stable, tools, watch, levels, crafts};
+    stable, tools, watch, levels, crafts, experiments};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 /// The kinds this crate has ported — one explicit list, so the report is honest.
 const PORTED_KINDS: &[&str] = &[
+    // Phase 8 sp4: THE EXPERIMENT AND THE CUT
+    "exp_room",
+    "exp_arms_plan",
+    "exp_open_words",
+    "exp_grade",
+    "exp_risk",
+    "exp_leaning",
+    "exp_proposal_words",
+    "exp_arm_words",
+    "promote_demand",
+    "ladder_legal",
+    "ladder_refusal",
+    "ladder_words",
+    "deploy_at",
+    "prune_words",
     "canonical",
     "encode",
     "encode_refuses",
@@ -771,6 +786,47 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
         }
         "source_form" => same!(crafts::source_form(&inp["manifest"]), exp.clone(), "the form"),
         "cut_demand" => same!(crafts::cut_demand(s(&inp["kind"]), &inp["manifest"], s(&inp["mode"])), exp.clone(), "the demand"),
+        // ---- Phase 8 sp4: THE EXPERIMENT AND THE CUT (experiments-v0) ----
+        "exp_room" => same!(experiments::room_name(s(&inp["agent"]), inp["n"].as_i64().unwrap()), s(&exp["room"]), "the room"),
+        "exp_arms_plan" => same!(experiments::arms_plan(inp["current_version"].as_i64()), s(&exp["words"]), "the words"),
+        "exp_open_words" => same!(
+            experiments::open_words(s(&inp["agent"]), s(&inp["room"]), inp["current_version"].as_i64(), inp["golden_n"].as_i64().unwrap()).unwrap(),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "exp_grade" => same!(experiments::grade_of(s(&inp["text"])), exp["verdict"], "the verdict"),
+        "exp_risk" => same!(json!(experiments::risk_of(s(&inp["text"]))), exp["risk"], "the risk"),
+        "exp_leaning" => same!(experiments::leaning_of(&inp["experiment"]), s(&exp["leaning"]), "the leaning"),
+        "exp_proposal_words" => same!(experiments::proposal_words(&inp["experiment"]), s(&exp["words"]), "the words"),
+        "exp_arm_words" => same!(
+            experiments::arm_words(s(&inp["side"]), &inp["arm"], if inp["experiment"].is_null() { None } else { Some(&inp["experiment"]) }),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "promote_demand" => same!(experiments::promote_demand(opt_str(&inp["template_kind"])), exp.clone(), "the demand"),
+        "ladder_legal" => same!(json!(experiments::ladder_legal(s(&inp["from"]), s(&inp["to"]))), exp["ok"], "the rung"),
+        "ladder_refusal" => same!(experiments::ladder_refusal(s(&inp["name"]), opt_str(&inp["from"]), s(&inp["to"])), s(&exp["words"]), "the refusal"),
+        "ladder_words" => {
+            let got = match s(&inp["rung"]) {
+                "rested" => experiments::rest_words(s(&inp["name"])),
+                "decommissioned" => {
+                    let strs = |v: &Value| v.as_array().map(|a| a.iter().map(|x| s(x).to_string()).collect::<Vec<_>>()).unwrap_or_default();
+                    experiments::decom_words(s(&inp["name"]), opt_str(&inp["did"]), &strs(&inp["removed"]), &strs(&inp["kept"]))
+                }
+                "promote" => experiments::promote_words(s(&inp["name"]), inp["version"].as_i64().unwrap(), s(&inp["at"])).unwrap(),
+                _ => experiments::restore_words(s(&inp["name"]), s(&inp["at"])).unwrap(),
+            };
+            same!(got, s(&exp["words"]), "the words");
+        }
+        "deploy_at" => {
+            let got = experiments::deploy_at(s(&inp["universe"]), opt_str(&inp["asked"]), opt_str(&inp["standing"]));
+            if exp.get("error").is_some() {
+                same!(got.clone().unwrap_err(), s(&exp["error"]), "the refusal");
+            } else {
+                same!(got.clone().unwrap(), s(&exp["path"]), "the path");
+            }
+        }
+        "prune_words" => same!(experiments::prune_words(s(&inp["name"]), s(&inp["kind"]), s(&inp["last_wearer"])), s(&exp["words"]), "the words"),
         "wear_of" => {
             let got = crafts::wear_of(&inp["parts"]);
             if exp["ok"].as_bool() == Some(true) {

@@ -311,14 +311,16 @@ class Resident:
     def __init__(self, template_path: str | os.PathLike,
                  *, home: str | os.PathLike | None = None, gateway=None,
                  binding: str | os.PathLike | None = None, scope: str | None = None):
-        raw = Path(template_path).read_bytes()
+        raw = b"" if isinstance(template_path, dict) else Path(template_path).read_bytes()
         # Phase 8 sp1, THE PATH: the scope path this body is seated on — a floor's or a room's
         # when the crew manifest says so (the reference seats it in-process; a spawned body
         # reads its own SPINE_SCOPE), else the process's world. What the body writes about
         # itself (its join, its lease, its facts' scope_path) wears it; its universe is
         # `ev.universe()`.
         self.scope = scope or ev.scope()
-        self.template = json.loads(raw)
+        # Phase 8 sp4: a template may arrive as the declaration itself — the Experiment's trial life
+        # wears the draft's candidate (never a file), a promoted agent wears the shelf's standing version
+        self.template = dict(template_path) if isinstance(template_path, dict) else json.loads(raw)
         if self.template.get("format") != "orreth-resident-template/1":
             raise ValueError("not a resident template: "
                              f"{self.template.get('format')!r}")
@@ -357,6 +359,7 @@ class Resident:
         self._serve_conn = None
         self._current_ask = None
         self._current_marker = None  # the ask's marker: WHY this serve (0006)
+        self._experiment = None      # Phase 8 sp4: the Experiment this serve reviews, when it does
         self._current_chain = None   # the chain the serve command arrived with (AG-7)
         self._state = "in"
         self._ckpt_graph = None      # the checkpointed graph, one per life
@@ -376,10 +379,13 @@ class Resident:
                        "name": str(pol.get("name") or "covenant-policy")}   # Phase 8 sp2: the craft it wears
         return self.policy
 
-    def join(self, conn) -> dict:
+    def join(self, conn, *, close_scope: str | None = None) -> dict:
         """The dev gate v0 (the governed becky gate arrives with kernel
         integration): the join is recorded wearing the policy version —
-        an agent without the covenant loaded never joins."""
+        an agent without the covenant loaded never joins. Phase 8 sp4:
+        `close_scope` — a TRIAL life in an experiment room closes only the
+        wear rows at its own scope, so the standing life's "in use by N"
+        holds while the Experiment runs."""
         if self.policy is None:
             raise PolicyRefused(
                 "this body wears no covenant policy — load it, or it never "
@@ -424,7 +430,8 @@ class Resident:
             outbox.add_row(cur, ev.encode(e), e["message_id"])
             # Phase 8 sp2: THE WEAR TABLE — one row per component this life wears, the previous
             # life's rows closed, in the join's own transaction ("in use by N" follows the roster)
-            crafts.record_wear(cur, scope=self.scope, did=self.identity.did, body=self.name, life=life, worn=worn)
+            crafts.record_wear(cur, scope=self.scope, did=self.identity.did, body=self.name, life=life, worn=worn,
+                               close_scope=close_scope)
         from . import scheduler                  # the role schedules the
         for sch in self.template.get("schedules", []):   # template declares are
             scheduler.declared(conn, self.name, "role", sch["text"],   # registered
@@ -489,6 +496,33 @@ class Resident:
                         session, person, state = row[0], row[2], row[3]
                         window = json.loads(row[1]) if row[1] else None
                 self._state = state          # P11: this serve stays in its state
+                # Phase 8 sp4: an ask under an EXPERIMENT's marker (the hull's event edge) — the
+                # kernel asks a reviewer to judge the arms; the evidence is the kernel's record of
+                # the runs, packed here so a grader has another's words to grade (rule 2), never its own
+                xm = self._current_marker or {}
+                if xm.get("parent"):
+                    from . import experiments as _xp
+                    xid = None
+                    cur.execute("SELECT kind, ref FROM spine_markers WHERE marker_id = %s", (xm["parent"],))
+                    xr = cur.fetchone()
+                    if xr and xr[0] == _xp.MARKER_KIND:
+                        xid = xr[1]
+                    if xid:
+                        xp = _xp.get(conn, xid)
+                        if xp:
+                            self._experiment = xid
+                            for side in _xp.ARMS:
+                                a = (xp.get("arms") or {}).get(side)
+                                if a and a.get("passed") is not None:
+                                    notes.append(f"THE EXPERIMENT'S EVIDENCE — arm {side}: {a['passed']} passed, {a['failed']} failed; "
+                                                 + " / ".join(f"asked {d.get('ask')!r} expected {d.get('expect')} replied "
+                                                              f"{str(d.get('reply') or '')[:160]!r} ({'passed' if d.get('ok') else 'FAILED'})"
+                                                              for d in (a.get("details") or [])))
+                            if xp.get("current_version"):
+                                notes.append(f"THE EXPERIMENT'S CANDIDATE against version {xp['current_version']}: the candidate's "
+                                             f"declaration is {json.dumps(xp.get('candidate'), sort_keys=True)[:1200]}")
+                            if _xp.KERNEL not in read:
+                                read.append(_xp.KERNEL)   # the evidence is the kernel's record — another's words, never mine
                 if person:
                     # the pack's third rung (canon 0003): the SHORT VERSION
                     # first — the digests of this human's earlier sessions,
@@ -998,6 +1032,7 @@ class Resident:
         cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (ask_id,))
         _mrow = cur.fetchone()
         self._current_marker = _mk.as_env(self._serve_conn, _mrow[0]) if _mrow and _mrow[0] else None
+        self._experiment = None
         initial = {"text": text, "reply": "", "steps": [], "notes": [],
                    "hold": None, "read": [], "edge": ""}
         resumed = None
@@ -1041,6 +1076,25 @@ class Resident:
             outbox.add_row(cur, ev.encode(n), n["message_id"])
             return
         self._land_reply(cur, ask_id, out["reply"], full_chain)
+        if self._experiment and self.function in ("grade", "critique"):
+            # Phase 8 sp4: a reviewer's SIGNED VERDICT on an Experiment — written by the reviewer
+            # itself, under its own DID, in its reply's transaction (rule 2: nothing grades its own
+            # yardstick; the evidence was the kernel's record of the arms, packed at recall)
+            from . import experiments as _xp
+            reply = out.get("reply") or ""
+            if self.function == "grade":
+                verdict = _xp.grade_of(reply)
+                kept = verdict["candidate"] is not None or verdict["verdict"] is not None
+            else:
+                r = _xp.risk_of(reply)
+                line = next((ln.split("—", 1)[1].strip() for ln in reply.splitlines() if ln.lower().lstrip("* ").startswith("risk:") and "—" in ln), None)
+                verdict, kept = {"risk": r, "line": line}, r is not None
+            if kept:
+                _xp.verdict_in(cur, experiment_id=self._experiment, identity=self.identity, by_name=self.name,
+                               reviewer="grader" if self.function == "grade" else "critic", ask_id=ask_id,
+                               verdict=verdict, words=reply, scope=self.scope)
+                self._journey(cur, ask_id, [f"wrote my signed verdict on the experiment {self._experiment} under my own name"],
+                              full_chain)
 
     def _full_chain(self, read: list | None) -> list[str]:
         """The chain this body wears for the serve in hand (AG-8 · AG-7):

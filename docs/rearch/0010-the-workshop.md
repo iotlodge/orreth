@@ -358,7 +358,32 @@ Each spoonful is a thing a human proves in the glass before the next opens
    inside one hop — one engine).
 4. **THE EXPERIMENT AND THE CUT.** Experiment rooms, two arms, the grader's
    signed verdicts on arms and live replies, the proposal, the stamped
-   promotion into a next life, the decom ladder and its prune beat.
+   promotion into a next life, the decom ladder and its prune beat. **BUILT
+   2026-10-07 (JB's word: "Phase 8 sp4"); the walk in the glass OWED
+   (SPEC-EXPERIMENT-01).** What landed, both kernels law for law
+   (`experiments.py` · `experiments.rs` · `experiments_live.rs`, fixture
+   `experiments-v0.json` ×61, schema 7): an agent's cut OPENS the Experiment
+   (`experiment.open`, L2) once its golden set stands on the shelf — an
+   experiment room on the agent's floor (`r:exp-bob-1`), the CANDIDATE as a
+   trial life of the agent's own self in the room (a real `body --experiment`
+   process on the Rust kernel; the standing life's wear untouched), the
+   CURRENT over the rail when one stands (a first version has one arm, said);
+   the grader and the critic asked under the experiment's marker — the hull's
+   EVENT edge (the edge law refined: an include's thought under a
+   non-structural parent is an event) — the evidence in the ask, the form in
+   the answer, each verdict SIGNED under its own DID in the reviewer's own
+   transaction (rule 2); security and identity honest empty slots; resiliency
+   the reds since the opening; THE PROPOSAL with its leaning (promote · hold ·
+   unsure) as THE EXPERIMENT card; THE STAMPED PROMOTION (`experiment.promote`,
+   L2 agent · L3 resident) with WHERE THE NEXT LIFE STANDS as its field — the
+   sibling version, the draft spent, the SEAT written, the body's next life
+   seated from the shelf after the commit, the wear table following; decline
+   routine and recorded; THE LADDER on the seat — rest (L2) · decommission (L3:
+   lease, key, assignment, bench removed; schedules, watches, intentions
+   rested; wear closed; DID · joins · Record kept) · restore (L2, a new life);
+   THE PRUNE BEAT retiring what nobody wears. Named, not in sp4: the shadow
+   replay; a room's own watches; verdicts on live replies (sp5 reads them for
+   Trust); the trial's words in the glass.
 5. **THE OPERATING STATE.** The five measurement watches at v0, the kernel
    intention, the improvement loop landing proposals on the owner's draft
    shelf, summon generalized, import from a repo.
@@ -389,6 +414,11 @@ evolves.
   in this phase; import means a repo'd graph the kernel runs.
 - The lessons digest, the architect resident, RAG and the embedding lane,
   drag-to-wire authoring, and Claude the developer are after this phase.
+- The Experiment's evidence at v0 is the golden set alone: the shadow replay
+  of recent real asks into the room (§5's optional arm) is named, not built;
+  resiliency reads the universe's reds since the opening, not a room's own
+  watches; the grader's verdicts on LIVE replies (row 6a's second half) land
+  with THE OPERATING STATE (spoonful 5), which reads them for Trust.
 
 ## Open, carried (not locked)
 

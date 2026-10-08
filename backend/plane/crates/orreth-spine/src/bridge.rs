@@ -395,6 +395,26 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                     "the crew is seated: {} bodies spawned as processes",
                     b.seats.len()
                 );
+                // Phase 8 sp4: the promoted agents' seats (`spine_body_seats`) — each active one a body of this
+                // kernel, seated from the shelf's standing version of its template
+                match Ground::connect(&w2.pg_dsn).await {
+                    Ok(g) => match crate::experiments_live::seats(g.client(), &w2.scope, Some("active")).await {
+                        Ok(seats) => {
+                            for st in seats {
+                                let name = st["name"].as_str().unwrap_or_default().to_string();
+                                let at = st["at_path"].as_str().unwrap_or_default().to_string();
+                                let sn = st["template"].as_str().unwrap_or_default().to_string();
+                                match crate::services_live::get(g.client(), &w2.scope, &sn).await {
+                                    Ok(Some(row)) if row["state"] != json!("retired") => b.seat_agent(&name, &at, row["manifest"].clone()),
+                                    Ok(_) => eprintln!("  [seats] {name}'s template {sn} is not standing on the shelf — not seated"),
+                                    Err(e) => eprintln!("  [seats] {name} could not be seated: {e}"),
+                                }
+                            }
+                        }
+                        Err(e) => eprintln!("the promoted agents' seats could not be read: {e}"),
+                    },
+                    Err(e) => eprintln!("the promoted agents' seats could not reach the ground: {e}"),
+                }
             }
         }));
         // the keepers' beats (P6.5 sp2 · sp3), on the kernel that holds the keepers' bodies
@@ -590,6 +610,91 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                         }
                     }
                     Err(e) => eprintln!("the retention sweep could not reach the ground: {e}"),
+                }
+                if !stop.load(Ordering::Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                }
+            }
+        }));
+    }
+    // Phase 8 sp4: THE EXPERIMENT BEAT — every 3 s under the `experiment` beat, every running experiment one step
+    // on (the trial life spawned, the current arm asked, the runs read, the reviewers asked, the proposal composed)
+    {
+        let (w, stop, seats_bodies) = (w.clone(), stop.clone(), cfg.bodies);
+        tasks.push(tokio::spawn(async move {
+            while !stop.load(Ordering::Relaxed) {
+                match Ground::connect(&w.pg_dsn).await {
+                    Ok(mut g) => {
+                        while !stop.load(Ordering::Relaxed) {
+                            match crate::beat::try_beat(&g, &w.scope, "experiment").await {
+                                Ok(true) => {
+                                    let spawn: Option<Box<crate::experiments_live::SpawnTrial>> = if seats_bodies {
+                                        Some(Box::new(|exp: &Value| match bodies::handle() {
+                                            Some(b) => b.spawn_trial(exp),
+                                            None => Err("this kernel seats no bodies — the trial life cannot run here".into()),
+                                        }))
+                                    } else {
+                                        None
+                                    };
+                                    match crate::experiments_live::beat(&mut g, &w, spawn.as_deref()).await {
+                                        Ok(moved) => {
+                                            for m in moved {
+                                                eprintln!("  [experiment] {m}");
+                                            }
+                                        }
+                                        Err(e) => eprintln!("the experiment beat stumbled: {e}"),
+                                    }
+                                    let _ = crate::beat::end_beat(&g, &w.scope, "experiment").await;
+                                }
+                                Ok(false) => {}
+                                Err(e) => {
+                                    eprintln!("the experiment beat could not be claimed: {e}");
+                                    break;
+                                }
+                            }
+                            sleep_unless_stopped(&stop, Duration::from_secs(3)).await;
+                        }
+                    }
+                    Err(e) => eprintln!("the experiment beat could not reach the ground: {e}"),
+                }
+                if !stop.load(Ordering::Relaxed) {
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+                }
+            }
+        }));
+    }
+    // Phase 8 sp4: THE PRUNE BEAT — a minute in, then hourly under the `prune` beat: the crafts nobody wears any more
+    // (every body that ever wore one decommissioned) retired on the shelf, never deleted, never at request time
+    {
+        let (w, stop) = (w.clone(), stop.clone());
+        tasks.push(tokio::spawn(async move {
+            sleep_unless_stopped(&stop, Duration::from_secs(60)).await;
+            while !stop.load(Ordering::Relaxed) {
+                match Ground::connect(&w.pg_dsn).await {
+                    Ok(mut g) => {
+                        while !stop.load(Ordering::Relaxed) {
+                            match crate::beat::try_beat(&g, &w.scope, "prune").await {
+                                Ok(true) => {
+                                    match crate::experiments_live::prune(&mut g, &w).await {
+                                        Ok(pruned) => {
+                                            for pr in pruned {
+                                                eprintln!("  [prune] {}: {}", pr["component"].as_str().unwrap_or_default(), pr["words"].as_str().unwrap_or_default());
+                                            }
+                                        }
+                                        Err(e) => eprintln!("the prune beat stumbled: {e}"),
+                                    }
+                                    let _ = crate::beat::end_beat(&g, &w.scope, "prune").await;
+                                }
+                                Ok(false) => {}
+                                Err(e) => {
+                                    eprintln!("the prune beat could not be claimed: {e}");
+                                    break;
+                                }
+                            }
+                            sleep_unless_stopped(&stop, Duration::from_secs(crate::experiments::PRUNE_EVERY_S)).await;
+                        }
+                    }
+                    Err(e) => eprintln!("the prune beat could not reach the ground: {e}"),
                 }
                 if !stop.load(Ordering::Relaxed) {
                     tokio::time::sleep(Duration::from_millis(500)).await;
@@ -845,6 +950,13 @@ fn router(app: Arc<App>) -> Router {
         .route("/drafts/discard", post(drafts_post))
         .route("/drafts/cut", post(drafts_post)) // THE CUT — a draft onto the shelf, held at the class's level
         .route("/wear", get(wear_door)) // THE WEAR TABLE — which body wears which component at which version
+        .route("/experiments", get(experiments_door)) // Phase 8 sp4: THE EXPERIMENT — this universe's experiments, one whole by id
+        .route("/experiments/promote", post(experiments_post)) // the stamped promotion — held at L2 (an agent) · L3 (a resident)
+        .route("/experiments/decline", post(experiments_post)) // the human's no — routine, recorded
+        .route("/seats", get(seats_door)) // the promoted agents' seats — where each stands and its rung
+        .route("/bodies/rest", post(bodies_rung)) // the ladder: rest (L2) · decommission (L3) · restore (L2)
+        .route("/bodies/decommission", post(bodies_rung))
+        .route("/bodies/restore", post(bodies_rung))
         .route("/seam", post(seam_post)) // P7 sp7: the seam — signed messages between peer cells
         .route("/asks/stop", post(asks_stop)) // P7 sp7: the human stops a routed ask (rule 11) · sp2: or a local one left waiting
         .route("/watches/rest", post(watches_rest)) // the honest glass sp2 (W86): a watch rested — rule 11's lever
@@ -2452,6 +2564,110 @@ async fn levels_open(
             s_opt(&p, "session").as_deref(),
         )
         .await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(202, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /experiments[?id=|agent=|state=]` — Phase 8 sp4: THE EXPERIMENT — the universe's experiments (one whole by id), the seats.
+async fn experiments_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        if let Some(id) = q.get("id").filter(|i| !i.is_empty()) {
+            return match crate::experiments_live::get(g.client(), id).await? {
+                Some(x) => Ok::<_, RoadError>((200, json!({"experiment": x, "verdicts": crate::experiments_live::verdicts(g.client(), id).await?}))),
+                None => Ok((404, json!({"error": "no such experiment here"}))),
+            };
+        }
+        let agent = q.get("agent").filter(|a| !a.is_empty()).map(String::as_str);
+        let state = q.get("state").filter(|a| !a.is_empty()).map(String::as_str);
+        Ok((200, json!({"experiments": crate::experiments_live::listing(g.client(), sc, agent, state).await?,
+                        "seats": crate::experiments_live::seats(g.client(), sc, None).await?,
+                        "reviewers": crate::experiments::REVIEWERS,
+                        "empty_slots": {"security": crate::experiments::EMPTY_SECURITY, "identity": crate::experiments::EMPTY_IDENTITY}})))
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /seats` — the promoted agents' seats.
+async fn seats_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        Ok::<_, RoadError>(json!({"seats": crate::experiments_live::seats(g.client(), scope(&app), None).await?,
+                                  "ladder": crate::experiments::LADDER}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /experiments/promote {experiment_id, at?, session?}` (202, held) · `POST /experiments/decline {experiment_id, reason?}`
+/// (200) — a governing seat's acts, the word checked here (the door table of `seat.rs` untouched, rule 9).
+async fn experiments_post(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    uri: axum::http::Uri,
+    body: Bytes,
+) -> Response {
+    let path = uri.path().to_string();
+    let p = body_json(&body);
+    let person = seated.person.clone();
+    let out = async {
+        let mut g = ground(&app).await?;
+        let w = &app.cfg.world;
+        if !desk_live::governs(g.client(), &w.scope, &person).await? {
+            return Err(RoadError::Forbidden("these are a governing seat's acts — yours reads and writes".into()));
+        }
+        let xid = s_or(&p, "experiment_id", "");
+        if path == "/experiments/decline" {
+            let made = crate::experiments_live::decline(&mut g, w, &person, &xid, s_opt(&p, "reason").as_deref()).await?;
+            return Ok::<_, RoadError>((200, made));
+        }
+        let made = crate::experiments_live::hold_promote(&mut g, w, &person, &xid, s_opt(&p, "at").as_deref(), s_opt(&p, "session").as_deref()).await?;
+        Ok((202, made))
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /bodies/rest|decommission|restore {name, session?}` — the decom ladder's rungs, each the kernel's held act.
+async fn bodies_rung(
+    State(app): State<Arc<App>>,
+    Extension(seated): Extension<Seated>,
+    uri: axum::http::Uri,
+    body: Bytes,
+) -> Response {
+    let path = uri.path().to_string();
+    let p = body_json(&body);
+    let person = seated.person.clone();
+    let out = async {
+        let mut g = ground(&app).await?;
+        let w = &app.cfg.world;
+        if !desk_live::governs(g.client(), &w.scope, &person).await? {
+            return Err(RoadError::Forbidden("these are a governing seat's acts — yours reads and writes".into()));
+        }
+        let tool = match path.as_str() {
+            "/bodies/rest" => crate::experiments::REST_TOOL,
+            "/bodies/decommission" => crate::experiments::DECOM_TOOL,
+            _ => crate::experiments::RESTORE_TOOL,
+        };
+        let name = s_or(&p, "name", "").trim().to_lowercase();
+        crate::experiments_live::hold_rung(&mut g, w, &person, &name, tool, s_opt(&p, "session").as_deref()).await
     }
     .await;
     match out {

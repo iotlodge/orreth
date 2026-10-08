@@ -318,6 +318,26 @@ impl Gateway {
         Ok(out)
     }
 
+    /// Phase 8 sp4: the grave removes a body's key at the gateway (`Gateway.key_delete`).
+    pub async fn key_delete(&self, keys: &[String]) -> Result<(), GatewayDark> {
+        let (st, out, _) = self
+            .call(
+                "POST",
+                "/key/delete",
+                Some(json!({"keys": keys})),
+                None,
+                Duration::from_secs(TIMEOUT_S),
+            )
+            .await?;
+        if st != 200 {
+            return Err(GatewayDark(format!(
+                "the gateway would not delete the key: {}",
+                words_of(&out)
+            )));
+        }
+        Ok(())
+    }
+
     pub async fn spend_logs(&self, user_id: &str) -> Result<Vec<Value>, GatewayDark> {
         let (st, out, _) = self
             .call(

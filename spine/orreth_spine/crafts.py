@@ -356,13 +356,15 @@ def node(g: dict, node_id: str) -> dict:
 
 
 def hull_edge(marker_kind: str | None, parent_kind: str | None) -> str:
-    """Which of the hull's three edges an ask takes, read off its marker: a THOUGHT (an include
-    asked in the chat) is chat; a ROOT (no parent) is chat — a human's own ask; a parent of a
-    STRUCTURAL kind (an intention's occurrence, an objective's child) is work; any other parent
-    (improvement · watch-red · any declared kind a body is interested in) is an event."""
-    if marker_kind == "thought":
-        return "chat"
+    """Which of the hull's three edges an ask takes, read off its marker: a ROOT (no parent) is
+    chat — a human's own ask; a THOUGHT (an include asked in the chat) under the session's
+    objective is chat; a parent of a STRUCTURAL kind (an intention's occurrence, an objective's
+    child) is work; any other parent (improvement · watch-red · experiment · any declared kind a
+    body is interested in) is an EVENT — a thought's too (Phase 8 sp4: the grader asked under an
+    experiment's marker is an include, and its ask is the kernel's event, never a human's chat)."""
     if not parent_kind:
+        return "chat"
+    if marker_kind == "thought" and parent_kind in STRUCTURAL:
         return "chat"
     if parent_kind in STRUCTURAL:
         return "work"
@@ -398,22 +400,24 @@ def source_form(manifest) -> dict:
 def cut_demand(kind: str, manifest, mode: str) -> dict:
     """What a cut demands, by the craft's class (0010 lock 4): a firmware template is cut only
     in a dev universe — prod reaches it as a release; a resident's template at L3 (the code);
-    an agent's template only through the Experiment (spoonful 4 — refused in words until then);
-    every other craft at L2. `{ok, level, reason}`."""
+    an agent's template only through THE EXPERIMENT (spoonful 4: the cut OPENS the Experiment at
+    L2 — two arms, the reviewers' signed verdicts, the proposal; the stamped promotion lands the
+    version); every other craft at L2. `{ok, level, gate, reason}` — the gate is `shelf` (the
+    cut lands the version) or `experiment` (the cut opens the Experiment)."""
     if kind not in CRAFT_KINDS:
-        return {"ok": False, "level": None, "reason": f"a craft kind is one of {', '.join(CRAFT_KINDS)} — not {kind!r}"}
+        return {"ok": False, "level": None, "gate": None,
+                "reason": f"a craft kind is one of {', '.join(CRAFT_KINDS)} — not {kind!r}"}
     if kind != "template":
-        return {"ok": True, "level": "L2", "reason": None}
+        return {"ok": True, "level": "L2", "gate": "shelf", "reason": None}
     tk = (manifest or {}).get("kind", "resident") if isinstance(manifest, dict) else "resident"
     if tk == "firmware":
         if mode == "prod":
-            return {"ok": False, "level": None,
+            return {"ok": False, "level": None, "gate": None,
                     "reason": "firmware is cut only in a dev universe — it reaches prod as a release"}
-        return {"ok": True, "level": "L2", "reason": None}
+        return {"ok": True, "level": "L2", "gate": "shelf", "reason": None}
     if tk == "agent":
-        return {"ok": False, "level": None,
-                "reason": "an agent's cut goes through the Experiment — two arms, the grader's verdict, the stamped promotion (spoonful 4)"}
-    return {"ok": True, "level": "L3-code", "reason": None}
+        return {"ok": True, "level": "L2", "gate": "experiment", "reason": None}
+    return {"ok": True, "level": "L3-code", "gate": "shelf", "reason": None}
 
 
 def wear_of(parts: dict) -> list[dict]:
@@ -615,12 +619,19 @@ def seed(conn, *, spine: str | Path | None = None, by: str = KERNEL) -> dict:
 
 # ---- the wear table ----------------------------------------------------------------------------------------------
 
-def record_wear(cur, *, scope: str, did: str, body: str, life: int, worn: list[dict]) -> list[dict]:
+def record_wear(cur, *, scope: str, did: str, body: str, life: int, worn: list[dict],
+                close_scope: str | None = None) -> list[dict]:
     """Inside the join's transaction: the previous life's rows closed, one row per component
     this life wears — its version read off the shelf by hash (None when the shelf has no such
-    pin: worn off the shelf, said honestly). Returns the rows as written."""
+    pin: worn off the shelf, said honestly). Returns the rows as written. Phase 8 sp4:
+    `close_scope` — a trial life in an experiment room closes only the rows at that scope, so the
+    standing life's rows (and its "in use by N") stand while the Experiment runs."""
     universe = scope.split("/", 1)[0]
-    cur.execute("UPDATE spine_wear SET until = clock_timestamp() WHERE did = %s AND until IS NULL", (did,))
+    if close_scope:
+        cur.execute("UPDATE spine_wear SET until = clock_timestamp() WHERE did = %s AND until IS NULL AND scope = %s",
+                    (did, close_scope))
+    else:
+        cur.execute("UPDATE spine_wear SET until = clock_timestamp() WHERE did = %s AND until IS NULL", (did,))
     out = []
     for w in worn:
         cur.execute("SELECT version FROM spine_service_versions WHERE scope = %s AND name = %s AND manifest_hash = %s"
@@ -765,6 +776,15 @@ def cut_check(conn, person: str, draft_id: str) -> dict:
     if not dem["ok"]:
         raise CraftRefused(dem["reason"])
     shelf_name = craft_name(d["name"], d["kind"])
+    if dem["gate"] == "experiment":                  # Phase 8 sp4: an agent's cut OPENS the Experiment
+        from . import experiments
+        try:
+            c = experiments.check_open(conn, person, draft_id)
+        except experiments.ExperimentRefused as e:
+            raise CraftRefused(str(e)) from None
+        return {"draft": d, "shelf_name": shelf_name, "verb": "experiment", "version": (c["current_version"] or 0) + 1,
+                "level": dem["level"], "mode": mode, "gate": "experiment", "room": c["room"], "cases": c["cases"],
+                "current_version": c["current_version"]}
     row = services.get(conn, shelf_name)
     if row is None:
         verb, to_version = "register", 1
@@ -777,7 +797,7 @@ def cut_check(conn, person: str, draft_id: str) -> dict:
     else:
         verb, to_version = "version", row["version"] + 1
     return {"draft": d, "shelf_name": shelf_name, "verb": verb, "version": to_version,
-            "level": dem["level"], "mode": mode}
+            "level": dem["level"], "mode": mode, "gate": "shelf"}
 
 
 def cut_words(name: str, kind: str, verb: str, version: int) -> str:
@@ -789,9 +809,13 @@ def cut_words(name: str, kind: str, verb: str, version: int) -> str:
 
 def hold_cut(conn, person: str, draft_id: str, *, session: str | None = None) -> str:
     """The cut is the gate: held at the interlock as the kernel's own act at the level the
-    class demands; the human's deliberate yes settles it (`proof.settle_kernel_act` → `cut`)."""
+    class demands; the human's deliberate yes settles it (`proof.settle_kernel_act` → `cut`).
+    Phase 8 sp4: an AGENT's template holds the Experiment's opening instead (`experiment.open`)."""
     from .proof import hold_kernel_act
     c = cut_check(conn, person, draft_id)
+    if c.get("gate") == "experiment":
+        from . import experiments
+        return experiments.hold_open(conn, person, draft_id, session=session)["held"]
     return hold_kernel_act(conn, text=cut_words(c["draft"]["name"], c["draft"]["kind"], c["verb"], c["version"]),
                            person=person, tool=CUT_TOOL, args={"draft_id": draft_id, "person": person},
                            level=c["level"], session=session, cls=CUT_CLASS)

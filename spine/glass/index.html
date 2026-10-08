@@ -1582,6 +1582,21 @@ async function onNotice(n){
     if (monitorPull.classList.contains("open")) loadMonitor();
     return;
   }
+  if (n.kind.startsWith("orreth.experiment.") || n.kind === "orreth.verdict.v1"){   // Phase 8 sp4: THE EXPERIMENT's facts — the ref is the experiment (a verdict's is its own id)
+    if (n.kind === "orreth.verdict.v1"){ sysline("a reviewer wrote its signed verdict on an experiment — the proposal follows when every reviewer is done"); return; }
+    const r = await fetch("/experiments?id=" + encodeURIComponent(n.ref)).then(x=>x.json()).catch(()=>null);
+    const x = r && r.experiment; if (!x) return;
+    if (n.kind.endsWith("opened.v1")) sysline(`THE EXPERIMENT on <b>${esc(x.agent)}</b> is running in ${esc(x.room)} — ${esc(x.current_version ? "two arms: version " + x.current_version + " and the candidate" : "one arm, the candidate")}; the proposal will reach you here`);
+    else if (n.kind.endsWith("proposed.v1")) experimentCard(x.experiment_id, x);
+    else sysline(x.state === "promoted" ? `the experiment on <b>${esc(x.agent)}</b> is promoted — the next life stands on ${esc(x.at_path)}` : `the experiment on <b>${esc(x.agent)}</b> is ${esc(x.state)}`);
+    return;
+  }
+  if (n.kind === "orreth.body.rested.v1" || n.kind === "orreth.body.decommissioned.v1" || n.kind === "orreth.body.restored.v1"){   // the ladder's facts
+    const rung = n.kind.split(".")[2];
+    sysline(`<b>${esc(n.ref)}</b> is ${esc(rung)}${rung === "decommissioned" ? " — its live objects removed; its DID, its joins and its record stay" : rung === "rested" ? " — its self kept; say “restore " + esc(n.ref) + "” for a new life" : " — a new life from the shelf"}`);
+    if (crewPull.classList.contains("open")) loadCrew();
+    return;
+  }
   if (n.kind === "orreth.harness.failed.v1"){      // AG-6: a failing run
     sysline(`⚠ the harness failed a run (${esc(n.ref)}) — open the monitor ` +
             `for the details; the watcher escalates here, in the chat`);
@@ -2510,6 +2525,64 @@ async function serviceWords(text){                 // "what services are here?" 
     toggleCrew(true);                              // the shelf, in the CREW pull
     return true;
   }
+  // ---- Phase 8 sp4, THE EXPERIMENT AND THE CUT: the experiments, the seats, the promotion, the ladder ----
+  m = t.match(/^show\s+(?:me\s+)?(?:the\s+)?(experiments|seats)$/);
+  if (m){
+    el("msg mine", esc(text));
+    const r = await fetch("/experiments").then(x=>x.json()).catch(()=>null);
+    if (!r){ sysline("the experiments door did not answer"); return true; }
+    if (m[1] === "seats"){
+      if (!(r.seats || []).length) sysline("no promoted agent holds a seat here yet — an agent's cut opens the Experiment; the promotion seats it");
+      for (const st of r.seats || []) sysline(`<b>${esc(st.name)}</b> · ${esc(st.state)} · stands on ${esc(st.at_path)} · ${esc(st.template)} v${st.version ?? "?"}`);
+      return true;
+    }
+    if (!(r.experiments || []).length) sysline("no experiment has run here yet — cut an agent's template draft to open one");
+    for (const x of r.experiments || []) experimentCard(x.experiment_id, x);
+    return true;
+  }
+  m = t.match(/^promote\s+([a-z0-9_-]+)(?:\s+to\s+(?:the\s+)?(?:(universe)|floor\s+([a-z0-9_-]+)|room\s+([a-z0-9_-]+)\s+on\s+(?:the\s+)?floor\s+([a-z0-9_-]+)))?$/);
+  if (m){
+    el("msg mine", esc(text)); toggleChat(true);
+    const r0 = await fetch("/experiments?agent=" + encodeURIComponent(m[1]) + "&state=proposed").then(x=>x.json()).catch(()=>null);
+    const x = r0 && (r0.experiments || [])[0];
+    if (!x){ sysline(`no proposed experiment on ${esc(m[1])} — say “show the experiments”`); return true; }
+    const u = (WORLD && WORLD.scope) || "u:dev";
+    const at = m[2] ? u : m[3] ? `f:${m[3]}` : m[4] ? `f:${m[5]}/r:${m[4]}` : undefined;
+    const r = await fetch("/experiments/promote", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({experiment_id: x.experiment_id, at, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+    if (r && r.held){
+      PENDING[r.held] = el("journey", `promoting ${esc(m[1])} to version ${r.version} — its next life on ${esc(r.at)} — is consequential: the kernel holds it at the interlock (${esc(r.level)})…`);
+      const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+      if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+      return true;
+    }
+    sysline(r && r.error ? esc(r.error) : "the experiments door did not answer");
+    return true;
+  }
+  m = t.match(/^decline\s+(?:the\s+)?([a-z0-9_-]+)(?:'s)?\s+experiment$/);
+  if (m){
+    el("msg mine", esc(text));
+    const r0 = await fetch("/experiments?agent=" + encodeURIComponent(m[1])).then(x=>x.json()).catch(()=>null);
+    const x = r0 && (r0.experiments || []).find(e => e.state === "proposed" || e.state === "running");
+    if (!x){ sysline(`no open experiment on ${esc(m[1])} — say “show the experiments”`); return true; }
+    const r = await fetch("/experiments/decline", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({experiment_id: x.experiment_id, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+    sysline(r && r.words ? esc(r.words) : (r && r.error ? esc(r.error) : "the experiments door did not answer"));
+    return true;
+  }
+  m = t.match(/^(rest|decommission|restore)\s+(?:the\s+)?(?:body\s+|agent\s+)?([a-z0-9_-]+)$/);
+  if (m && (m[1] !== "restore" || await isSeat(m[2]))){   // "restore bob" is the body's when bob holds a seat; else the shelf's restore below
+    el("msg mine", esc(text)); toggleChat(true);
+    const door = {rest: "/bodies/rest", decommission: "/bodies/decommission", restore: "/bodies/restore"}[m[1]];
+    const r = await fetch(door, {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({name: m[2], person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+    if (r && r.held){
+      const words = {rest: `resting ${esc(m[2])} — its life stops at a safe boundary, its self kept`, decommission: `decommissioning ${esc(m[2])} — the grave: its live objects removed, its self and record kept`, restore: `restoring ${esc(m[2])} — a new life from the shelf, never a revival`}[m[1]];
+      PENDING[r.held] = el("journey", `${words} — the kernel holds it at the interlock (${esc(r.level)})…`);
+      const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+      if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+      return true;
+    }
+    sysline(r && r.error ? esc(r.error) : "the bodies door did not answer");
+    return true;
+  }
   m = t.match(/^(retire|restore)\s+(?:the\s+)?([a-z0-9_.-]+)(?:\s+(tool|mind|store|source|mcp|service|template|prompt|skill|policy|graph|binding|golden))?$/);
   if (m){
     el("msg mine", esc(text));
@@ -2588,7 +2661,9 @@ async function serviceWords(text){                 // "what services are here?" 
     }
     const r = await fetch("/drafts/cut", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({draft_id: d.draft_id, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
     if (r && r.held){
-      PENDING[r.held] = el("journey", `cutting the ${esc(d.name)} ${esc(d.kind)} onto the shelf (${esc(r.verb)} → version ${r.version}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`);
+      PENDING[r.held] = el("journey", r.gate === "experiment"      // Phase 8 sp4: an agent's cut OPENS the Experiment
+        ? `an agent's cut goes through the Experiment: opening one on ${esc(d.name)} (${esc(r.room || "an experiment room")}, ${r.cases} golden case${r.cases === 1 ? "" : "s"}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`
+        : `cutting the ${esc(d.name)} ${esc(d.kind)} onto the shelf (${esc(r.verb)} → version ${r.version}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`);
       const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
       if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
       return true;
@@ -3340,6 +3415,27 @@ let SESSION = null;
 let LAST_LIST = [];
 let SESSIONS_SHOWN = false;       // W51: once the list has been shown here, a roll on any door re-reads it
 function sysline(html){ return el("journey", html); }
+async function isSeat(name){                         // Phase 8 sp4: does a promoted agent hold a seat here?
+  const r = await fetch("/seats").then(x=>x.json()).catch(()=>null);
+  return !!(r && (r.seats || []).some(s => s.name === name));
+}
+function experimentCard(id, x){                      // Phase 8 sp4: THE EXPERIMENT card — the arms, every reviewer by name, the leaning, the two words
+  const arms = x.arms || {}, rv = x.reviewers || {};
+  const arm = (side, a) => a === null || a === undefined ? `${side}: none — the first version` : a.skipped ? `${side}: ${esc(a.skipped)}` : a.passed === null || a.passed === undefined ? `${side}: running` : `${side}: ${a.passed} passed, ${a.failed} failed`;
+  const who = (name, slot) => slot && slot.verdict ? `${name}${slot.signed ? " (signed)" : ""}: candidate ${esc(slot.verdict.candidate || "?")}${slot.verdict.current ? ", current " + esc(slot.verdict.current) : ""} → ${esc(slot.verdict.verdict || "no side")}`
+                            : slot && slot.risk ? `${name}${slot.signed ? " (signed)" : ""}: risk ${esc(slot.risk)}${slot.line ? " — " + esc(slot.line) : ""}`
+                            : `${name}: ${esc((slot && slot.missing) || "waiting")}`;
+  const lean = {promote: "leans to promote", hold: "says hold", unsure: "is unsure"}[x.leaning] || "is running";
+  const b = el("msg theirs", `<div class="who">THE EXPERIMENT · ${esc(x.agent)} · ${esc(x.state)}</div>` +
+    `<div class="meta">${esc(id)} · ${esc(x.room)}</div>` +
+    `<div>${arm("candidate", arms.candidate)} · ${arm("current", arms.current)}</div>` +
+    `<div class="meta">${who("the grader", rv.grader)} · ${who("the critic", rv.critic)} · ${esc((rv.security || {}).missing || "security — waiting")} · ${esc((rv.identity || {}).missing || "identity — waiting")}</div>` +
+    `<div class="meta">resiliency: ${x.resiliency ? (x.resiliency.reds ? x.resiliency.reds + " watch(es) turned red while the arms ran" : "no watch turned red while the arms ran") : "running"} · the evidence ${lean}</div>` +
+    (x.state === "proposed" ? `<div class="acts"><button class="ws-btn p" data-promote>promote ${esc(x.agent)}</button> <button class="ws-btn" data-decline>decline</button><span class="meta"> · or say “promote ${esc(x.agent)} to floor ops”</span></div>` : ""));
+  const pb = b.querySelector("[data-promote]"); if (pb) pb.onclick = () => send(`promote ${x.agent}`);
+  const db = b.querySelector("[data-decline]"); if (db) db.onclick = () => send(`decline the ${x.agent} experiment`);
+  return b;
+}
 function clearDisplay(){          // clear ≠ erase: the words stay in the Record
   log.innerHTML = ""; for (const k in PENDING) delete PENDING[k];
 }

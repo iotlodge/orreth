@@ -55,6 +55,7 @@ from . import cells, crafts, levels, placement, presence, profile, projector, pr
 from . import body as _body, desk, levers as _levers, rails, stable as _stable, store   # panel sp2: the feed's topics
 from . import doors as _doors                                                          # panel sp3: THE CLOCK at every door
 from . import projector as _projector                                                  # re-base sp1: the parked, the advance
+from . import experiments as _xp                                                       # Phase 8 sp4: THE EXPERIMENT AND THE CUT
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -83,7 +84,11 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                desk.JOIN_ASKED, desk.JOIN_PROVED, desk.JOIN_ADMITTED, desk.JOIN_DENIED,   # the join desk
                _projector.PARKED, _projector.ADVANCED,   # re-base sp1: the poison parked, the person's advance
                _body.JOINED, _body.REFUSED,              # re-base sp1: a body joined (a life) · refused at birth — the roster's facts
-               levels.LEVEL_OPENED]                      # Phase 8 sp1: a floor or room opened — at light, by the manifest, on a person's word
+               levels.LEVEL_OPENED,                      # Phase 8 sp1: a floor or room opened — at light, by the manifest, on a person's word
+               # Phase 8 sp4: THE EXPERIMENT AND THE CUT — an experiment opened · proposed · settled, a reviewer's
+               # signed verdict, a body rested · decommissioned · restored
+               _xp.EXPERIMENT_OPENED, _xp.EXPERIMENT_PROPOSED, _xp.EXPERIMENT_SETTLED, _xp.VERDICT,
+               _xp.BODY_RESTED, _xp.BODY_DECOMMISSIONED, _xp.BODY_RESTORED]
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -782,6 +787,23 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"drafts": crafts.drafts(conn, person), "person": person,
                                             "kinds": list(crafts.CRAFT_KINDS)})
+            if path == "/experiments":                   # Phase 8 sp4: THE EXPERIMENT — this universe's experiments (one whole by id), the seats
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
+                    if "?" in self.path else {}
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if qs.get("id"):
+                        x = _xp.get(conn, str(qs["id"]))
+                        if x is None:
+                            return self._json(404, {"error": "no such experiment here"})
+                        return self._json(200, {"experiment": x, "verdicts": _xp.verdicts(conn, x["experiment_id"])})
+                    return self._json(200, {"experiments": _xp.listing(conn, agent=str(qs.get("agent") or "") or None,
+                                                                       state=str(qs.get("state") or "") or None),
+                                            "seats": _xp.seats(conn), "reviewers": list(_xp.REVIEWERS),
+                                            "empty_slots": _xp.EMPTY_SLOTS})
+            if path == "/seats":                         # Phase 8 sp4: the promoted agents' seats — where each stands and its rung
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, {"seats": _xp.seats(conn), "ladder": list(_xp.LADDER)})
             if path == "/wear":                          # Phase 8 sp2: THE WEAR TABLE — which body wears which component at which version
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \
@@ -949,6 +971,28 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                                        "experiment": bool(p.get("experiment")), "declares": p.get("declares")},
                                                 person=person, session=str(p.get("session") or "") or None)
                     except levels.LevelRefused as e:
+                        return self._json(400, {"error": str(e)})
+                return self._json(202, made)
+            if path in ("/experiments/promote", "/experiments/decline",
+                        "/bodies/rest", "/bodies/decommission", "/bodies/restore"):   # Phase 8 sp4: THE EXPERIMENT AND THE CUT — the stamped acts
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if not proof.governs(conn, person):
+                        return self._json(403, {"error": "these are a governing seat's acts — yours reads and writes"})
+                    sess = str(p.get("session") or "") or None
+                    try:
+                        if path == "/experiments/promote":
+                            made = _xp.hold_promote(conn, person, str(p.get("experiment_id") or ""),
+                                                    at=str(p.get("at") or "") or None, session=sess)
+                        elif path == "/experiments/decline":
+                            return self._json(200, _xp.decline(conn, person, str(p.get("experiment_id") or ""),
+                                                               reason=str(p.get("reason") or "") or None))
+                        elif path == "/bodies/rest":
+                            made = _xp.hold_rest(conn, person, str(p.get("name") or ""), session=sess)
+                        elif path == "/bodies/decommission":
+                            made = _xp.hold_decom(conn, person, str(p.get("name") or ""), session=sess)
+                        else:
+                            made = _xp.hold_restore(conn, person, str(p.get("name") or ""), session=sess)
+                    except _xp.ExperimentRefused as e:
                         return self._json(400, {"error": str(e)})
                 return self._json(202, made)
             if path == "/watches/rest":               # the honest glass sp2 (W86): a watch RESTED — rule 11's lever
@@ -1174,11 +1218,13 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                               else {"error": "no such draft of yours here"})
                         if not proof.governs(conn, person):           # the cut: a governing seat's word
                             return self._json(403, {"error": "a craft is cut on a governing seat's word — yours reads and writes"})
+                        c = crafts.cut_check(conn, person, str(p.get("draft_id") or ""))
                         held = crafts.hold_cut(conn, person, str(p.get("draft_id") or ""),
                                                session=str(p.get("session") or "") or None)
-                        c = crafts.cut_check(conn, person, str(p.get("draft_id") or ""))
                         return self._json(202, {"held": held, "level": c["level"], "class": crafts.CUT_CLASS,
-                                                "shelf_name": c["shelf_name"], "verb": c["verb"], "version": c["version"]})
+                                                "shelf_name": c["shelf_name"], "verb": c["verb"], "version": c["version"],
+                                                "gate": c.get("gate", "shelf"),      # Phase 8 sp4: an agent's cut opens the Experiment
+                                                **({"room": c["room"], "cases": c["cases"]} if c.get("gate") == "experiment" else {})})
                 except crafts.CraftRefused as e:
                     return self._json(400, {"error": str(e)})
             if path in ("/services", "/services/version", "/services/check",
@@ -1296,6 +1342,7 @@ class BridgeRig:
         services.HOME = self.services_home           # P6.5 sp2: the keeper's door registers into the same home
 
         policy_path = policy or spine / "policy" / "covenant-policy.v1.json"
+        self.policy_path, self.agents_home = policy_path, home     # Phase 8 sp4: a seat from the shelf wears the same policy and home
         # P7 sp6: THE CREW IS ONE MANIFEST (spine/crew.v0.json), read by both
         # spines — the Rust kernel spawns one process per seat; this rig, the
         # reference, seats the same crew in-process. The first seat is the
@@ -1332,9 +1379,10 @@ class BridgeRig:
         for r in self.residents:
             r.on_delta = self.feed.publish_delta
         from http.server import ThreadingHTTPServer
+        self.bodies = {r.name: r for r in self.residents}   # Phase 8 sp4: ONE live dict — a promoted seat joins it, a rest leaves it
         self._httpd = ThreadingHTTPServer(
             ("127.0.0.1", port), make_glass_handler(
-                self.feed, self.dsn, {r.name: r for r in self.residents},
+                self.feed, self.dsn, self.bodies,
                 gateway=gateway, services_home=self.services_home, kernel=self.kernel))
         self.port = self._httpd.server_address[1]
         self.feed_ready = threading.Event()
@@ -1405,11 +1453,13 @@ class BridgeRig:
             next_stable = time.monotonic() + self._mind_check_s()
             next_prune = time.monotonic()                     # RETENTION (the perf cure): the first hour's sweep at once
             next_bench = time.monotonic() + 30                # W91 THE BENCH SWEEP: every 30 s, one kernel
+            next_crafts = time.monotonic() + 60               # Phase 8 sp4 THE PRUNE BEAT: the first sweep a minute in, then hourly
             self._sign_in("schedule")
             while not self._stop.is_set():
                 if self._yielding("schedule"):
                     continue
                 try:
+                    bodies = {r.name: r for r in self.residents if not getattr(r, "_rest", False)}   # Phase 8 sp4: seats come and go
                     scheduler.tick(conn, bodies)
                 except Exception:
                     pass
@@ -1438,6 +1488,22 @@ class BridgeRig:
                 if time.monotonic() >= next_stable:   # P6.5 sp3: the Stable keeper's beat — every mind
                     next_stable = time.monotonic() + self._mind_check_s()   # pinged, the market's eyes,
                     self._stable_beat(conn)           # drift · EOL · drained · strikes → proposals
+                try:                                  # Phase 8 sp4: THE EXPERIMENT BEAT — every running experiment one step on
+                    with ground.beat(conn, "experiment") as ours:
+                        if ours:
+                            for w in _xp.beat(conn, spawn_trial=self._spawn_trial, publish=dispatch.publish_command):
+                                print(f"  [experiment] {w}", file=sys.stderr, flush=True)
+                except Exception as e:                # noqa: BLE001
+                    print(f"the experiment beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+                if time.monotonic() >= next_crafts:   # Phase 8 sp4: THE PRUNE BEAT — hourly, the crafts nobody wears retired
+                    next_crafts = time.monotonic() + _xp.PRUNE_EVERY_S
+                    try:
+                        with ground.beat(conn, "prune") as ours:
+                            if ours:
+                                for pr in _xp.prune(conn):
+                                    print(f"  [prune] {pr['component']}: {pr['words']}", file=sys.stderr, flush=True)
+                    except Exception as e:            # noqa: BLE001
+                        print(f"the prune beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
                 self._nap(5)
 
     @staticmethod
@@ -1587,7 +1653,7 @@ class BridgeRig:
                     print(f"mitl could not acquire the ontology: {type(e).__name__}: {e}",
                           file=sys.stderr, flush=True)      # still serves — and says so
             self._sign_in(f"serve:{resident.name}")
-            while not self._stop.is_set():
+            while not self._stop.is_set() and not getattr(resident, "_rest", False):   # Phase 8 sp4: rested at a safe boundary
                 if self._yielding(f"serve:{resident.name}"):
                     continue                # lock 5: the bench is a test's while the rig yields
                 try:
@@ -1596,6 +1662,8 @@ class BridgeRig:
                     resident.serve_once(conn, idle_s=1.0, max_commands=50)
                 except Exception:
                     pass
+            if getattr(resident, "_rest", False):
+                print(f"  [kernel] {resident.name} stopped whole — at rest on the human's word", file=sys.stderr, flush=True)
 
     # ---- lock 5: THE RIG YIELDS ---------------------------------------------------------
     # One rig per test session (canon 0005, JB's lock 5, 2026-09-27). The suite
@@ -1682,9 +1750,83 @@ class BridgeRig:
             # Phase 8 sp1: the crew manifest's levels stand before the crew is seated on them
             for lv in levels.declare(conn, ev.universe(), _body.manifest(self.spine)):
                 print(f"  [levels] {lv['words']} declared by the crew manifest ({lv['mode']})", file=sys.stderr, flush=True)
+            # Phase 8 sp4: the promoted agents' seats — each active seat is a body of this kernel, seated from
+            # the shelf's standing version at light; the kernel's hands for the Experiment and the ladder
+            _xp.HOOKS.update({"seat": self.seat_agent, "rest": self.rest_body, "queue": self._delete_bench})
+            for s in _xp.seats(conn, state="active"):
+                try:
+                    self.seat_agent(s["name"], s["at_path"], s["version"], conn=conn)
+                except Exception as e:                                  # noqa: BLE001 — said, the crew still lights
+                    print(f"  [seats] {s['name']} could not be seated: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
         for t in self._threads:
             t.start()
         return self
+
+    # ---- Phase 8 sp4: the kernel's hands — a seat, a rest, a bench, a trial life ------------------------
+    def seat_agent(self, name: str, at: str, version: int | None = None, *, conn=None) -> None:
+        """A promoted agent seated from the shelf's standing version of its template — a new life
+        (a restart when a life of it serves: the old one rests at its safe boundary first)."""
+        def _seat(c):
+            row = services.get(c, crafts.craft_name(name, "template"))
+            if row is None or row["state"] == "retired":
+                raise RuntimeError(f"{name}'s template is not standing on the shelf")
+            for old in list(self.residents):
+                if old.name == name and not getattr(old, "_rest", False):
+                    old._rest = True                                   # the standing life stops at its boundary
+            r = Resident(dict(row["manifest"]), gateway=self.gateway, home=self.agents_home, scope=at)
+            r.load_policy(self.policy_path)
+            r.on_delta = self.feed.publish_delta
+            self.residents.append(r)
+            self.bodies[name] = r
+            t = threading.Thread(target=self._serve_loop, args=(r,), daemon=True)
+            self._threads.append(t)
+            t.start()
+            print(f"  [seats] {name} seated on {at} from the shelf (version {row['version']})", file=sys.stderr, flush=True)
+        if conn is not None:
+            _seat(conn)
+        else:
+            with psycopg.connect(self.dsn, autocommit=True) as c:
+                _seat(c)
+
+    def rest_body(self, name: str) -> bool:
+        """The ladder's stop: the body's serve loop ends at its next safe boundary; its self is kept."""
+        found = False
+        for r in self.residents:
+            if r.name == name and not getattr(r, "_rest", False):
+                r._rest = True
+                found = True
+        self.bodies.pop(name, None)
+        return found
+
+    def _delete_bench(self, name: str) -> bool:
+        """The grave removes the body's own bench (its queue on the rail)."""
+        import pika as _pika
+        from .rails import RABBIT_URL as _RU
+        from .resident import serve_queue as _sq
+        rc = _pika.BlockingConnection(_pika.URLParameters(_RU))
+        try:
+            rc.channel().queue_delete(_sq(name))
+        finally:
+            rc.close()
+        return True
+
+    def _spawn_trial(self, exp: dict) -> None:
+        """The Experiment's candidate as a trial life — on the reference, a thread (the Rust kernel
+        spawns `body --experiment`): the same `experiments.trial` either way."""
+        def _run():
+            with psycopg.connect(self.dsn, autocommit=True) as conn:
+                try:
+                    _xp.trial(conn, exp, gateway=self.gateway, home=self.agents_home, policy=self.policy_path,
+                              say=lambda w: print(f"  [trial] {w}", file=sys.stderr, flush=True))
+                except Exception as e:                                  # noqa: BLE001 — the beat reads the missing run
+                    print(f"  [trial] the trial life stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+                    arms = (_xp.get(conn, exp["experiment_id"]) or {}).get("arms") or {}
+                    if arms.get("candidate") is not None:
+                        arms["candidate"]["skipped"] = f"the trial life stumbled: {type(e).__name__}: {str(e)[:160]}"
+                        _xp._update(conn, exp["experiment_id"], arms=arms)
+        t = threading.Thread(target=_run, daemon=True)
+        self._threads.append(t)
+        t.start()
 
     def wait_ready(self, timeout_s: float = 25.0) -> bool:
         """Both listeners hold assignments: the feed AND the dispatcher.

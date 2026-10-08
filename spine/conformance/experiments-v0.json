@@ -1,0 +1,1028 @@
+{
+ "contract": "orreth.experiments/1",
+ "version": 0,
+ "generated_by": "orreth_spine.experiments (the Python reference) - rearch Phase 8 sp4, THE EXPERIMENT AND THE CUT: the room's name, the arms in words, the opening's words, the reviewers' form (a grade per arm and a side; a risk), the proposal's leaning and words, the promotion's demand by class, the decom ladder and its words, where a next life stands, the prune beat's words",
+ "generated_at": "2026-10-07",
+ "cases": [
+  {
+   "name": "exp_room: bob #1",
+   "kind": "exp_room",
+   "input": {
+    "agent": "bob",
+    "n": 1
+   },
+   "expect": {
+    "room": "exp-bob-1"
+   }
+  },
+  {
+   "name": "exp_room: bob #2",
+   "kind": "exp_room",
+   "input": {
+    "agent": "bob",
+    "n": 2
+   },
+   "expect": {
+    "room": "exp-bob-2"
+   }
+  },
+  {
+   "name": "exp_room: quinn-2 #7",
+   "kind": "exp_room",
+   "input": {
+    "agent": "quinn-2",
+    "n": 7
+   },
+   "expect": {
+    "room": "exp-quinn-2-7"
+   }
+  },
+  {
+   "name": "exp_arms_plan: current None",
+   "kind": "exp_arms_plan",
+   "input": {
+    "current_version": null
+   },
+   "expect": {
+    "words": "one arm \u2014 the candidate alone; no version of it stands on the shelf yet"
+   }
+  },
+  {
+   "name": "exp_arms_plan: current 1",
+   "kind": "exp_arms_plan",
+   "input": {
+    "current_version": 1
+   },
+   "expect": {
+    "words": "two arms \u2014 the standing version 1 and the candidate"
+   }
+  },
+  {
+   "name": "exp_arms_plan: current 3",
+   "kind": "exp_arms_plan",
+   "input": {
+    "current_version": 3
+   },
+   "expect": {
+    "words": "two arms \u2014 the standing version 3 and the candidate"
+   }
+  },
+  {
+   "name": "exp_open_words: bob vNone 2 cases",
+   "kind": "exp_open_words",
+   "input": {
+    "agent": "bob",
+    "room": "u:dev/f:ops/r:exp-bob-1",
+    "current_version": null,
+    "golden_n": 2
+   },
+   "expect": {
+    "words": "opening an experiment on the bob agent \u2014 room exp-bob-1 on floor ops of universe dev opens as an experiment room; one arm \u2014 the candidate alone; no version of it stands on the shelf yet; the evidence is its golden set (2 cases); the grader and the critic review under their own names; the verdict is a proposal and the promotion is yours"
+   }
+  },
+  {
+   "name": "exp_open_words: bob v1 1 cases",
+   "kind": "exp_open_words",
+   "input": {
+    "agent": "bob",
+    "room": "u:dev/f:ops/r:exp-bob-2",
+    "current_version": 1,
+    "golden_n": 1
+   },
+   "expect": {
+    "words": "opening an experiment on the bob agent \u2014 room exp-bob-2 on floor ops of universe dev opens as an experiment room; two arms \u2014 the standing version 1 and the candidate; the evidence is its golden set (1 case); the grader and the critic review under their own names; the verdict is a proposal and the promotion is yours"
+   }
+  },
+  {
+   "name": "exp_grade: 'current: B \u2014 fine\\n**candidat'",
+   "kind": "exp_grade",
+   "input": {
+    "text": "current: B \u2014 fine\n**candidate: A** \u2014 better\nverdict: candidate"
+   },
+   "expect": {
+    "verdict": {
+     "current": "B",
+     "candidate": "A",
+     "verdict": "candidate"
+    }
+   }
+  },
+  {
+   "name": "exp_grade: 'current: none\\ncandidate: C \u2014'",
+   "kind": "exp_grade",
+   "input": {
+    "text": "current: none\ncandidate: C \u2014 meh\nverdict: neither"
+   },
+   "expect": {
+    "verdict": {
+     "current": null,
+     "candidate": "C",
+     "verdict": "neither"
+    }
+   }
+  },
+  {
+   "name": "exp_grade: 'I will not grade this.'",
+   "kind": "exp_grade",
+   "input": {
+    "text": "I will not grade this."
+   },
+   "expect": {
+    "verdict": {
+     "current": null,
+     "candidate": null,
+     "verdict": null
+    }
+   }
+  },
+  {
+   "name": "exp_grade: 'Candidate: b - ok\\nVerdict: C'",
+   "kind": "exp_grade",
+   "input": {
+    "text": "Candidate: b - ok\nVerdict: CURRENT"
+   },
+   "expect": {
+    "verdict": {
+     "current": null,
+     "candidate": "B",
+     "verdict": "current"
+    }
+   }
+  },
+  {
+   "name": "exp_grade: '  * current : D \u2014 poor\\n  * c'",
+   "kind": "exp_grade",
+   "input": {
+    "text": "  * current : D \u2014 poor\n  * candidate : F \u2014 worse\n  * verdict : current"
+   },
+   "expect": {
+    "verdict": {
+     "current": "D",
+     "candidate": "F",
+     "verdict": "current"
+    }
+   }
+  },
+  {
+   "name": "exp_risk: 'risk: low \u2014 one node'",
+   "kind": "exp_risk",
+   "input": {
+    "text": "risk: low \u2014 one node"
+   },
+   "expect": {
+    "risk": "low"
+   }
+  },
+  {
+   "name": "exp_risk: 'the change is wide.\\nRisk: HI'",
+   "kind": "exp_risk",
+   "input": {
+    "text": "the change is wide.\nRisk: HIGH \u2014 rewrites the entry"
+   },
+   "expect": {
+    "risk": "high"
+   }
+  },
+  {
+   "name": "exp_risk: 'no form here'",
+   "kind": "exp_risk",
+   "input": {
+    "text": "no form here"
+   },
+   "expect": {
+    "risk": null
+   }
+  },
+  {
+   "name": "exp_risk: '**risk: medium** \u2014 two tools'",
+   "kind": "exp_risk",
+   "input": {
+    "text": "**risk: medium** \u2014 two tools"
+   },
+   "expect": {
+    "risk": "medium"
+   }
+  },
+  {
+   "name": "exp_leaning: case 1",
+   "kind": "exp_leaning",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 3,
+       "failed": 0
+      },
+      "current": {
+       "passed": 2,
+       "failed": 1
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "B",
+        "candidate": "A",
+        "verdict": "candidate"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "low",
+       "line": "one node"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "leaning": "promote"
+   }
+  },
+  {
+   "name": "exp_proposal_words: case 1",
+   "kind": "exp_proposal_words",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 3,
+       "failed": 0
+      },
+      "current": {
+       "passed": 2,
+       "failed": 1
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "B",
+        "candidate": "A",
+        "verdict": "candidate"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "low",
+       "line": "one node"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 3 of 3 \u00b7 the standing version 1 passed 2 of 3 \u00b7 the grader (signed) grades the candidate A and the current B and names candidate \u00b7 the critic reads the risk as low: one node \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence leans to promote. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+   }
+  },
+  {
+   "name": "exp_leaning: case 2",
+   "kind": "exp_leaning",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": null,
+     "arms": {
+      "candidate": {
+       "passed": 1,
+       "failed": 0
+      },
+      "current": null
+     },
+     "reviewers": {
+      "grader": {
+       "missing": "the grader is not seated here \u2014 no verdict"
+      },
+      "critic": {
+       "missing": "the critic is not seated here \u2014 no verdict"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "leaning": "unsure"
+   }
+  },
+  {
+   "name": "exp_proposal_words: case 2",
+   "kind": "exp_proposal_words",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": null,
+     "arms": {
+      "candidate": {
+       "passed": 1,
+       "failed": 0
+      },
+      "current": null
+     },
+     "reviewers": {
+      "grader": {
+       "missing": "the grader is not seated here \u2014 no verdict"
+      },
+      "critic": {
+       "missing": "the critic is not seated here \u2014 no verdict"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 1 of 1 \u00b7 no current arm \u2014 the first version \u00b7 the grader: the grader is not seated here \u2014 no verdict \u00b7 the critic: the critic is not seated here \u2014 no verdict \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence is unsure \u2014 read the arms yourself. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+   }
+  },
+  {
+   "name": "exp_leaning: case 3",
+   "kind": "exp_leaning",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 2,
+     "arms": {
+      "candidate": {
+       "passed": 2,
+       "failed": 1
+      },
+      "current": {
+       "skipped": "no standing life was serving \u2014 the current arm is empty"
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": null,
+        "candidate": "C",
+        "verdict": "neither"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "high",
+       "line": "it drops the covenant node"
+      }
+     },
+     "resiliency": {
+      "reds": 2
+     }
+    }
+   },
+   "expect": {
+    "leaning": "hold"
+   }
+  },
+  {
+   "name": "exp_proposal_words: case 3",
+   "kind": "exp_proposal_words",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 2,
+     "arms": {
+      "candidate": {
+       "passed": 2,
+       "failed": 1
+      },
+      "current": {
+       "skipped": "no standing life was serving \u2014 the current arm is empty"
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": null,
+        "candidate": "C",
+        "verdict": "neither"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "high",
+       "line": "it drops the covenant node"
+      }
+     },
+     "resiliency": {
+      "reds": 2
+     }
+    }
+   },
+   "expect": {
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 2 of 3 \u00b7 current: no standing life was serving \u2014 the current arm is empty \u00b7 the grader (signed) grades the candidate C and names neither \u00b7 the critic reads the risk as high: it drops the covenant node \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: 2 watches turned red while the arms ran. the evidence says hold \u2014 fix the draft and cut again, or promote on your own judgement. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+   }
+  },
+  {
+   "name": "exp_leaning: case 4",
+   "kind": "exp_leaning",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 2,
+       "failed": 0
+      },
+      "current": {
+       "passed": 3,
+       "failed": 0
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "A",
+        "candidate": "B",
+        "verdict": "current"
+       },
+       "signed": false
+      },
+      "critic": {
+       "risk": "low"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "leaning": "hold"
+   }
+  },
+  {
+   "name": "exp_proposal_words: case 4",
+   "kind": "exp_proposal_words",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 2,
+       "failed": 0
+      },
+      "current": {
+       "passed": 3,
+       "failed": 0
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "A",
+        "candidate": "B",
+        "verdict": "current"
+       },
+       "signed": false
+      },
+      "critic": {
+       "risk": "low"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 2 of 2 \u00b7 the standing version 1 passed 3 of 3 \u00b7 the grader (unsigned) grades the candidate B and the current A and names current \u00b7 the critic reads the risk as low \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence says hold \u2014 fix the draft and cut again, or promote on your own judgement. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+   }
+  },
+  {
+   "name": "exp_leaning: case 5",
+   "kind": "exp_leaning",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": null,
+     "arms": {
+      "candidate": {
+       "passed": null,
+       "failed": null
+      },
+      "current": null
+     },
+     "reviewers": {},
+     "resiliency": {}
+    }
+   },
+   "expect": {
+    "leaning": "unsure"
+   }
+  },
+  {
+   "name": "exp_proposal_words: case 5",
+   "kind": "exp_proposal_words",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": null,
+     "arms": {
+      "candidate": {
+       "passed": null,
+       "failed": null
+      },
+      "current": null
+     },
+     "reviewers": {},
+     "resiliency": {}
+    }
+   },
+   "expect": {
+    "words": "THE EXPERIMENT on bob proposes: candidate: running \u00b7 no current arm \u2014 the first version \u00b7 the grader: no verdict yet \u00b7 the critic: no review yet \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence is unsure \u2014 read the arms yourself. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+   }
+  },
+  {
+   "name": "exp_arm_words: candidate null",
+   "kind": "exp_arm_words",
+   "input": {
+    "side": "candidate",
+    "arm": null,
+    "experiment": null
+   },
+   "expect": {
+    "words": "candidate: no version stands yet \u2014 this is the first cut"
+   }
+  },
+  {
+   "name": "exp_arm_words: current {\"skipped\": \"no stan",
+   "kind": "exp_arm_words",
+   "input": {
+    "side": "current",
+    "arm": {
+     "skipped": "no standing life was serving \u2014 the current arm is empty"
+    },
+    "experiment": null
+   },
+   "expect": {
+    "words": "current: no standing life was serving \u2014 the current arm is empty"
+   }
+  },
+  {
+   "name": "exp_arm_words: candidate {\"passed\": null}",
+   "kind": "exp_arm_words",
+   "input": {
+    "side": "candidate",
+    "arm": {
+     "passed": null
+    },
+    "experiment": null
+   },
+   "expect": {
+    "words": "candidate: running"
+   }
+  },
+  {
+   "name": "exp_arm_words: candidate {\"passed\": 2, \"faile",
+   "kind": "exp_arm_words",
+   "input": {
+    "side": "candidate",
+    "arm": {
+     "passed": 2,
+     "failed": 1
+    },
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 3,
+       "failed": 0
+      },
+      "current": {
+       "passed": 2,
+       "failed": 1
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "B",
+        "candidate": "A",
+        "verdict": "candidate"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "low",
+       "line": "one node"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "words": "the candidate passed 2 of 3"
+   }
+  },
+  {
+   "name": "exp_arm_words: current {\"passed\": 2, \"faile",
+   "kind": "exp_arm_words",
+   "input": {
+    "side": "current",
+    "arm": {
+     "passed": 2,
+     "failed": 1
+    },
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 3,
+       "failed": 0
+      },
+      "current": {
+       "passed": 2,
+       "failed": 1
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "B",
+        "candidate": "A",
+        "verdict": "candidate"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "low",
+       "line": "one node"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "words": "the standing version 1 passed 2 of 3"
+   }
+  },
+  {
+   "name": "promote_demand: agent",
+   "kind": "promote_demand",
+   "input": {
+    "template_kind": "agent"
+   },
+   "expect": {
+    "ok": true,
+    "level": "L2",
+    "reason": null
+   }
+  },
+  {
+   "name": "promote_demand: resident",
+   "kind": "promote_demand",
+   "input": {
+    "template_kind": "resident"
+   },
+   "expect": {
+    "ok": true,
+    "level": "L3-code",
+    "reason": null
+   }
+  },
+  {
+   "name": "promote_demand: firmware",
+   "kind": "promote_demand",
+   "input": {
+    "template_kind": "firmware"
+   },
+   "expect": {
+    "ok": false,
+    "level": null,
+    "reason": "firmware is never promoted through the Experiment \u2014 it reaches prod as a release"
+   }
+  },
+  {
+   "name": "promote_demand: None",
+   "kind": "promote_demand",
+   "input": {
+    "template_kind": null
+   },
+   "expect": {
+    "ok": true,
+    "level": "L3-code",
+    "reason": null
+   }
+  },
+  {
+   "name": "ladder_legal: active \u2192 rested",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "active",
+    "to": "rested"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "ladder_legal: rested \u2192 decommissioned",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "rested",
+    "to": "decommissioned"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "ladder_legal: rested \u2192 active",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "rested",
+    "to": "active"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "ladder_legal: decommissioned \u2192 active",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "decommissioned",
+    "to": "active"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "ladder_legal: active \u2192 decommissioned",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "active",
+    "to": "decommissioned"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "ladder_legal: active \u2192 active",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "active",
+    "to": "active"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "ladder_legal: decommissioned \u2192 rested",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "decommissioned",
+    "to": "rested"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "ladder_legal: rested \u2192 rested",
+   "kind": "ladder_legal",
+   "input": {
+    "from": "rested",
+    "to": "rested"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "ladder_refusal: None \u2192 rested",
+   "kind": "ladder_refusal",
+   "input": {
+    "name": "bob",
+    "from": null,
+    "to": "rested"
+   },
+   "expect": {
+    "words": "bob holds no seat this kernel wrote \u2014 only a promoted agent rests, retires or returns here"
+   }
+  },
+  {
+   "name": "ladder_refusal: rested \u2192 rested",
+   "kind": "ladder_refusal",
+   "input": {
+    "name": "bob",
+    "from": "rested",
+    "to": "rested"
+   },
+   "expect": {
+    "words": "bob is rested \u2014 only an active body rests"
+   }
+  },
+  {
+   "name": "ladder_refusal: active \u2192 decommissioned",
+   "kind": "ladder_refusal",
+   "input": {
+    "name": "bob",
+    "from": "active",
+    "to": "decommissioned"
+   },
+   "expect": {
+    "words": "bob is active \u2014 rest it first; the grave takes a rested body"
+   }
+  },
+  {
+   "name": "ladder_refusal: decommissioned \u2192 decommissioned",
+   "kind": "ladder_refusal",
+   "input": {
+    "name": "bob",
+    "from": "decommissioned",
+    "to": "decommissioned"
+   },
+   "expect": {
+    "words": "bob is already decommissioned"
+   }
+  },
+  {
+   "name": "ladder_refusal: active \u2192 active",
+   "kind": "ladder_refusal",
+   "input": {
+    "name": "bob",
+    "from": "active",
+    "to": "active"
+   },
+   "expect": {
+    "words": "bob is active \u2014 nothing to restore"
+   }
+  },
+  {
+   "name": "ladder_words: rest",
+   "kind": "ladder_words",
+   "input": {
+    "rung": "rested",
+    "name": "bob"
+   },
+   "expect": {
+    "words": "bob is at rest \u2014 its life stopped at a safe boundary, its self kept, its record whole; say \u201crestore bob\u201d for a new life or \u201cdecommission bob\u201d for the grave"
+   }
+  },
+  {
+   "name": "ladder_words: decom, removed",
+   "kind": "ladder_words",
+   "input": {
+    "rung": "decommissioned",
+    "name": "bob",
+    "did": "did:orreth:agent:abc",
+    "removed": [
+     "its lease",
+     "its bench"
+    ],
+    "kept": []
+   },
+   "expect": {
+    "words": "bob is decommissioned \u2014 removed: its lease, its bench; its DID did:orreth:agent:abc, its joins and its record stay; say \u201crestore bob\u201d for a new life from the shelf"
+   }
+  },
+  {
+   "name": "ladder_words: decom, nothing standing, a kept bench",
+   "kind": "ladder_words",
+   "input": {
+    "rung": "decommissioned",
+    "name": "bob",
+    "did": null,
+    "removed": [],
+    "kept": [
+     "its bench (the rail was dark)"
+    ]
+   },
+   "expect": {
+    "words": "bob is decommissioned \u2014 removed: nothing was standing; kept: its bench (the rail was dark); its DID, its joins and its record stay; say \u201crestore bob\u201d for a new life from the shelf"
+   }
+  },
+  {
+   "name": "ladder_words: restore",
+   "kind": "ladder_words",
+   "input": {
+    "rung": "active",
+    "name": "bob",
+    "at": "u:dev/f:ops"
+   },
+   "expect": {
+    "words": "bob returns \u2014 a new life from the shelf's standing version, on floor ops of universe dev; never a revival"
+   }
+  },
+  {
+   "name": "ladder_words: promote",
+   "kind": "ladder_words",
+   "input": {
+    "rung": "promote",
+    "name": "bob",
+    "version": 2,
+    "at": "u:dev"
+   },
+   "expect": {
+    "words": "promoting bob to version 2 \u2014 its next life stands on universe dev"
+   }
+  },
+  {
+   "name": "deploy_at: asked None standing None",
+   "kind": "deploy_at",
+   "input": {
+    "universe": "u:dev",
+    "asked": null,
+    "standing": null
+   },
+   "expect": {
+    "path": "u:dev"
+   }
+  },
+  {
+   "name": "deploy_at: asked None standing 'u:dev/f:ops'",
+   "kind": "deploy_at",
+   "input": {
+    "universe": "u:dev",
+    "asked": null,
+    "standing": "u:dev/f:ops"
+   },
+   "expect": {
+    "path": "u:dev/f:ops"
+   }
+  },
+  {
+   "name": "deploy_at: asked 'f:ops' standing 'u:dev'",
+   "kind": "deploy_at",
+   "input": {
+    "universe": "u:dev",
+    "asked": "f:ops",
+    "standing": "u:dev"
+   },
+   "expect": {
+    "path": "u:dev/f:ops"
+   }
+  },
+  {
+   "name": "deploy_at: asked 'u:dev/f:ops/r:bob' standing None",
+   "kind": "deploy_at",
+   "input": {
+    "universe": "u:dev",
+    "asked": "u:dev/f:ops/r:bob",
+    "standing": null
+   },
+   "expect": {
+    "path": "u:dev/f:ops/r:bob"
+   }
+  },
+  {
+   "name": "deploy_at: asked '' standing 'u:dev/f:ops'",
+   "kind": "deploy_at",
+   "input": {
+    "universe": "u:dev",
+    "asked": "",
+    "standing": "u:dev/f:ops"
+   },
+   "expect": {
+    "path": "u:dev/f:ops"
+   }
+  },
+  {
+   "name": "deploy_at refuses: another universe",
+   "kind": "deploy_at",
+   "input": {
+    "universe": "u:dev",
+    "asked": "u:prod/f:ops",
+    "standing": null
+   },
+   "expect": {
+    "error": "u:prod/f:ops does not stand in u:dev"
+   }
+  },
+  {
+   "name": "prune_words",
+   "kind": "prune_words",
+   "input": {
+    "name": "bob.v0.graph",
+    "kind": "graph",
+    "last_wearer": "bob"
+   },
+   "expect": {
+    "words": "pruned by the beat \u2014 worn by no body since bob was decommissioned"
+   }
+  }
+ ]
+}

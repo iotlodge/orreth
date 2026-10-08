@@ -31,6 +31,7 @@ SEED = [  # kind, group, description — the kernel's, in every world
     ("observation", "structural", "a harness run, a red watch, a lease lapse — under its kernel intention"),
     ("improvement", "quality", "an improvement observed to what was being executed — every body's policy marks it"),
     ("watch-red", "resiliency", "a watch judged red — under the intention that keeps it green (0007)"),
+    ("experiment", "quality", "an Experiment opened on an agent's candidate — its arms' runs and the reviewers' signed verdicts under it (0010 §5)"),
 ]
 
 

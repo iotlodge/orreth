@@ -161,11 +161,13 @@ def test_the_draft_shelf_lives_under_the_person_and_the_cut_is_the_gate(pg, monk
     out = proof.settle_kernel_act(pg, g2, approve=False, by=PERSON)
     assert out["status"] == "cancelled" and services.get(pg, "two.graph") is None
     assert crafts.draft(pg, PERSON, half["draft_id"]) is not None
-    # the demand by class: a resident's template asks the code; an agent's waits for the Experiment
+    # the demand by class: a resident's template asks the code; an agent's OPENS the Experiment (Phase 8 sp4) —
+    # whose evidence, the golden set, is required
     res = crafts.save_draft(pg, PERSON, "template", "bob", {"graph": "mind.v0", "nature": "a test body"})
     assert crafts.cut_check(pg, PERSON, res["draft_id"])["level"] == "L3-code"
     ag = crafts.save_draft(pg, PERSON, "template", "bob2", {"graph": "mind.v0", "kind": "agent"})
-    with pytest.raises(crafts.CraftRefused, match="goes through the Experiment"):
+    assert crafts.cut_demand("template", ag["body"], "dev") == {"ok": True, "level": "L2", "gate": "experiment", "reason": None}
+    with pytest.raises(crafts.CraftRefused, match="bob2 has no golden set on the shelf"):
         crafts.cut_check(pg, PERSON, ag["draft_id"])
     fw = crafts.save_draft(pg, PERSON, "template", "chip", {"graph": "mind.v0", "kind": "firmware"})
     assert crafts.cut_check(pg, PERSON, fw["draft_id"])["level"] == "L2"                  # dev: cut
