@@ -33,7 +33,9 @@ Every lapse is dormancy, never death: the same self re-joins and renews.
 JB's pin (2026-09-26, the STANDING KEY-CHECK): the kernel asking a body every so
 often to prove it is WHAT and WHO it says — this desk's challenge is that act. A
 re-join by a leased body proves the key again and is admitted on its welcome in
-silence; a cadence dial that asks for it is not built until a proof asks (rule 12).
+silence; the CADENCE is built (Phase 8 sp6, 2026-10-09, `chips.py`): the key-check
+beat repeats this challenge (`challenge_payload` · `proof_of` · `prove`) to every
+seated body every `SPINE_KEYCHECK_S` seconds over the rail, and records the verdict.
 
 The pure law here (the statuses and their transitions, the challenge's bytes, the
 proof's verdict, the lease and its fuel clause, the collect's bytes, the words) is

@@ -1,584 +1,608 @@
 {
- "format": "orreth-guide/1",
- "version": "0.10.0",
- "title": "THE GUIDE · what you can say here, and what happens",
- "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
- "sections": [
-  {
-   "id": "chat",
-   "when": "chat",
-   "title": "The chat",
-   "lead": "Type to the crew. A reply always arrives whole. Esc closes one thing at a time.",
-   "entries": [
+  "format": "orreth-guide/1",
+  "version": "0.11.0",
+  "title": "THE GUIDE · what you can say here, and what happens",
+  "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
+  "sections": [
     {
-     "say": "what is the temperature outside?",
-     "does": "A thought: the librarian answers with its tools; every body it needs is asked."
+      "id": "chat",
+      "when": "chat",
+      "title": "The chat",
+      "lead": "Type to the crew. A reply always arrives whole. Esc closes one thing at a time.",
+      "entries": [
+        {
+          "say": "what is the temperature outside?",
+          "does": "A thought: the librarian answers with its tools; every body it needs is asked."
+        },
+        {
+          "say": "echo, say the word HERON once",
+          "does": "A name at the head sends the ask to that body alone."
+        },
+        {
+          "say": "librarian, remember that I went to the trailer today",
+          "does": "The librarian keeps the words in the Record. Ask later: \"what do you remember about the trailer?\""
+        },
+        {
+          "say": "between 9am and noon, what did I ask?",
+          "does": "Sets the time window the crew reads from; \"since yesterday\" works too."
+        },
+        {
+          "say": "follow up on this by counting the asks",
+          "does": "A child of the origin last opened in the Analyzer."
+        },
+        {
+          "say": "summon MITL",
+          "does": "The Master Mind In The Loop reads the canon and says what a change touches; every hold offers \"expected impact?\"."
+        },
+        {
+          "say": "export compliance for this session",
+          "does": "A table of every ask, act and reply with its chain of who acted for whom, signed by the kernel; two downloads beneath it, JSON and CSV."
+        },
+        {
+          "say": "list my sessions · new session",
+          "does": "Your worldlines, newest first, each with its short version; a new session archives the old one — nothing is deleted."
+        },
+        {
+          "say": "guide · help · ?",
+          "does": "This guide, opened to where you are."
+        },
+        {
+          "say": "(open a reply's journey — the ⌄ on its line)",
+          "does": "Every hop the body took, in order: heard the ask · recalled N notes · routed to the chat edge (a human's ask) — or the work edge (a duty, an objective) or the event edge (a marker it is interested in) · the work node runs graph mind.v0: think · thought it through the metered gateway. Since Phase 8 sp2 every body runs this HULL and its template's graph is the work node."
+        }
+      ]
     },
     {
-     "say": "echo, say the word HERON once",
-     "does": "A name at the head sends the ask to that body alone."
+      "id": "panel",
+      "when": "chat",
+      "title": "THE PANEL — the main window",
+      "lead": "The kernel drawn as a control room's panel. Geometry is architecture: every block sits where its declaration puts it and never moves. Light is operations: a fact on the feed lights a lamp or a rail segment, then fades. Colour is origin: amber a person's word, cyan a body's act, violet the kernel's own, red a watch or a hold. A quiet kernel is a dark, still panel. The panel knocks on no door by a clock: the roster, the stations and every lamp follow the feed — a body joining, refused, parked, its lease crossing the line.",
+      "entries": [
+        {
+          "say": "tour · show me around · what am I looking at",
+          "does": "THE TOUR: a soft line walks you around the panel one part at a time, in plain words — what it is, what to try — with the world still moving underneath. ← → to move, Esc to leave; the TOUR switch on the sill opens it too."
+        },
+        {
+          "say": "(click DESK · GROUND · GATEWAY · SHELF · MONITOR · ANALYZER)",
+          "does": "The kernel's six organs, always seated. A click opens the inspector in place: what it is, its self, what it serves, and one-click doors into the chat, the crew, the monitor or the analyzer."
+        },
+        {
+          "say": "(click a station — planner · librarian · echo …)",
+          "does": "A crew seat. Solid = seated by its lease; dashed = declared, not seated; amber = parked by the kernel. The inspector shows its self, lease, life and last act; \"scope the chat here\" makes the chat speak to that body alone."
+        },
+        {
+          "say": "(click a tool under the shelf)",
+          "does": "A tool the kernel governs. Its border says how consequential it is: plain routine, amber consequential, red grave. Retire or restore it from the inspector — a retire holds at the interlock."
+        },
+        {
+          "say": "(click a row on the running board)",
+          "does": "The intention → objective → thought → action chain, live. A click opens that origin in the Analyzer."
+        },
+        {
+          "say": "(click ARCHITECTURE · OPERATIONS · PERFORMANCE on the sill)",
+          "does": "Three soft toggles on one drawing, any combination. ARCHITECTURE shows the empty sockets and the tools; OPERATIONS the rails and the board; PERFORMANCE the numbers: under each organ its doors' p95 (how long the slowest one in twenty knocks took), under the GROUND the pool of lines to the ground (how many are busy, how many knocks wait for one), the outbox's age, the spend, the benches' depth, and THE DOORS row - every door this kernel answered in the last ten minutes, the slowest first, red past one second. A watch can stand on door_p95_ms, pool_busy or pool_waiting."
+        },
+        {
+          "say": "(click FULL SCREEN on the sill, or press F)",
+          "does": "The panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away, the browser goes full screen too, and on a wide display the drawing is scaled up to be read from across the room. The sill stays as the one thin bar - the toggles, CHAT, ANALYZER and the way out. Esc or F leaves it. Remembered in this browser."
+        },
+        {
+          "say": "(click a marker chip — structural · quality · resiliency)",
+          "does": "Dims that group's rows on the board and the tape."
+        },
+        {
+          "say": "(click ☀ or ☾ in the ceiling)",
+          "does": "The Daylight Glass: the same panel in daylight — paper, ink, bronze — or back to the night. Remembered in this browser; with nothing remembered, your system's own preference decides."
+        },
+        {
+          "say": "(watch the presence track · a tool's lamp · the scheduler's track)",
+          "does": "A lease lapsing lights the presence track red and the station goes dashed within five seconds; seated again, violet. A tool hop lights the tool's lamp cyan under the shelf and the dispatcher's track toward it. A duty waking on its clock lights the scheduler's track toward the runner. A lever the kernel pulls lights the monitor and the intent track toward the body it acts on — red when it is held at the interlock for your word."
+        }
+      ]
     },
     {
-     "say": "librarian, remember that I went to the trailer today",
-     "does": "The librarian keeps the words in the Record. Ask later: \"what do you remember about the trailer?\""
+      "id": "kinds",
+      "when": "chat",
+      "title": "The kind of an ask",
+      "lead": "The chip under the composer reads the kind from your words; one click flips it.",
+      "entries": [
+        {
+          "say": "thought: …",
+          "does": "One answer, now."
+        },
+        {
+          "say": "objective: …",
+          "does": "Work the crew owns until it is done; the Analyzer shows it under its origin."
+        },
+        {
+          "say": "keep this world resilient: when a watch goes red, get it green",
+          "does": "An intention — a standing purpose that wakes on what it watches; it appears in the Analyzer with its stop."
+        },
+        {
+          "say": "echo, every 5 seconds, say the time, please",
+          "does": "A cadence: the intention runs on the clock; \"echo, stop\" rests it, \"echo, restart intention 'every 5 seconds'\" stands it again."
+        }
+      ]
     },
     {
-     "say": "between 9am and noon, what did I ask?",
-     "does": "Sets the time window the crew reads from; \"since yesterday\" works too."
+      "id": "involvement",
+      "when": "chat",
+      "title": "How much of you a task needs — manual · manual assist · full auto",
+      "lead": "The kind of your ask decides how far the kernel goes without you, and it never goes one step further without a word from you. A THOUGHT moves nothing: you ask, one body answers, you are the whole loop (manual). An OBJECTIVE moves what you asked and stops at every consequence: the planner breaks it into steps, the crew acts, and any step that changes something holds for your Cancel or Yes (manual assist). An INTENTION keeps moving until you rest it: the kernel watches for what you named — a red watch, a clock — plans the next objective itself, files it, and the loop turns; you are told, not asked — except at a consequence, which still holds for you (full auto). Three things tell you which mode a thing is in: the chip under the composer (the kind), the hold row (the kernel is waiting on you), and the Analyzer (every intention and objective by origin, with its stop).",
+      "entries": [
+        {
+          "say": "what is the temperature outside?",
+          "does": "MANUAL. A thought: the librarian answers once, with its tools. Nothing in the world changes. Your part: the question."
+        },
+        {
+          "say": "objective: get the weather tool healthy again",
+          "does": "MANUAL ASSIST. The planner writes the steps, the crew runs them, the Analyzer shows the tree. When a step would change something (retire, re-pin, refill), the chat shows a hold with Cancel as the default — nothing runs until you click Yes (a grave step asks for your authenticator's code). Your part: one word to start, one word at each hold. Say “stop it” at any time; what was left undone is said."
+        },
+        {
+          "say": "keep this world resilient: when a watch goes red, get it green",
+          "does": "FULL AUTO. A standing purpose. The kernel observes (the red), reads the ground itself first — the watch, who it names and their state, the last acts on them, what happened last time — and hands the planner that dossier with the LEVERS it can pull (restart a body · check or restore a service or a mind · retire one); the planner answers with one lever and its reason; the kernel pulls it with its own hands, as a row in the intention’s session, then reads the watch again and says what happened — green after its act wears the cause, green on its own is said to be self-healed, still red tries once more and then hands you the dossier. You read it in the Analyzer (“last red: cured”) and the Intentions band; you are not asked. Consequential steps STILL hold for you: the kernel never lowers the ladder because it is running on its own. Your part: declare once; decide holds when they come; rest it when you want (“stop the … intention” — your code, then a master's click; “restart intention '…'” stands it again)."
+        },
+        {
+          "say": "echo, every 5 seconds, say the time, please",
+          "does": "FULL AUTO on a clock: the same loop, woken by a cadence instead of a red. “echo, stop” rests it."
+        },
+        {
+          "say": "summon MITL · expected impact?",
+          "does": "In any mode, before you decide a hold: the Master Mind In The Loop says who and what the act touches, from the canon."
+        },
+        {
+          "say": "(the light bulb)",
+          "does": "Manual: you act, the kernel answers. Manual assist: the kernel acts, you decide every consequence. Full auto: the kernel acts and plans, you still decide every consequence and can always stop. The kernel's reach grows with the kind you chose; your hand on the consequences never shrinks."
+        }
+      ]
     },
     {
-     "say": "follow up on this by counting the asks",
-     "does": "A child of the origin last opened in the Analyzer."
+      "id": "interlock",
+      "when": "chat",
+      "title": "When the kernel asks \"Are you sure?\"",
+      "lead": "A consequential act holds until you decide. Cancel is the default and has the focus; Yes needs a deliberate click.",
+      "entries": [
+        {
+          "say": "Cancel",
+          "does": "Nothing runs; the hold is recorded as cancelled."
+        },
+        {
+          "say": "Yes — do it",
+          "does": "The act runs on your word and wears proof L2; a grave act asks for your authenticator's code instead (\"enroll my authenticator\" once)."
+        },
+        {
+          "say": "expected impact?",
+          "does": "MITL says who and what the act touches before you decide."
+        },
+        {
+          "say": "(a proposal from a keeper)",
+          "does": "A keeper never retires, assigns, refills or re-pins alone — it proposes here and you cut; a proposal whose reason has passed withdraws itself."
+        }
+      ]
     },
     {
-     "say": "summon MITL",
-     "does": "The Master Mind In The Loop reads the canon and says what a change touches; every hold offers \"expected impact?\"."
+      "id": "crew",
+      "when": "crew",
+      "title": "The Crew",
+      "lead": "Every body in this world, both sides: what it served and the job it runs. When this kernel seats the bodies itself (the Rust kernel alone), each card says where its process stands — alive, restarting, PARKED or refused. Beneath the bodies stands the shelf — the services the kernel governs and the crafts the bodies are made of.",
+      "entries": [
+        {
+          "say": "what services are here? · show the tools · show the LLMs · show the crafts",
+          "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM — and, since Phase 8 sp2, every CRAFT a body is made of (templates, prompts, skills, policies, graphs, bindings, golden sets) — on one ladder: registered → versioned → healthy | unhealthy → retired. A craft's card says who wears it; the drafts and the cut are under “The shelf widened”."
+        },
+        {
+          "say": "check the services · check the minds",
+          "does": "Every standing service probed by its kind; an LLM answers a one-token ping through the gateway."
+        },
+        {
+          "say": "retire the weather tool · restore the weather tool",
+          "does": "Retire holds at the interlock; restore is a new fact. Retired is dormancy, never deletion."
+        },
+        {
+          "say": "toolkeeper, add the MCP server at <command or URL>",
+          "does": "The server and its tools land on the shelf as identities; its secrets by env NAME only."
+        },
+        {
+          "say": "stablekeeper, add the LLM ollama gemma3:270m as gemma",
+          "does": "An LLM wherever it lives — anthropic · openrouter · ollama · openai · compatible — becomes a stall in the Stable and an entry in the gateway; held for your yes. A deal added without a price takes the gateway's own price map (W107: never left at $0 — the meter charges by the pin); say the price yourself to pin another: “… as sonnet at $2 in and $10 out per million”."
+        },
+        {
+          "say": "stablekeeper, repin sonnet",
+          "does": "Re-pins a stall from the market's word — the gateway's price map (or OpenRouter's catalog): the new price, context and modalities land as the next version (held at the interlock, L2); the old pin stays in its history. The cure for a stall that reads $0 in / $0 out."
+        },
+        {
+          "say": "assign librarian to gemma · assign librarian to gemma for fast work · unassign librarian",
+          "does": "Which LLM a body uses, for all its work or one class of work (fast · standard · deep); the card says \"LLM: …\" and why."
+        },
+        {
+          "say": "librarian's fuel · refill librarian by $2",
+          "does": "A body's allowance for this window and what it has spent; a refill holds at the interlock — real spending."
+        },
+        {
+          "say": "schedule an ask for librarian… (on its card)",
+          "does": "A standing duty on the clock, shown on the card's job side; \"rest it\" stops it."
+        },
+        {
+          "say": "restart the echo body",
+          "does": "A body the kernel PARKED (it died three times in five minutes) or refused at birth is tried again on your word — its deaths forgotten, the same self. A body that simply died comes back by itself; nothing is ever deleted."
+        }
+      ]
     },
     {
-     "say": "export compliance for this session",
-     "does": "A table of every ask, act and reply with its chain of who acted for whom, signed by the kernel; two downloads beneath it, JSON and CSV."
+      "id": "monitor",
+      "when": "monitor",
+      "title": "The Monitoring",
+      "lead": "The operating state of this world, live: the rails, the bodies, the asks, the watches, THE STABLE, the HEALTH CHECKS.",
+      "entries": [
+        {
+          "say": "watch for asks left waiting",
+          "does": "The monitor agent proposes a watch — a hold you cut; a watch is RED while its condition holds and turns in the chat."
+        },
+        {
+          "say": "propose a watch that usd_today > 5",
+          "does": "A watch over the farm: spend today, thoughts per minute, LLMs standing, bodies out of fuel."
+        },
+        {
+          "say": "HEALTH CHECKS",
+          "does": "What must be true of this world, read from the ground now: nine rows, each holds or BROKEN with its words; read every 30 seconds."
+        },
+        {
+          "say": "run the harness against the librarian now",
+          "does": "The golden cases against a body's LLM; a failing run escalates to the chat. From the Rust kernel the run rides the rail to the body and lands when it is done."
+        },
+        {
+          "say": "advance past parked 3",
+          "does": "The RAILS card names every event the dispatcher HOLDS at — bytes the rail carried that were never an envelope, or a fact that can never apply — parked with its evidence, nothing behind it dispatched until a person decides. Your word (or the card's lever) advances it, recorded in your name; nothing is lost silently and nothing loops."
+        }
+      ]
     },
     {
-     "say": "list my sessions · new session",
-     "does": "Your worldlines, newest first, each with its short version; a new session archives the old one — nothing is deleted."
+      "id": "analyzer",
+      "when": "band",
+      "title": "The Analyzer",
+      "lead": "Everything born in the chat, by origin: intentions, objectives, in flight and done. Every row is a door.",
+      "entries": [
+        {
+          "say": "(click a row)",
+          "does": "Its tree in words; an objective's row puts the chat in focus on it."
+        },
+        {
+          "say": "stop the kernel's Resiliency intention",
+          "does": "A grave act: your code, then a declared master's click; the intention rests, recorded, never deleted."
+        },
+        {
+          "say": "restart intention '<its words>'",
+          "does": "The reverse, through the same ladder; it \"stands again\"."
+        }
+      ]
     },
     {
-     "say": "guide · help · ?",
-     "does": "This guide, opened to where you are."
+      "id": "seat",
+      "when": "chat",
+      "title": "Your seat — who this door knows you are",
+      "lead": "Every door reads who you are from your SEAT, never from the page. You take a seat with the code your authenticator shows; it lasts a day. On a ground no one holds yet, the first person to prove an authenticator becomes its owner; from then on only the owner or a master can enroll someone new. Nobody types a master's name any more — a master confirms a grave act from their own seat, in their own window. Bodies hold the machine's twin: a LEASE, earned at the join desk — a body proves the key behind its DID, and a governing seat says yes.",
+      "entries": [
+        {
+          "say": "(the seat form) your name + the 6-digit code · Take my seat",
+          "does": "The kernel signs a token naming you, what you may do here and until when; the page carries it on every knock. The first proof on an unheld ground: “you hold this ground now”."
+        },
+        {
+          "say": "(the seat form, no one holds the ground yet) your name · Enroll",
+          "does": "The QR for your authenticator; the first code finishes enrolling; the next one takes your seat as the owner."
+        },
+        {
+          "say": "my seat · who am I seated as?",
+          "does": "Seated as whom, until when, and what the seat may do: retrieve · write (· govern for the owner and a master)."
+        },
+        {
+          "say": "leave my seat",
+          "does": "Ends this seat now — recorded, never deleted; the seat form returns. Another window's seat is its own."
+        },
+        {
+          "say": "enroll quinn",
+          "does": "The owner's (or a master's) word: a QR for another person's authenticator; their first code finishes it here; they sit in their own browser with the next."
+        },
+        {
+          "say": "enroll my authenticator",
+          "does": "Re-enrolling yourself is grave: your current code first, then the new QR."
+        },
+        {
+          "say": "(a grave act, as the asker) type your code → a declared master clicks Confirm as master in THEIR window",
+          "does": "The two-person law, honestly: the master is a second seated person; the typed name is gone."
+        },
+        {
+          "say": "who is at the door?",
+          "does": "The join desk: every body that asked to join this world, newest first — the crew (admitted on the crew manifest), a stranger waiting for your yes, one turned away. A stranger's knock appears in the chat as a hold: Cancel is the default; only the owner or a master can click Yes."
+        }
+      ]
     },
     {
-     "say": "(open a reply's journey — the ⌄ on its line)",
-     "does": "Every hop the body took, in order: heard the ask · recalled N notes · routed to the chat edge (a human's ask) — or the work edge (a duty, an objective) or the event edge (a marker it is interested in) · the work node runs graph mind.v0: think · thought it through the metered gateway. Since Phase 8 sp2 every body runs this HULL and its template's graph is the work node."
+      "id": "you",
+      "when": "chat",
+      "title": "You — what this ground knows about you",
+      "lead": "Your profile is yours: what you tell this ground about yourself, in your own words, labeled by who said it — “you told me” · “I observed” · “the mirror noticed” (reserved). Every body reads it first when it answers you; a routed ask carries it to the far cell for that answer alone. The YOU tag under the sun shows who this door knows you are.",
+      "entries": [
+        {
+          "say": "my name is JB · call me JB",
+          "does": "Your name, trusted on your word. The newest word wins; the old one stays in the record."
+        },
+        {
+          "say": "I live in Boulder, Colorado · my place is Payson, Arizona",
+          "does": "Your place, in your words. The kernel looks its coordinates and clock up once (Open-Meteo, no key) and keeps them beside your words as “I observed” — the weather tool then answers for YOUR place, never a fixed point. With no place told, it says so rather than reading someone else's weather."
+        },
+        {
+          "say": "my time zone is America/Denver · my clock is Europe/Paris",
+          "does": "Your clock, told; every time a body reads you is in it. Untold, the clock of your told place; untold both, the browser's zone, then the ground's dial."
+        },
+        {
+          "say": "remember about me: I take my coffee black",
+          "does": "A free word about you. Every resident reads it in its context, never recites it unasked."
+        },
+        {
+          "say": "what do you know about me? · show my profile · who am I",
+          "does": "The portrait: every live word with its label and the clock this ground would use for you."
+        },
+        {
+          "say": "forget about me: my place · forget my name · forget that I take my coffee black",
+          "does": "A recorded withdrawal on your word — the words no longer read; the record keeps that you said them once. Never a deletion."
+        }
+      ]
+    },
+    {
+      "id": "memory",
+      "when": "chat",
+      "title": "Memory, sessions and the export",
+      "lead": "The kernel never forgets: every word acquired is kept verbatim with its lineage; a correction is a sibling, never an overwrite.",
+      "entries": [
+        {
+          "say": "what do you remember about the trailer?",
+          "does": "Recall, stemmed and ranked; the librarian answers from the Record, word for word."
+        },
+        {
+          "say": "list my sessions",
+          "does": "Each session's short version — the digest — written from the Record alone; the same on every door."
+        },
+        {
+          "say": "export compliance for this session · export compliance for today",
+          "does": "Signed by the kernel's own self (did:orreth:kernel:…); a stranger can verify the chain and the signature."
+        },
+        {
+          "say": "librarian, forget the trailer note",
+          "does": "The librarian's own purge, held at the interlock (consequential): every version leaves; a tombstone keeps the hashes; the digests that cited it are rebuilt. A body's word, not the glass's — say it to the body that remembers it."
+        }
+      ]
+    },
+    {
+      "id": "cells",
+      "when": "monitor",
+      "title": "Cells — a second universe, and the seam between them",
+      "lead": "A cell is one universe's home: its own kernel, its own database and role, its own benches, its own bodies and keys. Two cells that name each other can speak over a signed seam. What this world is and where it stands reads in the Monitoring's PULSE and PEERS.",
+      "entries": [
+        {
+          "say": "what world is this?",
+          "does": "The universe, the cell it stands in, its epoch, and the peers it names."
+        },
+        {
+          "say": "librarian@two, what is the weather?",
+          "does": "An ask that names a cell ROUTES HOME: cell two's own librarian answers, and the answer lands on your ask here, its journey saying so. \"two/librarian, …\" works too."
+        },
+        {
+          "say": "stop it (on a routed ask's line)",
+          "does": "Rests the ask here and tells its home cell to rest it too — the human can always stop what the machine manages."
+        },
+        {
+          "say": "scripts/dev.sh cell two (in a terminal)",
+          "does": "Lights a second universe, u:two, on its own database and role, sealed from this one; relight this kernel so it names cell two as a peer (SPINE_PEERS)."
+        },
+        {
+          "say": "re-home this universe to cell three",
+          "does": "Consequential: held at the interlock (your yes). The universe's epoch advances; this kernel then refuses to serve it, and a peer still wearing the old epoch is told to re-hear the world."
+        },
+        {
+          "say": "(when a peer is dark)",
+          "does": "An ask routed to it reads PARKED in plain words — nothing is lost; the moment the peer answers again the ask goes and is answered once. The PEERS view says \"unreachable since\"."
+        }
+      ]
+    },
+    {
+      "id": "levels",
+      "when": "monitor",
+      "title": "Levels — the universe, its floors, their rooms",
+      "lead": "One kernel per cell serves three levels on one path: the UNIVERSE (this cell), its FLOORS, and their ROOMS (u:dev/f:ops/r:bob). A crew can be seated on any level by the crew manifest; what a body writes about itself wears its level, and a listing at a level sees everything within it. Mode only tightens down the path: a prod universe's floors and rooms are prod. The GROUND organ names the universe's mode and its levels. The shipped crew seats the echo on floor ops, so the levels line under the GROUND organ reads “floor ops · dev · 1 body” from the first light.",
+      "entries": [
+        {
+          "say": "what levels are here?",
+          "does": "Every floor and room of this universe with its mode, who is seated there, and what rolls up from within it."
+        },
+        {
+          "say": "echo, say the word HERON once",
+          "does": "The echo stands on floor ops, yet an ask from the universe reaches it: the address law reads within the universe, and the reply wears the floor's path (u:dev/f:ops) on its journey."
+        },
+        {
+          "say": "open floor ops",
+          "does": "Consequential: held at the interlock (a governing seat's yes). A floor under this universe, in the universe's mode — \"open floor ops as prod\" tightens it."
+        },
+        {
+          "say": "open room bob on floor ops as an experiment room",
+          "does": "A room on the floor; an experiment room is where a candidate cut is tried — two arms, the grader's verdict, the stamped promotion — nothing promotes out of it except through the Experiment gate (spoonful 4)."
+        },
+        {
+          "say": "open room loose on floor three as dev",
+          "does": "Under a prod floor, refused in words before anything is held: mode only tightens down the path."
+        },
+        {
+          "say": "SPINE_MODE=prod (in the kernel's environment at light)",
+          "does": "Declares the universe prod when its cell opens; a relight may tighten dev to prod and never loosen it — a prod universe refuses to light as dev."
+        }
+      ]
+    },
+    {
+      "id": "shelf-widened",
+      "when": "crew",
+      "title": "The shelf widened — the crafts a body is made of, who wears them, your drafts",
+      "lead": "The SHELF (in the CREW pull, beneath the bodies) holds every service the kernel governs (tools, MCP servers, stores, sources, minds) and, since Phase 8 sp2, every CRAFT a body is made of: templates, prompts, skills, policies, graphs, bindings and golden sets. A craft is addressed by its name and pin (librarian.template, mind.v0.graph) and is never a self — its card says “address craft:… (no self)”. The WEAR TABLE says which body wears which craft at which version — “in use by N”. A DRAFT lives under you alone until you CUT it onto the shelf; the cut is held at the interlock. Every body now runs the HULL: hear, recall, route to the chat, work or event edge, then its template's graph as the work node. The SHELF organ's second line counts the crafts.",
+      "entries": [
+        {
+          "say": "show the crafts · show the templates · show the prompts · show the graphs",
+          "does": "Every craft on the shelf with its ladder state, its health and how many bodies wear it now; a kind's word narrows it (templates · prompts · skills · policies · graphs · bindings · goldens)."
+        },
+        {
+          "say": "who wears the librarian template? · who wears mind.v0.graph?",
+          "does": "The bodies wearing that component now, by life and version — “librarian.template is worn by 1 body: librarian (life 107, v1)” — the blast radius a change would touch."
+        },
+        {
+          "say": "what is echo made of?",
+          "does": "The components a body wears: “echo.template v1 · pin f249b129 · the-orreth-covenant.policy v1 · echo.v0.graph v1”. A body joined before the wear table shows nothing until its next life, and says so."
+        },
+        {
+          "say": "my drafts",
+          "does": "Your drafts and no one else's — they live in the ground under your seat, never on the shelf, never in any recall. With none, the words to start one."
+        },
+        {
+          "say": "draft a prompt called greeting: Greet the human by name, warmly.",
+          "does": "Routine: the draft is saved under your seat (saying it again with the same name updates it). A prompt or a skill takes its words after the colon; a template, graph, policy, binding or golden set takes its JSON — draft a template called bob: {\"graph\": \"mind.v0\", \"kind\": \"agent\"}. Half-formed words (no colon) are taught back, never sent to a body."
+        },
+        {
+          "say": "cut the greeting draft",
+          "does": "Consequential: held at the interlock — “cutting the greeting prompt — version 1 onto the shelf”. On your yes the draft lands as version 1, or the next version of a craft already there (a sibling); it is probed at once and the draft is spent. The same bytes twice refuse (“nothing to cut”). A resident's template asks your code (L3); firmware cuts only in a dev universe; an agent's template is refused in words until the Experiment (spoonful 4)."
+        },
+        {
+          "say": "discard the greeting draft",
+          "does": "Lets a draft go — it was never recorded, so nothing is kept."
+        },
+        {
+          "say": "retire the greeting prompt · restore the greeting prompt",
+          "does": "The same ladder every service rides — “the greeting prompt is retired — at rest on the shelf, recorded, never deleted”; restored as a new fact, standing registered again."
+        }
+      ]
+    },
+    {
+      "id": "workshop",
+      "when": "workshop",
+      "title": "The Workshop — where a craft is authored: your drafts, the canvas, the inspector, the agent, the cut",
+      "lead": "THE WORKSHOP (the tab on the right, full screen) is the one place where all mutability occurs. The left rail finds earlier work: YOUR DRAFTS (under your seat alone — never on the shelf, never in any recall) and THE SHELF's crafts by kind, with a filter box. The canvas DRAWS THE DECLARATION: a graph's nodes as blocks (the entry ringed cyan; THINK is the metered mind, ECHO the words back; each node's prompt · skill · tools · mind refs beneath) and its ways out as arrows — a plain arrow is the default (“otherwise”), a violet arrow wears a WHEN: the hull's edge the ask took (chat · work · event), a pattern in the ask's words, or a pattern in the last reply. A node may have several ways out when at most one wears no when; the graph runs forward only. Click a node or an arrow to edit it in the inspector; the DECLARATION box below is the same truth as JSON. SAVE is routine (under your seat); the CUT is yours and holds at the interlock. With the Workshop open the chat speaks to its agent, workshop, and your open draft rides your ask so it edits that draft on your words. The MIND chip in the header assigns the agent's stall from the Stable (held at the interlock, L2): an Anthropic stall is Claude the model, metered like every mind; Claude the developer (repo access) is Phase 9, not this chip. Floor and room are not chosen here: a craft's card says where its wearers stand; where a next life stands is a field on the promotion (spoonful 4).",
+      "entries": [
+        {
+          "say": "open the workshop · workshop · close the workshop",
+          "does": "Opens or closes the Workshop pull (one pull at a time; Esc closes it). Opening pushes a focus: the chat speaks to the Workshop agent until you close it."
+        },
+        {
+          "say": "load the librarian template in the workshop · load mind.v0 in the workshop · load my bob draft in the workshop",
+          "does": "Opens the Workshop with that craft or draft loaded. A craft from the shelf is read-only — its address, pin, version, health, who wears it and WHERE each wearer stands; “draft from this” copies it into a new draft of yours (cut it and it lands as the next version, a sibling). A template draws the graph it wears."
+        },
+        {
+          "say": "(click a node)",
+          "does": "The NODE INSPECTOR: id · kind (think | echo) · prompt and skill (from the shelf; both join the node's system words) · tools (narrows the door to those named — never past what the template declares) · mind (pins a stall) · words; add a node after it, add a way out, make it the entry, remove it. Apply, then SAVE."
+        },
+        {
+          "say": "(click an arrow)",
+          "does": "THE WAY OUT: set its when — otherwise (the default, at most one per node) · the hull's edge (chat · work · event) · a pattern in the ask · a pattern in the last reply — or remove it. The run takes the first when that holds, else the default, else the line ends there."
+        },
+        {
+          "say": "(SAVE · CUT · discard changes · discard the draft · ask the agent)",
+          "does": "SAVE writes the draft under your seat (routine, L1). CUT is the chat's “cut the <name> draft” — held at the interlock, probed at once on your yes. The declaration box takes JSON too (apply it to the canvas); escaped quotes read plain."
+        },
+        {
+          "say": "workshop, add an echo node after think · workshop, wire a way out of think to greet when the ask says hello",
+          "does": "The Workshop agent reads your open draft (on your ask alone) and edits it through its draft tool with the whole declaration — the canvas redraws and says so. It never cuts: the cut is yours."
+        },
+        {
+          "say": "(the MIND chip)",
+          "does": "Assigns the Workshop agent's stall through the Stable's own door — consequential, held at the interlock (L2). “stablekeeper, add the LLM anthropic <model> as <name>” adds a frontier stall to choose from."
+        }
+      ]
+    },
+    {
+      "id": "experiment",
+      "when": "chat",
+      "title": "The Experiment and the cut — how an agent's change is tried, judged, promoted, rested and retired",
+      "lead": "An AGENT's template never cuts straight onto the shelf. “cut the bob draft” on an agent template OPENS THE EXPERIMENT (held at the interlock, L2): first the evidence must stand — bob's GOLDEN SET on the shelf (every engineered agent is born with one) and the graph its template names. On your yes an EXPERIMENT ROOM opens on a floor of the path (room exp-bob-1 on floor ops) and two arms run there: the CANDIDATE — your draft, instantiated as a trial life of bob's own self in the room, running the golden set through its own graph — and the CURRENT, the standing version (a first version has one arm, said honestly). Then the kernel asks the GRADER and the CRITIC under the experiment's marker; each reads the kernel's record of the arms — never its own words — and writes a SIGNED verdict under its own name (the grader a grade A–F per arm and a side; the critic what changed and a risk: low · medium · high). Since spoonful 6 THE TWO CHIPS review beside them: the IDENTITY chip judges the trial life's claims from the kernel's record — who it joined as (bob's own self, never a new one), what it said it stands on, where it stood, that it left whole — and signs `identity: kept` or `identity: broken`; the SECURITY chip reads what the candidate may do that the standing version may not (every capability widened, the graph, the mind, the policy) against the refusals ground and signs `security: clear` or `security: concern`. Broken claims or a concern hold the promotion; a chip not seated or silent is said as missing, never guessed. Resiliency is whether a watch turned red while the arms ran. THE VERDICT IS A PROPOSAL — THE EXPERIMENT card reaches your chat with the arms, every reviewer by name and where the evidence leans (promote · hold · unsure). The promotion is yours. A promoted agent has a SEAT: where its life stands (a field of the promotion) and its rung on the ladder: active → rested → decommissioned; restore is a new life, never a revival. The prune beat retires, hourly, the crafts nobody wears any more.",
+      "entries": [
+        {
+          "say": "cut the bob draft",
+          "does": "On an AGENT template: opens the Experiment instead of cutting — held at L2 in plain words (the room, the arms, the golden set's size, the reviewers). Refused in words before the hold when bob has no golden set on the shelf or its graph is not there. On any other craft the cut lands the version as before."
+        },
+        {
+          "say": "show the experiments",
+          "does": "Every experiment of this universe, newest first: the agent, the room, its state (running · proposed · promoted · declined), the arms as they land, where the proposal leans — and every promoted agent's seat."
+        },
+        {
+          "say": "show the seats",
+          "does": "The promoted agents: where each life stands (universe, floor or room), its template's version, and its rung on the ladder (active · rested · decommissioned)."
+        },
+        {
+          "say": "promote bob · promote bob to floor ops · promote bob to room x on floor ops",
+          "does": "THE STAMPED PROMOTION of the proposed experiment on bob — held at L2 (a resident's template asks the code, L3). Where the next life stands is a field of it: unsaid, bob stands where it stands now, else at the universe; an experiment room is refused (nothing stands there but an arm). On your yes the candidate lands as the next version (a sibling), the draft is spent, bob's seat is written and the kernel seats bob's next life from the shelf; the room's record is the replay."
+        },
+        {
+          "say": "decline the bob experiment",
+          "does": "Your no — routine, recorded. The experiment settles declined; the draft stays under your seat to fix and cut again; the room stands (a level is never deleted)."
+        },
+        {
+          "say": "rest bob",
+          "does": "The ladder's first rung (rule 11), held at L2: bob's life stops at a safe boundary, its self kept, its wear links closed. Only a promoted agent rests here — a crew body is seated by the manifest and rests with the kernel."
+        },
+        {
+          "say": "decommission bob",
+          "does": "The grave, held at L3 (your code), for a RESTED body only: its lease, its bench, its gateway key and its mind assignment removed; its schedules, watches and intentions rested; its wear links closed. Its DID, its joins and its record STAY. The crafts nobody wears any more are pruned by the beat, never now."
+        },
+        {
+          "say": "restore bob",
+          "does": "A NEW life from the shelf's standing version of bob's template, on its seat — never a revival; held at L2. Refused while the template is retired (say “restore the bob template” first)."
+        }
+      ]
+    },
+    {
+      "id": "operating-state",
+      "when": "monitor",
+      "title": "The Operating State — the five measurements, the kernel's watches and intention on them, thumbs, summon, the critic's proposals, a repo'd graph",
+      "lead": "THE OPERATING STATE is the kernel's scorecard: five measurements, each 1.0 at the ideal, read live and shown on the MONITOR pull as MEASUREMENTS — TRUST (graded live replies that passed), RECALL (served asks replayable by their marker chain), EFFICIENCY (serves inside their latency class: a chat ask 30 s, work and events 180 s), EXPERIENCE (thumbs up over thumbs given), COST (spend a serving ask can be named for). These are v0 coverage ratios, said as such. A measurement reads UNKNOWN while nothing is there to measure — never a silent 1.0 — and an unknown turns no watch red. The kernel watches each (red below 1.0) and holds ONE intention on them, THE OPERATING STATE, beside Resiliency: the watch is the discriminator — the measurements' reds reach the Operating State, every other red Resiliency. The grader hears every live reply: a few per minute, under a grading marker beneath the reply's own ask, and signs its verdict — Trust reads it. Raw feedback never reaches a body: your thumbs feed Experience and the grader's evidence; an improvement marked on a body's reply reaches the critic, whose PROPOSE tool lands a draft under that body's owner, who cuts it in the Workshop and lets the Experiment judge it.",
+      "entries": [
+        {
+          "say": "show the measurements · open the monitor",
+          "does": "The MEASUREMENTS card on the Monitor pull: each of the five with its value (or unknown) and its words — how many of what over how many of what."
+        },
+        {
+          "say": "(click 👍 or 👎 under a reply)",
+          "does": "A thumb on that reply — routine, recorded under your seat (a fact). It feeds the Experience measurement and the grader's evidence; it never reaches the body that answered."
+        },
+        {
+          "say": "summon critic · dismiss critic · summon bob",
+          "does": "Summon generalized from MITL's toggle: any body whose template declares `summonable: true` (the planner, the critic and the grader do; an agent's template may) joins this session's crew on your word and leaves it on your word — both recorded. A summoned body's asks are an include's thoughts under the session's objective. MITL keeps its own word (“summon MITL”); a helper is never summoned."
+        },
+        {
+          "say": "load my echo draft in the workshop",
+          "does": "When the critic proposed a draft for a body you own, the chat says so and the draft stands under YOUR DRAFTS, marked “proposed by the critic from marker …”. Read it, cut it (“cut the echo draft”), and — for an agent — the Experiment judges it."
+        },
+        {
+          "say": "register the source bob-src from https://github.com/x/bob at a1b2c3d4e5f6 entry bob.graph:build",
+          "does": "A repo'd source on the shelf (through the shelf door, as any service). A graph node of kind `import` naming it runs the repo's entry inside the hull — fetched once under the body's home at that commit; a compiled LangGraph or a callable of the words — in a dev universe only (a prod universe refuses in words)."
+        }
+      ]
+    },
+    {
+      "id": "chips",
+      "when": "chat",
+      "title": "The two chips — identity and security, and the key-check",
+      "lead": "Two firmware bodies of the third kind stand on the crew since spoonful 6. THE IDENTITY CHIP holds the ceremony and the seats — ask it anything and it says who is seated by the ceremony, how many bodies are alive on a lease and how the KEY-CHECK stands — and at the Experiment's gate it judges the trial life's claims. THE KEY-CHECK is its cadence: every seated body is asked, every SPINE_KEYCHECK_S seconds (300 by default; 0 turns it off), to prove it is WHO and WHAT it says — the join desk's challenge repeated: the kernel issues a fresh nonce, the body signs it with the key behind its DID and names the declaration it stands on, the kernel verifies (the key derives the DID, the signature stands over the kernel's own nonce, the hash is the one it joined as) and records the verdict. A body never marks itself proven. A body silent two minutes, a signature that does not stand or a hash that is not the join's is a FAILED check — a fact, the watch metric key_checks_failed, and the kernel's seventh watch turns red (Resiliency sees it). THE SECURITY CHIP reads what a candidate may do that the standing version may not, and THE REFUSALS GROUND — the bodies turned away at the join (a placement or the seats refused) and at the desk (a bad proof, a no, a hold nobody answered); ask it and it says what the ground holds today. Both chips are summonable into a session like the critic. Neither decides anything: each judges and signs under its own name; the promotion stays yours.",
+      "entries": [
+        {
+          "say": "show the key checks",
+          "does": "The key-check's line (how many proofs in the last day, how many failed, how many waiting, the cadence) and the last twenty checks — each body by name, when it was asked, and the kernel's verdict in words."
+        },
+        {
+          "say": "summon identity",
+          "does": "The identity chip joins this session's crew — its thoughts hang under the session's objective; ask it who is seated, what the key-check found, or whether a body is who it says. “dismiss identity” lets it go."
+        },
+        {
+          "say": "summon security",
+          "does": "The security chip joins this session's crew; ask it what the refusals ground holds, or what a draft would widen. “dismiss security” lets it go."
+        },
+        {
+          "say": "SPINE_KEYCHECK_S=0",
+          "does": "Not a chat word — the kernel's dial: 0 turns the key-check cadence off (the rig's tests set it; a prod cell never should); any other number is the seconds between a body's challenges. The glass's RAILS card and the pulse read the cadence and today's tally."
+        }
+      ]
     }
-   ]
-  },
-  {
-   "id": "panel",
-   "when": "chat",
-   "title": "THE PANEL — the main window",
-   "lead": "The kernel drawn as a control room's panel. Geometry is architecture: every block sits where its declaration puts it and never moves. Light is operations: a fact on the feed lights a lamp or a rail segment, then fades. Colour is origin: amber a person's word, cyan a body's act, violet the kernel's own, red a watch or a hold. A quiet kernel is a dark, still panel. The panel knocks on no door by a clock: the roster, the stations and every lamp follow the feed — a body joining, refused, parked, its lease crossing the line.",
-   "entries": [
-    {
-     "say": "tour · show me around · what am I looking at",
-     "does": "THE TOUR: a soft line walks you around the panel one part at a time, in plain words — what it is, what to try — with the world still moving underneath. ← → to move, Esc to leave; the TOUR switch on the sill opens it too."
-    },
-    {
-     "say": "(click DESK · GROUND · GATEWAY · SHELF · MONITOR · ANALYZER)",
-     "does": "The kernel's six organs, always seated. A click opens the inspector in place: what it is, its self, what it serves, and one-click doors into the chat, the crew, the monitor or the analyzer."
-    },
-    {
-     "say": "(click a station — planner · librarian · echo …)",
-     "does": "A crew seat. Solid = seated by its lease; dashed = declared, not seated; amber = parked by the kernel. The inspector shows its self, lease, life and last act; \"scope the chat here\" makes the chat speak to that body alone."
-    },
-    {
-     "say": "(click a tool under the shelf)",
-     "does": "A tool the kernel governs. Its border says how consequential it is: plain routine, amber consequential, red grave. Retire or restore it from the inspector — a retire holds at the interlock."
-    },
-    {
-     "say": "(click a row on the running board)",
-     "does": "The intention → objective → thought → action chain, live. A click opens that origin in the Analyzer."
-    },
-    {
-     "say": "(click ARCHITECTURE · OPERATIONS · PERFORMANCE on the sill)",
-     "does": "Three soft toggles on one drawing, any combination. ARCHITECTURE shows the empty sockets and the tools; OPERATIONS the rails and the board; PERFORMANCE the numbers: under each organ its doors' p95 (how long the slowest one in twenty knocks took), under the GROUND the pool of lines to the ground (how many are busy, how many knocks wait for one), the outbox's age, the spend, the benches' depth, and THE DOORS row - every door this kernel answered in the last ten minutes, the slowest first, red past one second. A watch can stand on door_p95_ms, pool_busy or pool_waiting."
-    },
-    {
-     "say": "(click FULL SCREEN on the sill, or press F)",
-     "does": "The panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away, the browser goes full screen too, and on a wide display the drawing is scaled up to be read from across the room. The sill stays as the one thin bar - the toggles, CHAT, ANALYZER and the way out. Esc or F leaves it. Remembered in this browser."
-    },
-    {
-     "say": "(click a marker chip — structural · quality · resiliency)",
-     "does": "Dims that group's rows on the board and the tape."
-    },
-    {
-     "say": "(click ☀ or ☾ in the ceiling)",
-     "does": "The Daylight Glass: the same panel in daylight — paper, ink, bronze — or back to the night. Remembered in this browser; with nothing remembered, your system's own preference decides."
-    },
-    {
-     "say": "(watch the presence track · a tool's lamp · the scheduler's track)",
-     "does": "A lease lapsing lights the presence track red and the station goes dashed within five seconds; seated again, violet. A tool hop lights the tool's lamp cyan under the shelf and the dispatcher's track toward it. A duty waking on its clock lights the scheduler's track toward the runner. A lever the kernel pulls lights the monitor and the intent track toward the body it acts on — red when it is held at the interlock for your word."
-    }
-   ]
-  },
-  {
-   "id": "kinds",
-   "when": "chat",
-   "title": "The kind of an ask",
-   "lead": "The chip under the composer reads the kind from your words; one click flips it.",
-   "entries": [
-    {
-     "say": "thought: …",
-     "does": "One answer, now."
-    },
-    {
-     "say": "objective: …",
-     "does": "Work the crew owns until it is done; the Analyzer shows it under its origin."
-    },
-    {
-     "say": "keep this world resilient: when a watch goes red, get it green",
-     "does": "An intention — a standing purpose that wakes on what it watches; it appears in the Analyzer with its stop."
-    },
-    {
-     "say": "echo, every 5 seconds, say the time, please",
-     "does": "A cadence: the intention runs on the clock; \"echo, stop\" rests it, \"echo, restart intention 'every 5 seconds'\" stands it again."
-    }
-   ]
-  },
-  {
-   "id": "involvement",
-   "when": "chat",
-   "title": "How much of you a task needs — manual · manual assist · full auto",
-   "lead": "The kind of your ask decides how far the kernel goes without you, and it never goes one step further without a word from you. A THOUGHT moves nothing: you ask, one body answers, you are the whole loop (manual). An OBJECTIVE moves what you asked and stops at every consequence: the planner breaks it into steps, the crew acts, and any step that changes something holds for your Cancel or Yes (manual assist). An INTENTION keeps moving until you rest it: the kernel watches for what you named — a red watch, a clock — plans the next objective itself, files it, and the loop turns; you are told, not asked — except at a consequence, which still holds for you (full auto). Three things tell you which mode a thing is in: the chip under the composer (the kind), the hold row (the kernel is waiting on you), and the Analyzer (every intention and objective by origin, with its stop).",
-   "entries": [
-    {
-     "say": "what is the temperature outside?",
-     "does": "MANUAL. A thought: the librarian answers once, with its tools. Nothing in the world changes. Your part: the question."
-    },
-    {
-     "say": "objective: get the weather tool healthy again",
-     "does": "MANUAL ASSIST. The planner writes the steps, the crew runs them, the Analyzer shows the tree. When a step would change something (retire, re-pin, refill), the chat shows a hold with Cancel as the default — nothing runs until you click Yes (a grave step asks for your authenticator's code). Your part: one word to start, one word at each hold. Say “stop it” at any time; what was left undone is said."
-    },
-    {
-     "say": "keep this world resilient: when a watch goes red, get it green",
-     "does": "FULL AUTO. A standing purpose. The kernel observes (the red), reads the ground itself first — the watch, who it names and their state, the last acts on them, what happened last time — and hands the planner that dossier with the LEVERS it can pull (restart a body · check or restore a service or a mind · retire one); the planner answers with one lever and its reason; the kernel pulls it with its own hands, as a row in the intention’s session, then reads the watch again and says what happened — green after its act wears the cause, green on its own is said to be self-healed, still red tries once more and then hands you the dossier. You read it in the Analyzer (“last red: cured”) and the Intentions band; you are not asked. Consequential steps STILL hold for you: the kernel never lowers the ladder because it is running on its own. Your part: declare once; decide holds when they come; rest it when you want (“stop the … intention” — your code, then a master's click; “restart intention '…'” stands it again)."
-    },
-    {
-     "say": "echo, every 5 seconds, say the time, please",
-     "does": "FULL AUTO on a clock: the same loop, woken by a cadence instead of a red. “echo, stop” rests it."
-    },
-    {
-     "say": "summon MITL · expected impact?",
-     "does": "In any mode, before you decide a hold: the Master Mind In The Loop says who and what the act touches, from the canon."
-    },
-    {
-     "say": "(the light bulb)",
-     "does": "Manual: you act, the kernel answers. Manual assist: the kernel acts, you decide every consequence. Full auto: the kernel acts and plans, you still decide every consequence and can always stop. The kernel's reach grows with the kind you chose; your hand on the consequences never shrinks."
-    }
-   ]
-  },
-  {
-   "id": "interlock",
-   "when": "chat",
-   "title": "When the kernel asks \"Are you sure?\"",
-   "lead": "A consequential act holds until you decide. Cancel is the default and has the focus; Yes needs a deliberate click.",
-   "entries": [
-    {
-     "say": "Cancel",
-     "does": "Nothing runs; the hold is recorded as cancelled."
-    },
-    {
-     "say": "Yes — do it",
-     "does": "The act runs on your word and wears proof L2; a grave act asks for your authenticator's code instead (\"enroll my authenticator\" once)."
-    },
-    {
-     "say": "expected impact?",
-     "does": "MITL says who and what the act touches before you decide."
-    },
-    {
-     "say": "(a proposal from a keeper)",
-     "does": "A keeper never retires, assigns, refills or re-pins alone — it proposes here and you cut; a proposal whose reason has passed withdraws itself."
-    }
-   ]
-  },
-  {
-   "id": "crew",
-   "when": "crew",
-   "title": "The Crew",
-   "lead": "Every body in this world, both sides: what it served and the job it runs. When this kernel seats the bodies itself (the Rust kernel alone), each card says where its process stands — alive, restarting, PARKED or refused. Beneath the bodies stands the shelf — the services the kernel governs and the crafts the bodies are made of.",
-   "entries": [
-    {
-     "say": "what services are here? · show the tools · show the LLMs · show the crafts",
-     "does": "The shelf, from the registry: every tool, MCP server, store, source and LLM — and, since Phase 8 sp2, every CRAFT a body is made of (templates, prompts, skills, policies, graphs, bindings, golden sets) — on one ladder: registered → versioned → healthy | unhealthy → retired. A craft's card says who wears it; the drafts and the cut are under “The shelf widened”."
-    },
-    {
-     "say": "check the services · check the minds",
-     "does": "Every standing service probed by its kind; an LLM answers a one-token ping through the gateway."
-    },
-    {
-     "say": "retire the weather tool · restore the weather tool",
-     "does": "Retire holds at the interlock; restore is a new fact. Retired is dormancy, never deletion."
-    },
-    {
-     "say": "toolkeeper, add the MCP server at <command or URL>",
-     "does": "The server and its tools land on the shelf as identities; its secrets by env NAME only."
-    },
-    {
-     "say": "stablekeeper, add the LLM ollama gemma3:270m as gemma",
-     "does": "An LLM wherever it lives — anthropic · openrouter · ollama · openai · compatible — becomes a stall in the Stable and an entry in the gateway; held for your yes. A deal added without a price takes the gateway's own price map (W107: never left at $0 — the meter charges by the pin); say the price yourself to pin another: “… as sonnet at $2 in and $10 out per million”."
-    },
-    {
-     "say": "stablekeeper, repin sonnet",
-     "does": "Re-pins a stall from the market's word — the gateway's price map (or OpenRouter's catalog): the new price, context and modalities land as the next version (held at the interlock, L2); the old pin stays in its history. The cure for a stall that reads $0 in / $0 out."
-    },
-    {
-     "say": "assign librarian to gemma · assign librarian to gemma for fast work · unassign librarian",
-     "does": "Which LLM a body uses, for all its work or one class of work (fast · standard · deep); the card says \"LLM: …\" and why."
-    },
-    {
-     "say": "librarian's fuel · refill librarian by $2",
-     "does": "A body's allowance for this window and what it has spent; a refill holds at the interlock — real spending."
-    },
-    {
-     "say": "schedule an ask for librarian… (on its card)",
-     "does": "A standing duty on the clock, shown on the card's job side; \"rest it\" stops it."
-    },
-    {
-     "say": "restart the echo body",
-     "does": "A body the kernel PARKED (it died three times in five minutes) or refused at birth is tried again on your word — its deaths forgotten, the same self. A body that simply died comes back by itself; nothing is ever deleted."
-    }
-   ]
-  },
-  {
-   "id": "monitor",
-   "when": "monitor",
-   "title": "The Monitoring",
-   "lead": "The operating state of this world, live: the rails, the bodies, the asks, the watches, THE STABLE, the HEALTH CHECKS.",
-   "entries": [
-    {
-     "say": "watch for asks left waiting",
-     "does": "The monitor agent proposes a watch — a hold you cut; a watch is RED while its condition holds and turns in the chat."
-    },
-    {
-     "say": "propose a watch that usd_today > 5",
-     "does": "A watch over the farm: spend today, thoughts per minute, LLMs standing, bodies out of fuel."
-    },
-    {
-     "say": "HEALTH CHECKS",
-     "does": "What must be true of this world, read from the ground now: nine rows, each holds or BROKEN with its words; read every 30 seconds."
-    },
-    {
-     "say": "run the harness against the librarian now",
-     "does": "The golden cases against a body's LLM; a failing run escalates to the chat. From the Rust kernel the run rides the rail to the body and lands when it is done."
-    },
-    {
-     "say": "advance past parked 3",
-     "does": "The RAILS card names every event the dispatcher HOLDS at — bytes the rail carried that were never an envelope, or a fact that can never apply — parked with its evidence, nothing behind it dispatched until a person decides. Your word (or the card's lever) advances it, recorded in your name; nothing is lost silently and nothing loops."
-    }
-   ]
-  },
-  {
-   "id": "analyzer",
-   "when": "band",
-   "title": "The Analyzer",
-   "lead": "Everything born in the chat, by origin: intentions, objectives, in flight and done. Every row is a door.",
-   "entries": [
-    {
-     "say": "(click a row)",
-     "does": "Its tree in words; an objective's row puts the chat in focus on it."
-    },
-    {
-     "say": "stop the kernel's Resiliency intention",
-     "does": "A grave act: your code, then a declared master's click; the intention rests, recorded, never deleted."
-    },
-    {
-     "say": "restart intention '<its words>'",
-     "does": "The reverse, through the same ladder; it \"stands again\"."
-    }
-   ]
-  },
-  {
-   "id": "seat",
-   "when": "chat",
-   "title": "Your seat — who this door knows you are",
-   "lead": "Every door reads who you are from your SEAT, never from the page. You take a seat with the code your authenticator shows; it lasts a day. On a ground no one holds yet, the first person to prove an authenticator becomes its owner; from then on only the owner or a master can enroll someone new. Nobody types a master's name any more — a master confirms a grave act from their own seat, in their own window. Bodies hold the machine's twin: a LEASE, earned at the join desk — a body proves the key behind its DID, and a governing seat says yes.",
-   "entries": [
-    {
-     "say": "(the seat form) your name + the 6-digit code · Take my seat",
-     "does": "The kernel signs a token naming you, what you may do here and until when; the page carries it on every knock. The first proof on an unheld ground: “you hold this ground now”."
-    },
-    {
-     "say": "(the seat form, no one holds the ground yet) your name · Enroll",
-     "does": "The QR for your authenticator; the first code finishes enrolling; the next one takes your seat as the owner."
-    },
-    {
-     "say": "my seat · who am I seated as?",
-     "does": "Seated as whom, until when, and what the seat may do: retrieve · write (· govern for the owner and a master)."
-    },
-    {
-     "say": "leave my seat",
-     "does": "Ends this seat now — recorded, never deleted; the seat form returns. Another window's seat is its own."
-    },
-    {
-     "say": "enroll quinn",
-     "does": "The owner's (or a master's) word: a QR for another person's authenticator; their first code finishes it here; they sit in their own browser with the next."
-    },
-    {
-     "say": "enroll my authenticator",
-     "does": "Re-enrolling yourself is grave: your current code first, then the new QR."
-    },
-    {
-     "say": "(a grave act, as the asker) type your code → a declared master clicks Confirm as master in THEIR window",
-     "does": "The two-person law, honestly: the master is a second seated person; the typed name is gone."
-    },
-    {
-     "say": "who is at the door?",
-     "does": "The join desk: every body that asked to join this world, newest first — the crew (admitted on the crew manifest), a stranger waiting for your yes, one turned away. A stranger's knock appears in the chat as a hold: Cancel is the default; only the owner or a master can click Yes."
-    }
-   ]
-  },
-  {
-   "id": "you",
-   "when": "chat",
-   "title": "You — what this ground knows about you",
-   "lead": "Your profile is yours: what you tell this ground about yourself, in your own words, labeled by who said it — “you told me” · “I observed” · “the mirror noticed” (reserved). Every body reads it first when it answers you; a routed ask carries it to the far cell for that answer alone. The YOU tag under the sun shows who this door knows you are.",
-   "entries": [
-    {
-     "say": "my name is JB · call me JB",
-     "does": "Your name, trusted on your word. The newest word wins; the old one stays in the record."
-    },
-    {
-     "say": "I live in Boulder, Colorado · my place is Payson, Arizona",
-     "does": "Your place, in your words. The kernel looks its coordinates and clock up once (Open-Meteo, no key) and keeps them beside your words as “I observed” — the weather tool then answers for YOUR place, never a fixed point. With no place told, it says so rather than reading someone else's weather."
-    },
-    {
-     "say": "my time zone is America/Denver · my clock is Europe/Paris",
-     "does": "Your clock, told; every time a body reads you is in it. Untold, the clock of your told place; untold both, the browser's zone, then the ground's dial."
-    },
-    {
-     "say": "remember about me: I take my coffee black",
-     "does": "A free word about you. Every resident reads it in its context, never recites it unasked."
-    },
-    {
-     "say": "what do you know about me? · show my profile · who am I",
-     "does": "The portrait: every live word with its label and the clock this ground would use for you."
-    },
-    {
-     "say": "forget about me: my place · forget my name · forget that I take my coffee black",
-     "does": "A recorded withdrawal on your word — the words no longer read; the record keeps that you said them once. Never a deletion."
-    }
-   ]
-  },
-  {
-   "id": "memory",
-   "when": "chat",
-   "title": "Memory, sessions and the export",
-   "lead": "The kernel never forgets: every word acquired is kept verbatim with its lineage; a correction is a sibling, never an overwrite.",
-   "entries": [
-    {
-     "say": "what do you remember about the trailer?",
-     "does": "Recall, stemmed and ranked; the librarian answers from the Record, word for word."
-    },
-    {
-     "say": "list my sessions",
-     "does": "Each session's short version — the digest — written from the Record alone; the same on every door."
-    },
-    {
-     "say": "export compliance for this session · export compliance for today",
-     "does": "Signed by the kernel's own self (did:orreth:kernel:…); a stranger can verify the chain and the signature."
-    },
-    {
-     "say": "librarian, forget the trailer note",
-     "does": "The librarian's own purge, held at the interlock (consequential): every version leaves; a tombstone keeps the hashes; the digests that cited it are rebuilt. A body's word, not the glass's — say it to the body that remembers it."
-    }
-   ]
-  },
-  {
-   "id": "cells",
-   "when": "monitor",
-   "title": "Cells — a second universe, and the seam between them",
-   "lead": "A cell is one universe's home: its own kernel, its own database and role, its own benches, its own bodies and keys. Two cells that name each other can speak over a signed seam. What this world is and where it stands reads in the Monitoring's PULSE and PEERS.",
-   "entries": [
-    {
-     "say": "what world is this?",
-     "does": "The universe, the cell it stands in, its epoch, and the peers it names."
-    },
-    {
-     "say": "librarian@two, what is the weather?",
-     "does": "An ask that names a cell ROUTES HOME: cell two's own librarian answers, and the answer lands on your ask here, its journey saying so. \"two/librarian, …\" works too."
-    },
-    {
-     "say": "stop it (on a routed ask's line)",
-     "does": "Rests the ask here and tells its home cell to rest it too — the human can always stop what the machine manages."
-    },
-    {
-     "say": "scripts/dev.sh cell two (in a terminal)",
-     "does": "Lights a second universe, u:two, on its own database and role, sealed from this one; relight this kernel so it names cell two as a peer (SPINE_PEERS)."
-    },
-    {
-     "say": "re-home this universe to cell three",
-     "does": "Consequential: held at the interlock (your yes). The universe's epoch advances; this kernel then refuses to serve it, and a peer still wearing the old epoch is told to re-hear the world."
-    },
-    {
-     "say": "(when a peer is dark)",
-     "does": "An ask routed to it reads PARKED in plain words — nothing is lost; the moment the peer answers again the ask goes and is answered once. The PEERS view says \"unreachable since\"."
-    }
-   ]
-  },
-  {
-   "id": "levels",
-   "when": "monitor",
-   "title": "Levels — the universe, its floors, their rooms",
-   "lead": "One kernel per cell serves three levels on one path: the UNIVERSE (this cell), its FLOORS, and their ROOMS (u:dev/f:ops/r:bob). A crew can be seated on any level by the crew manifest; what a body writes about itself wears its level, and a listing at a level sees everything within it. Mode only tightens down the path: a prod universe's floors and rooms are prod. The GROUND organ names the universe's mode and its levels. The shipped crew seats the echo on floor ops, so the levels line under the GROUND organ reads “floor ops · dev · 1 body” from the first light.",
-   "entries": [
-    {
-     "say": "what levels are here?",
-     "does": "Every floor and room of this universe with its mode, who is seated there, and what rolls up from within it."
-    },
-    {
-     "say": "echo, say the word HERON once",
-     "does": "The echo stands on floor ops, yet an ask from the universe reaches it: the address law reads within the universe, and the reply wears the floor's path (u:dev/f:ops) on its journey."
-    },
-    {
-     "say": "open floor ops",
-     "does": "Consequential: held at the interlock (a governing seat's yes). A floor under this universe, in the universe's mode — \"open floor ops as prod\" tightens it."
-    },
-    {
-     "say": "open room bob on floor ops as an experiment room",
-     "does": "A room on the floor; an experiment room is where a candidate cut is tried — two arms, the grader's verdict, the stamped promotion — nothing promotes out of it except through the Experiment gate (spoonful 4)."
-    },
-    {
-     "say": "open room loose on floor three as dev",
-     "does": "Under a prod floor, refused in words before anything is held: mode only tightens down the path."
-    },
-    {
-     "say": "SPINE_MODE=prod (in the kernel's environment at light)",
-     "does": "Declares the universe prod when its cell opens; a relight may tighten dev to prod and never loosen it — a prod universe refuses to light as dev."
-    }
-   ]
-  },
-  {
-   "id": "shelf-widened",
-   "when": "crew",
-   "title": "The shelf widened — the crafts a body is made of, who wears them, your drafts",
-   "lead": "The SHELF (in the CREW pull, beneath the bodies) holds every service the kernel governs (tools, MCP servers, stores, sources, minds) and, since Phase 8 sp2, every CRAFT a body is made of: templates, prompts, skills, policies, graphs, bindings and golden sets. A craft is addressed by its name and pin (librarian.template, mind.v0.graph) and is never a self — its card says “address craft:… (no self)”. The WEAR TABLE says which body wears which craft at which version — “in use by N”. A DRAFT lives under you alone until you CUT it onto the shelf; the cut is held at the interlock. Every body now runs the HULL: hear, recall, route to the chat, work or event edge, then its template's graph as the work node. The SHELF organ's second line counts the crafts.",
-   "entries": [
-    {
-     "say": "show the crafts · show the templates · show the prompts · show the graphs",
-     "does": "Every craft on the shelf with its ladder state, its health and how many bodies wear it now; a kind's word narrows it (templates · prompts · skills · policies · graphs · bindings · goldens)."
-    },
-    {
-     "say": "who wears the librarian template? · who wears mind.v0.graph?",
-     "does": "The bodies wearing that component now, by life and version — “librarian.template is worn by 1 body: librarian (life 107, v1)” — the blast radius a change would touch."
-    },
-    {
-     "say": "what is echo made of?",
-     "does": "The components a body wears: “echo.template v1 · pin f249b129 · the-orreth-covenant.policy v1 · echo.v0.graph v1”. A body joined before the wear table shows nothing until its next life, and says so."
-    },
-    {
-     "say": "my drafts",
-     "does": "Your drafts and no one else's — they live in the ground under your seat, never on the shelf, never in any recall. With none, the words to start one."
-    },
-    {
-     "say": "draft a prompt called greeting: Greet the human by name, warmly.",
-     "does": "Routine: the draft is saved under your seat (saying it again with the same name updates it). A prompt or a skill takes its words after the colon; a template, graph, policy, binding or golden set takes its JSON — draft a template called bob: {\"graph\": \"mind.v0\", \"kind\": \"agent\"}. Half-formed words (no colon) are taught back, never sent to a body."
-    },
-    {
-     "say": "cut the greeting draft",
-     "does": "Consequential: held at the interlock — “cutting the greeting prompt — version 1 onto the shelf”. On your yes the draft lands as version 1, or the next version of a craft already there (a sibling); it is probed at once and the draft is spent. The same bytes twice refuse (“nothing to cut”). A resident's template asks your code (L3); firmware cuts only in a dev universe; an agent's template is refused in words until the Experiment (spoonful 4)."
-    },
-    {
-     "say": "discard the greeting draft",
-     "does": "Lets a draft go — it was never recorded, so nothing is kept."
-    },
-    {
-     "say": "retire the greeting prompt · restore the greeting prompt",
-     "does": "The same ladder every service rides — “the greeting prompt is retired — at rest on the shelf, recorded, never deleted”; restored as a new fact, standing registered again."
-    }
-   ]
-  },
-  {
-   "id": "workshop",
-   "when": "workshop",
-   "title": "The Workshop — where a craft is authored: your drafts, the canvas, the inspector, the agent, the cut",
-   "lead": "THE WORKSHOP (the tab on the right, full screen) is the one place where all mutability occurs. The left rail finds earlier work: YOUR DRAFTS (under your seat alone — never on the shelf, never in any recall) and THE SHELF's crafts by kind, with a filter box. The canvas DRAWS THE DECLARATION: a graph's nodes as blocks (the entry ringed cyan; THINK is the metered mind, ECHO the words back; each node's prompt · skill · tools · mind refs beneath) and its ways out as arrows — a plain arrow is the default (“otherwise”), a violet arrow wears a WHEN: the hull's edge the ask took (chat · work · event), a pattern in the ask's words, or a pattern in the last reply. A node may have several ways out when at most one wears no when; the graph runs forward only. Click a node or an arrow to edit it in the inspector; the DECLARATION box below is the same truth as JSON. SAVE is routine (under your seat); the CUT is yours and holds at the interlock. With the Workshop open the chat speaks to its agent, workshop, and your open draft rides your ask so it edits that draft on your words. The MIND chip in the header assigns the agent's stall from the Stable (held at the interlock, L2): an Anthropic stall is Claude the model, metered like every mind; Claude the developer (repo access) is Phase 9, not this chip. Floor and room are not chosen here: a craft's card says where its wearers stand; where a next life stands is a field on the promotion (spoonful 4).",
-   "entries": [
-    {
-     "say": "open the workshop · workshop · close the workshop",
-     "does": "Opens or closes the Workshop pull (one pull at a time; Esc closes it). Opening pushes a focus: the chat speaks to the Workshop agent until you close it."
-    },
-    {
-     "say": "load the librarian template in the workshop · load mind.v0 in the workshop · load my bob draft in the workshop",
-     "does": "Opens the Workshop with that craft or draft loaded. A craft from the shelf is read-only — its address, pin, version, health, who wears it and WHERE each wearer stands; “draft from this” copies it into a new draft of yours (cut it and it lands as the next version, a sibling). A template draws the graph it wears."
-    },
-    {
-     "say": "(click a node)",
-     "does": "The NODE INSPECTOR: id · kind (think | echo) · prompt and skill (from the shelf; both join the node's system words) · tools (narrows the door to those named — never past what the template declares) · mind (pins a stall) · words; add a node after it, add a way out, make it the entry, remove it. Apply, then SAVE."
-    },
-    {
-     "say": "(click an arrow)",
-     "does": "THE WAY OUT: set its when — otherwise (the default, at most one per node) · the hull's edge (chat · work · event) · a pattern in the ask · a pattern in the last reply — or remove it. The run takes the first when that holds, else the default, else the line ends there."
-    },
-    {
-     "say": "(SAVE · CUT · discard changes · discard the draft · ask the agent)",
-     "does": "SAVE writes the draft under your seat (routine, L1). CUT is the chat's “cut the <name> draft” — held at the interlock, probed at once on your yes. The declaration box takes JSON too (apply it to the canvas); escaped quotes read plain."
-    },
-    {
-     "say": "workshop, add an echo node after think · workshop, wire a way out of think to greet when the ask says hello",
-     "does": "The Workshop agent reads your open draft (on your ask alone) and edits it through its draft tool with the whole declaration — the canvas redraws and says so. It never cuts: the cut is yours."
-    },
-    {
-     "say": "(the MIND chip)",
-     "does": "Assigns the Workshop agent's stall through the Stable's own door — consequential, held at the interlock (L2). “stablekeeper, add the LLM anthropic <model> as <name>” adds a frontier stall to choose from."
-    }
-   ]
-  },
-  {
-   "id": "experiment",
-   "when": "chat",
-   "title": "The Experiment and the cut — how an agent's change is tried, judged, promoted, rested and retired",
-   "lead": "An AGENT's template never cuts straight onto the shelf. “cut the bob draft” on an agent template OPENS THE EXPERIMENT (held at the interlock, L2): first the evidence must stand — bob's GOLDEN SET on the shelf (every engineered agent is born with one) and the graph its template names. On your yes an EXPERIMENT ROOM opens on a floor of the path (room exp-bob-1 on floor ops) and two arms run there: the CANDIDATE — your draft, instantiated as a trial life of bob's own self in the room, running the golden set through its own graph — and the CURRENT, the standing version (a first version has one arm, said honestly). Then the kernel asks the GRADER and the CRITIC under the experiment's marker; each reads the kernel's record of the arms — never its own words — and writes a SIGNED verdict under its own name (the grader a grade A–F per arm and a side; the critic what changed and a risk: low · medium · high). SECURITY and IDENTITY are honest empty slots on the card until spoonful 6; resiliency is whether a watch turned red while the arms ran. THE VERDICT IS A PROPOSAL — THE EXPERIMENT card reaches your chat with the arms, every reviewer by name and where the evidence leans (promote · hold · unsure). The promotion is yours. A promoted agent has a SEAT: where its life stands (a field of the promotion) and its rung on the ladder: active → rested → decommissioned; restore is a new life, never a revival. The prune beat retires, hourly, the crafts nobody wears any more.",
-   "entries": [
-    {
-     "say": "cut the bob draft",
-     "does": "On an AGENT template: opens the Experiment instead of cutting — held at L2 in plain words (the room, the arms, the golden set's size, the reviewers). Refused in words before the hold when bob has no golden set on the shelf or its graph is not there. On any other craft the cut lands the version as before."
-    },
-    {
-     "say": "show the experiments",
-     "does": "Every experiment of this universe, newest first: the agent, the room, its state (running · proposed · promoted · declined), the arms as they land, where the proposal leans — and every promoted agent's seat."
-    },
-    {
-     "say": "show the seats",
-     "does": "The promoted agents: where each life stands (universe, floor or room), its template's version, and its rung on the ladder (active · rested · decommissioned)."
-    },
-    {
-     "say": "promote bob · promote bob to floor ops · promote bob to room x on floor ops",
-     "does": "THE STAMPED PROMOTION of the proposed experiment on bob — held at L2 (a resident's template asks the code, L3). Where the next life stands is a field of it: unsaid, bob stands where it stands now, else at the universe; an experiment room is refused (nothing stands there but an arm). On your yes the candidate lands as the next version (a sibling), the draft is spent, bob's seat is written and the kernel seats bob's next life from the shelf; the room's record is the replay."
-    },
-    {
-     "say": "decline the bob experiment",
-     "does": "Your no — routine, recorded. The experiment settles declined; the draft stays under your seat to fix and cut again; the room stands (a level is never deleted)."
-    },
-    {
-     "say": "rest bob",
-     "does": "The ladder's first rung (rule 11), held at L2: bob's life stops at a safe boundary, its self kept, its wear links closed. Only a promoted agent rests here — a crew body is seated by the manifest and rests with the kernel."
-    },
-    {
-     "say": "decommission bob",
-     "does": "The grave, held at L3 (your code), for a RESTED body only: its lease, its bench, its gateway key and its mind assignment removed; its schedules, watches and intentions rested; its wear links closed. Its DID, its joins and its record STAY. The crafts nobody wears any more are pruned by the beat, never now."
-    },
-    {
-     "say": "restore bob",
-     "does": "A NEW life from the shelf's standing version of bob's template, on its seat — never a revival; held at L2. Refused while the template is retired (say “restore the bob template” first)."
-    }
-   ]
-  },
-  {
-   "id": "operating-state",
-   "when": "monitor",
-   "title": "The Operating State — the five measurements, the kernel's watches and intention on them, thumbs, summon, the critic's proposals, a repo'd graph",
-   "lead": "THE OPERATING STATE is the kernel's scorecard: five measurements, each 1.0 at the ideal, read live and shown on the MONITOR pull as MEASUREMENTS — TRUST (graded live replies that passed), RECALL (served asks replayable by their marker chain), EFFICIENCY (serves inside their latency class: a chat ask 30 s, work and events 180 s), EXPERIENCE (thumbs up over thumbs given), COST (spend a serving ask can be named for). These are v0 coverage ratios, said as such. A measurement reads UNKNOWN while nothing is there to measure — never a silent 1.0 — and an unknown turns no watch red. The kernel watches each (red below 1.0) and holds ONE intention on them, THE OPERATING STATE, beside Resiliency: the watch is the discriminator — the measurements' reds reach the Operating State, every other red Resiliency. The grader hears every live reply: a few per minute, under a grading marker beneath the reply's own ask, and signs its verdict — Trust reads it. Raw feedback never reaches a body: your thumbs feed Experience and the grader's evidence; an improvement marked on a body's reply reaches the critic, whose PROPOSE tool lands a draft under that body's owner, who cuts it in the Workshop and lets the Experiment judge it.",
-   "entries": [
-    {
-     "say": "show the measurements · open the monitor",
-     "does": "The MEASUREMENTS card on the Monitor pull: each of the five with its value (or unknown) and its words — how many of what over how many of what."
-    },
-    {
-     "say": "(click 👍 or 👎 under a reply)",
-     "does": "A thumb on that reply — routine, recorded under your seat (a fact). It feeds the Experience measurement and the grader's evidence; it never reaches the body that answered."
-    },
-    {
-     "say": "summon critic · dismiss critic · summon bob",
-     "does": "Summon generalized from MITL's toggle: any body whose template declares `summonable: true` (the planner, the critic and the grader do; an agent's template may) joins this session's crew on your word and leaves it on your word — both recorded. A summoned body's asks are an include's thoughts under the session's objective. MITL keeps its own word (“summon MITL”); a helper is never summoned."
-    },
-    {
-     "say": "load my echo draft in the workshop",
-     "does": "When the critic proposed a draft for a body you own, the chat says so and the draft stands under YOUR DRAFTS, marked “proposed by the critic from marker …”. Read it, cut it (“cut the echo draft”), and — for an agent — the Experiment judges it."
-    },
-    {
-     "say": "register the source bob-src from https://github.com/x/bob at a1b2c3d4e5f6 entry bob.graph:build",
-     "does": "A repo'd source on the shelf (through the shelf door, as any service). A graph node of kind `import` naming it runs the repo's entry inside the hull — fetched once under the body's home at that commit; a compiled LangGraph or a callable of the words — in a dev universe only (a prod universe refuses in words)."
-    }
-   ]
-  }
- ]
+  ]
 }

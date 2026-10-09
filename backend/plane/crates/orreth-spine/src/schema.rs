@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 8; // 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
+pub const SCHEMA_VERSION: i32 = 9; // 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row (Phase 8 sp6, 2026-10-09) · 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -486,8 +486,21 @@ pub const OPERATING_DDL: &[&str] = &[
     "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS watches text",
 ];
 
+/// Phase 8 sp6, THE TWO CHIPS (`chips_live`): the standing key-check's record — a challenge the kernel issued
+/// (its nonce), the body's proof (its key, its signature, what it stands on) and the kernel's verdict; and the two
+/// columns the chips' evidence rides on an experiment's row.
+pub const CHIPS_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_keychecks ( check_id text PRIMARY KEY, scope text NOT NULL, did text NOT NULL, name text NOT NULL, \
+     nonce text NOT NULL, joined_as text, asked_at timestamptz NOT NULL DEFAULT now(), answered_at timestamptz, public_key text, sig text, \
+     what text, ok boolean, words text, verified_at timestamptz)",
+    "CREATE INDEX IF NOT EXISTS spine_keychecks_scope_did ON spine_keychecks (scope, did, asked_at DESC)",
+    "CREATE INDEX IF NOT EXISTS spine_keychecks_open ON spine_keychecks (scope, verified_at) WHERE verified_at IS NULL",
+    "ALTER TABLE spine_experiments ADD COLUMN IF NOT EXISTS claims text",
+    "ALTER TABLE spine_experiments ADD COLUMN IF NOT EXISTS diff text",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 25] = [
+pub const ROAD: [(&str, &[&str]); 26] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -515,6 +528,7 @@ pub const ROAD: [(&str, &[&str]); 25] = [
     ("crafts", CRAFTS_DDL), // Phase 8 sp2: THE SHELF WIDENED — the wear table and the draft shelf (schema 6)
     ("experiments", EXPERIMENTS_DDL), // Phase 8 sp4: THE EXPERIMENT AND THE CUT — the experiments, the verdicts, the body seats (schema 7)
     ("operating", OPERATING_DDL), // Phase 8 sp5: THE OPERATING STATE — feedback, the includes, the grading; the meter's ask, the intention's watches (schema 8)
+    ("chips", CHIPS_DDL), // Phase 8 sp6: THE TWO CHIPS — the key-checks; the chips' evidence on the experiment's row (schema 9)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

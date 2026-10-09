@@ -62,7 +62,8 @@ from . import envelope as ev
 BEAT_LOCK = 742200                  # the beat classes count up from here (the DDL guard is 742199)
 BEATS = {"scheduler": 1, "intent": 2, "keeper": 3, "retention": 4, "bench": 5,   # 4: the outbox's prune (the perf cure) · 5: THE BENCH SWEEP (W91)
          "experiment": 6, "prune": 7,                                             # Phase 8 sp4: THE EXPERIMENT BEAT · THE PRUNE BEAT
-         "grade": 8}                                                              # Phase 8 sp5: THE GRADE BEAT — the grader hears every live reply
+         "grade": 8,                                                              # Phase 8 sp5: THE GRADE BEAT — the grader hears every live reply
+         "keycheck": 9}                                                           # Phase 8 sp6: THE KEY-CHECK BEAT — every seated body proves who and what it is
 HELD = "the beat is held by another kernel on this ground"
 
 
@@ -99,16 +100,17 @@ TAGS = ("outbox", "inbox", "heartbeat", "projector", "resident", "gateway", "too
         "proof", "mitl", "placement", "services", "stable", "cells", "profile", "seat", "desk", "levels",
         "crafts",                                        # Phase 8 sp2: the wear table and the draft shelf
         "experiments",                                   # Phase 8 sp4: the experiments, the verdicts, the body seats
-        "operating")                                     # Phase 8 sp5: feedback, the includes, the grading; the meter's ask, the intention's watches
+        "operating",                                     # Phase 8 sp5: feedback, the includes, the grading; the meter's ask, the intention's watches
+        "chips")                                         # Phase 8 sp6: THE TWO CHIPS — the key-checks
 # re-base sp1: `heartbeat` (the rig's breath stood its table unguarded before), `stable` (its
 # tag was orphaned — the Stable's tables were born inside a request, the very thing the law
 # forbids) and `desk` (the machine join desk, the Rust kernel's table) join the one list.
 
-SCHEMA_VERSION = 8          # 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes (2: the indexes, the perf cure 2026-09-29; 3: a watch's rest · a peer's forgetting, the honest glass sp2 2026-09-29; 4: an ask's resent_at, W91 THE BENCH SWEEP 2026-10-02; 5: the levels — spine_levels, THE PATH, Phase 8 sp1 2026-10-05; 6: the wear table and the draft shelf — spine_wear · spine_drafts, THE SHELF WIDENED, Phase 8 sp2 2026-10-05; 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats, THE EXPERIMENT AND THE CUT, Phase 8 sp4 2026-10-07)
+SCHEMA_VERSION = 9          # 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record (Phase 8 sp6, 2026-10-09); 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · THE MIGRATOR: bumped in BOTH kernels whenever any DDL statement changes (2: the indexes, the perf cure 2026-09-29; 3: a watch's rest · a peer's forgetting, the honest glass sp2 2026-09-29; 4: an ask's resent_at, W91 THE BENCH SWEEP 2026-10-02; 5: the levels — spine_levels, THE PATH, Phase 8 sp1 2026-10-05; 6: the wear table and the draft shelf — spine_wear · spine_drafts, THE SHELF WIDENED, Phase 8 sp2 2026-10-05; 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats, THE EXPERIMENT AND THE CUT, Phase 8 sp4 2026-10-07)
 TABLES = (                  # every table both kernels stand on at this version (fixture `schema_tables`)
     "spine_aggregate_cursor", "spine_asks", "spine_authenticators", "spine_body_seats", "spine_desk", "spine_digests", "spine_drafts",
     "spine_experiments", "spine_feedback", "spine_grading", "spine_harness_runs", "spine_heartbeat", "spine_inbox", "spine_includes", "spine_intent_turns", "spine_intentions",
-    "spine_joins", "spine_leases", "spine_levels", "spine_marker_kinds", "spine_markers", "spine_masters", "spine_memories",
+    "spine_joins", "spine_keychecks", "spine_leases", "spine_levels", "spine_marker_kinds", "spine_markers", "spine_masters", "spine_memories",
     "spine_meter", "spine_mind_assignments", "spine_mind_keys", "spine_mitl", "spine_occurrences",
     "spine_outbox", "spine_owner", "spine_parked", "spine_peers", "spine_profile", "spine_proof_attempts",
     "spine_refusals", "spine_schedules", "spine_schema", "spine_seam_nonces", "spine_seam_out", "spine_seats",
@@ -125,14 +127,15 @@ class GroundRefused(RuntimeError):
 
 
 def _modules():
-    from . import (cells, crafts, desk, digest, experiments, gateway, harness, heartbeat, inbox, intent, levels, markers,
+    from . import (cells, chips, crafts, desk, digest, experiments, gateway, harness, heartbeat, inbox, intent, levels, markers,
                    mitl, monitor, operating, outbox, placement, presence, profile, projector, proof, resident, scheduler,
                    seat, services, stable, store, tools)
     return (outbox, inbox, heartbeat, projector, resident, gateway, tools, store, markers,
             monitor, scheduler, harness, presence, digest, intent, proof, mitl, placement, cells,
             services, stable, profile, seat, desk, levels, crafts,
             experiments,                                 # Phase 8 sp4: the experiments, the verdicts, the body seats
-            operating)                                   # Phase 8 sp5: THE OPERATING STATE
+            operating,                                   # Phase 8 sp5: THE OPERATING STATE
+            chips)                                       # Phase 8 sp6: THE TWO CHIPS — the key-checks
 
 
 _MIGRATED: dict[str, dict] = {}     # this PROCESS's verdict per ground (DSN + search_path): once, never per tick

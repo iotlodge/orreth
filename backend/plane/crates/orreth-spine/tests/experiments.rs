@@ -205,7 +205,7 @@ async fn the_experiment_opens_on_an_agents_cut_and_the_promotion_seats_its_life(
     assert_eq!(x["leaning"], json!("unsure"), "no reviewer is seated in this two-seat world: {x}");
     let words = x["proposal"].as_str().unwrap();
     assert!(words.starts_with("THE EXPERIMENT on bob proposes: the candidate passed 2 of 2 · no current arm — the first version · the grader: the grader is not seated here — no verdict"), "{words}");
-    assert!(words.contains("security — an honest empty slot") && words.contains("say “promote bob”"), "{words}");
+    assert!(words.contains("the identity chip: the identity is not seated here — no verdict · the security chip: the security is not seated here — no verdict") && words.contains("say “promote bob”"), "{words}"); // Phase 8 sp6: the chips named, missing honestly in a two-seat world
     let (_, joins) = knock(port, "GET", "/crew", None, &jb).await;
     let trial = joins["crew"].as_array().unwrap().iter().find(|c| c["name"] == json!("bob")).expect("the trial life joined");
     assert_eq!(trial["scope"], json!(format!("{u}/f:ops/r:exp-bob-1")), "the trial life stood in the room: {trial}");

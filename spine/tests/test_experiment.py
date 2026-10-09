@@ -5,7 +5,7 @@ path, the candidate as a TRIAL LIFE of the agent's own self in the room (its wea
 scope, the standing life's untouched), the golden set run through its own graph and recorded under
 the kernel's run id; the grader and the critic asked under the experiment's marker (the hull's
 event edge), each writing a SIGNED verdict under its own DID (rule 2) — the kernel's record of the
-arms is what they grade, never their own words; the proposal composed with the empty slots named;
+arms is what they grade, never their own words; the proposal composed with every reviewer named (a chip not seated said as MISSING — Phase 8 sp6 filled the empty slots);
 the stamped promotion (L2) landing the sibling version, the seat and the draft spent, the kernel's
 hand owed after the commit; the ladder — rest (L2) · decommission (L3: the live objects removed,
 the DID and the joins kept) · restore (a new life, refused while the template is retired); the prune
@@ -60,6 +60,12 @@ def _cut(pg, kind, name, body):
     return out
 
 
+def exp_missing_chips(rv):
+    """Phase 8 sp6: with no chip seated in this world, each slot is an honest MISSING, never an empty slot by law."""
+    return rv["identity"]["missing"] == "the identity is not seated here — no verdict" and \
+        rv["security"]["missing"] == "the security is not seated here — no verdict"
+
+
 def _serve(pg, body, ask_id, reply):
     """A body serves one ask in-process through its whole hull, its mind scripted."""
     body.gateway = gateway.FakeGateway(reply=reply)
@@ -94,7 +100,18 @@ def test_the_law_is_pure():
     w = xp.proposal_words(exp)
     assert w.startswith("THE EXPERIMENT on bob proposes: the candidate passed 3 of 3 · the standing version 1 passed 2 of 3 · "
                         "the grader (signed) grades the candidate A and the current B and names candidate · the critic reads the "
-                        "risk as low: one node · security — an honest empty slot")
+                        "risk as low: one node · the identity chip: no verdict yet · the security chip: no review yet")
+    # Phase 8 sp6: the chips' words on the card, and their holds
+    exp["reviewers"]["identity"] = {"identity": "kept", "line": "the same self"}
+    exp["reviewers"]["security"] = {"security": "clear", "line": "nothing widened"}
+    assert "the identity chip finds the trial life's claims kept: the same self · the security chip reads the candidate as clear: nothing widened" in xp.proposal_words(exp)
+    assert xp.leaning_of(exp) == "promote"
+    exp["reviewers"]["security"] = {"security": "concern", "line": "a tool widened"}
+    assert xp.leaning_of(exp) == "hold"
+    exp["reviewers"]["security"] = {"missing": "the security is not seated here — no verdict"}
+    exp["reviewers"]["identity"] = {"identity": "broken", "line": "another self"}
+    assert xp.leaning_of(exp) == "hold" and "the security chip: the security is not seated here — no verdict" in xp.proposal_words(exp)
+    del exp["reviewers"]["identity"]; del exp["reviewers"]["security"]
     assert "resiliency: no watch turned red while the arms ran. the evidence leans to promote." in w
     assert "say “promote bob” (or “promote bob to floor <name>”) — or “decline the bob experiment”" in w
     exp["arms"]["candidate"]["failed"] = 1
@@ -137,7 +154,7 @@ def test_an_agents_cut_opens_the_experiment_and_the_proposal_is_the_humans(pg, m
     [e] = xp.listing(pg)
     exp = xp.get(pg, e["experiment_id"])
     assert exp["state"] == "running" and exp["arms"]["current"] is None and exp["arms"]["candidate"]["run_id"] is None
-    assert exp["reviewers"]["security"]["missing"].startswith("security — an honest empty slot")
+    assert set(exp["reviewers"]) == {"grader", "critic", "security", "identity"} and all(v == {"ask_id": None} for v in exp["reviewers"].values())   # Phase 8 sp6: four reviewers, no empty slot
     mk = markers.get(pg, exp["marker"])
     assert mk["kind"] == "experiment" and mk["ref"] == exp["experiment_id"]
     assert len(_facts(pg, xp.EXPERIMENT_OPENED, u)) == 1 and _facts(pg, xp.EXPERIMENT_OPENED, u)[0]["scope_path"] == exp["room"]
@@ -150,9 +167,9 @@ def test_an_agents_cut_opens_the_experiment_and_the_proposal_is_the_humans(pg, m
     moved = xp.beat(pg, spawn_trial=spawn, publish=None)
     assert any("trial life spawned" in m for m in moved)
     assert ran["run"]["passed"] == 2 and ran["run"]["failed"] == 0
-    cur.execute("SELECT name, life, scope, kind FROM spine_joins WHERE name = 'bob' ORDER BY join_id")
-    assert cur.fetchall() == [("bob", 1, exp["room"], "agent")]                      # one life, in the room, an agent
-    cur.execute("SELECT component, scope, until IS NOT NULL FROM spine_wear WHERE body = 'bob' ORDER BY component")
+    cur.execute("SELECT name, life, scope, kind FROM spine_joins WHERE name = 'bob' AND scope LIKE %s || '/%%' ORDER BY join_id", (u,))
+    assert cur.fetchall() == [("bob", 1, exp["room"], "agent")]                      # one life, in the room, an agent (this world's — the session's schema is shared)
+    cur.execute("SELECT component, scope, until IS NOT NULL FROM spine_wear WHERE body = 'bob' AND scope LIKE %s || '/%%' ORDER BY component", (u,))
     worn = cur.fetchall()
     assert [w[0] for w in worn] == ["bob.golden", "bob.template", "bob.v0.graph", "the-orreth-covenant.policy"]
     assert all(w[1] == exp["room"] and w[2] for w in worn)                           # at the room's scope; closed when the trial ended
@@ -192,7 +209,8 @@ def test_the_reviewers_sign_their_verdicts_and_the_promotion_seats_the_agent(pg,
     xid = e["experiment_id"]
     xp.beat(pg, spawn_trial=lambda x: xp.trial(pg, x, gateway=None, home=home, policy=POLICY), publish=None)
     moved = xp.beat(pg, spawn_trial=None, publish=None)
-    assert any("the grader and the critic were asked" in m for m in moved)
+    assert any("the reviewers were asked — grader, critic" in m for m in moved), moved
+    assert exp_missing_chips(xp.get(pg, xid)["reviewers"])
     exp = xp.get(pg, xid)
     g_ask, c_ask = exp["reviewers"]["grader"]["ask_id"], exp["reviewers"]["critic"]["ask_id"]
     cur = pg.cursor()
@@ -225,7 +243,8 @@ def test_the_reviewers_sign_their_verdicts_and_the_promotion_seats_the_agent(pg,
     assert exp["reviewers"]["grader"]["signed"] is True and exp["reviewers"]["critic"]["risk"] == "low"
     assert exp["proposal"].startswith("THE EXPERIMENT on bob proposes: the candidate passed 1 of 1 · no current arm — the first version · "
                                       "the grader (signed) grades the candidate A and names candidate · the critic reads the risk as low: "
-                                      "nothing stands to break · security — an honest empty slot")
+                                      "nothing stands to break · the identity chip: the identity is not seated here — no verdict · "
+                                      "the security chip: the security is not seated here — no verdict")
     # THE PROMOTION — the human's stamped act at L2; where the next life stands is a field of it
     with pytest.raises(xp.ExperimentRefused, match="is an experiment room — nothing stands there but an arm"):
         xp.promote_check(pg, PERSON, xid, at=exp["room"])

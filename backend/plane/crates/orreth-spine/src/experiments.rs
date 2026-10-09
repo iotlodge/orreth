@@ -3,7 +3,7 @@
 //! `orreth_spine.experiments` keeps, word for word (fixture `experiments-v0.json`): the
 //! experiment room's name, the arms in words, the opening's words, the reviewers' ask and the
 //! FORM their verdicts take (a grade A–F per arm and a side; a risk low · medium · high), the
-//! proposal's leaning and words (every reviewer by name, the empty slots said as such), the
+//! proposal's leaning and words (every reviewer by name — since sp6 the two chips among them), the
 //! promotion's demand by class, the decom ladder and its words, where a next life stands. The
 //! ground half is `experiments_live`.
 
@@ -35,19 +35,10 @@ pub const MARKER_KIND: &str = "experiment";
 pub const STATES: [&str; 4] = ["running", "proposed", "promoted", "declined"];
 pub const ARMS: [&str; 2] = ["current", "candidate"];
 pub const LADDER: [&str; 3] = ["active", "rested", "decommissioned"];
-pub const REVIEWERS: [&str; 4] = ["grader", "critic", "security", "identity"];
-pub const EMPTY_SECURITY: &str = "security — an honest empty slot until the security chip (spoonful 6)";
-pub const EMPTY_IDENTITY: &str = "identity — an honest empty slot until the identity chip (spoonful 6)";
+pub const REVIEWERS: [&str; 4] = ["grader", "critic", "security", "identity"]; // Phase 8 sp6: all four are asked — the empty slots are filled
+pub const CHIP_REVIEWERS: [&str; 2] = ["identity", "security"];
 pub const REVIEW_WAIT_S: i64 = 600;
 pub const PRUNE_EVERY_S: u64 = 3600;
-
-pub fn empty_slot(reviewer: &str) -> Option<&'static str> {
-    match reviewer {
-        "security" => Some(EMPTY_SECURITY),
-        "identity" => Some(EMPTY_IDENTITY),
-        _ => None,
-    }
-}
 
 /// `experiments.room_name`: `exp-<agent>-<n>`.
 pub fn room_name(agent: &str, n: i64) -> String {
@@ -66,7 +57,7 @@ pub fn arms_plan(current_version: Option<i64>) -> String {
 pub fn open_words(agent: &str, room: &str, current_version: Option<i64>, golden_n: i64) -> Result<String, String> {
     let words = crate::levels::words(room)?;
     Ok(format!(
-        "opening an experiment on the {agent} agent — {words} opens as an experiment room; {}; the evidence is its golden set ({golden_n} case{}); the grader and the critic review under their own names; the verdict is a proposal and the promotion is yours",
+        "opening an experiment on the {agent} agent — {words} opens as an experiment room; {}; the evidence is its golden set ({golden_n} case{}); the grader, the critic, the identity chip and the security chip review under their own names; the verdict is a proposal and the promotion is yours",
         arms_plan(current_version),
         if golden_n != 1 { "s" } else { "" }
     ))
@@ -129,7 +120,16 @@ pub fn review_ask(reviewer: &str, exp: &Value) -> String {
             ));
         }
     }
-    if reviewer == "grader" {
+    if reviewer == "identity" {
+        // Phase 8 sp6: the identity chip judges THE TRIAL LIFE'S CLAIMS the beat read off the record
+        lines.push(format!("THE TRIAL LIFE'S CLAIMS, from the kernel's record — {}", crate::chips::claims_words(&exp["claims"])));
+        lines.push(crate::chips::review_form("identity").into());
+    } else if reviewer == "security" {
+        let diff = if exp["diff"].is_null() { json!({"first": true}) } else { exp["diff"].clone() };
+        lines.push(format!("THE CANDIDATE'S DIFF against the standing version — {}", crate::chips::diff_words(&diff)));
+        lines.push(crate::chips::refusals_words(&exp["refusals"], exp["agent"].as_str()));
+        lines.push(crate::chips::review_form("security").into());
+    } else if reviewer == "grader" {
         lines.push("Answer in exactly this form, one line each: `current: <A-F> — <one line of reason>` (write `current: none` when no current arm ran), `candidate: <A-F> — <one line>`, then `verdict: candidate` or `verdict: current` or `verdict: neither`. Grade the replies against what was asked and expected — never your own words.".into());
     } else {
         lines.push("Say what the candidate changes against the current version and the risk of promoting it. End with exactly one line `risk: low` or `risk: medium` or `risk: high` — <one line of reason>.".into());
@@ -203,6 +203,9 @@ pub fn leaning_of(exp: &Value) -> &'static str {
     if cand["failed"].as_i64().unwrap_or(0) > 0 || g["verdict"] == json!("current") || risk == Some("high") || reds > 0 {
         return "hold";
     }
+    if !crate::chips::chip_holds(&exp["reviewers"]).is_empty() {
+        return "hold"; // Phase 8 sp6: broken claims or a security concern hold the promotion
+    }
     if !cur.is_null()
         && !crate::py::truthy(&cur["skipped"])
         && !cur["passed"].is_null()
@@ -255,8 +258,8 @@ pub fn proposal_words(exp: &Value) -> String {
         let m = if crate::py::truthy(&c["missing"]) { crate::py::python_str(&c["missing"]) } else { "no review yet".into() };
         bits.push(format!("the critic: {m}"));
     }
-    bits.push(EMPTY_SECURITY.into());
-    bits.push(EMPTY_IDENTITY.into());
+    bits.push(crate::chips::slot_words("identity", &rv["identity"]));
+    bits.push(crate::chips::slot_words("security", &rv["security"]));
     let reds = exp["resiliency"]["reds"].as_i64().unwrap_or(0);
     bits.push(if reds == 0 {
         "resiliency: no watch turned red while the arms ran".into()
@@ -367,7 +370,11 @@ mod tests {
                           "critic": {"risk": "low", "line": "one node"}}, "resiliency": {"reds": 0}});
         assert_eq!(leaning_of(&exp), "promote");
         let w = proposal_words(&exp);
-        assert!(w.starts_with("THE EXPERIMENT on bob proposes: the candidate passed 3 of 3 · the standing version 1 passed 2 of 3 · the grader (signed) grades the candidate A and the current B and names candidate · the critic reads the risk as low: one node · security — an honest empty slot"));
+        assert!(w.starts_with("THE EXPERIMENT on bob proposes: the candidate passed 3 of 3 · the standing version 1 passed 2 of 3 · the grader (signed) grades the candidate A and the current B and names candidate · the critic reads the risk as low: one node · the identity chip: no verdict yet · the security chip: no review yet"));
+        let mut exp2 = exp.clone();
+        exp2["reviewers"]["security"] = json!({"security": "concern", "line": "a tool widened"});
+        assert_eq!(leaning_of(&exp2), "hold");
+        assert!(proposal_words(&exp2).contains("the security chip reads the candidate as concern: a tool widened"));
         assert!(w.contains("say “promote bob”"));
     }
 }

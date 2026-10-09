@@ -19,7 +19,7 @@ use std::sync::LazyLock;
 
 /// The metrics this world measures — ONE vocabulary on both kernels, in one order (fixture
 /// `watch_metrics`); a name here is a name the snapshot carries, never a zero by omission.
-pub const METRICS: [&str; 21] = [
+pub const METRICS: [&str; 22] = [
     "outbox_pending",
     "oldest_outbox_age_s",
     "asks_received",
@@ -48,6 +48,9 @@ pub const METRICS: [&str; 21] = [
     // THE GROUND CONNECTIONS CURE (2026-10-08): the lines the ground holds right now, so a watch sees it
     // filling BEFORE Postgres refuses the next one
     "ground_connections",
+    // Phase 8 sp6: THE TWO CHIPS — the key-checks of the last day a seated body FAILED (silent, a signature that does not
+    // stand, a hash that is not the join's): the identity chip's cadence, watched
+    "key_checks_failed",
 ];
 /// A watch changed state: red ↔ green.
 pub const WATCH_TURNED: &str = "orreth.watch.turned.v1";

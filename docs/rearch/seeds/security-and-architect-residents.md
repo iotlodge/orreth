@@ -7,7 +7,12 @@ after the release wave, driven by a proof's need (rule 12).**
 **Amended 2026-10-05 (`../0010` lock 8): `security` v0 lands in Phase 8 sp6 as
 a reviewer at the Experiment gate (capability and policy diffs · the refusals
 ground · the key-check cadence); `architect` stays HELD with RAG, after the
-Workshop.**
+Workshop.** **`security` v0 BUILT 2026-10-09 (Phase 8 sp6):
+`templates/firmware-security.v0.json` on the crew; the candidate's diff and
+the refusals ground (the join's refusals and the desk's denials) read off the
+record and judged at the gate; the key-check's failures on the kernel's
+seventh watch. The content rails (0068's detectors), the per-DID anomaly and
+the examiner's ceiling stay this seed's; `architect` stays held.**
 
 ## JB's word, faithfully
 

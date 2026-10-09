@@ -1,0 +1,1056 @@
+{
+ "contract": "orreth.chips/1",
+ "version": 0,
+ "generated_by": "orreth_spine.chips (the Python reference) - rearch Phase 8 sp6, THE TWO CHIPS: the trial life's claims and their words, the candidate's diff and its words, the chips' forms and how a verdict is read off the words, a chip's line on the card and what holds a promotion, the key-check's law (due \u00b7 the challenge's bytes \u00b7 the kernel's verdict \u00b7 the seventh watch \u00b7 the glass's line), the refusals ground's and the seats' words",
+ "generated_at": "2026-10-09",
+ "cases": [
+  {
+   "name": "chip_claims: every claim kept \u2014 the same self, the candidate's hash, the room, left whole",
+   "kind": "chip_claims",
+   "input": {
+    "experiment": {
+     "experiment_id": "exp_1",
+     "agent": "bob",
+     "room": "u:dev/f:ops/r:exp-bob-1",
+     "candidate_hash": "sha256:abcdef0123456789",
+     "current_version": 1
+    },
+    "trial": {
+     "did": "did:orreth:agent:bob0000000000000000000000000000",
+     "life": 2,
+     "template_hash": "sha256:abcdef0123456789",
+     "scope": "u:dev/f:ops/r:exp-bob-1",
+     "wear_open": false
+    },
+    "standing_did": "did:orreth:agent:bob0000000000000000000000000000"
+   },
+   "expect": {
+    "claims": [
+     {
+      "claim": "who",
+      "kept": true,
+      "said": "joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2)"
+     },
+     {
+      "claim": "what",
+      "kept": true,
+      "said": "stood on the candidate's declaration (sha256:a)"
+     },
+     {
+      "claim": "where",
+      "kept": true,
+      "said": "stood in the experiment room, nowhere else"
+     },
+     {
+      "claim": "left",
+      "kept": true,
+      "said": "left the room \u2014 its wear closed when it stopped"
+     }
+    ],
+    "words": "every claim kept: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2); what \u2014 stood on the candidate's declaration (sha256:a); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
+   }
+  },
+  {
+   "name": "chip_claims: a first life \u2014 no standing self to compare",
+   "kind": "chip_claims",
+   "input": {
+    "experiment": {
+     "experiment_id": "exp_1",
+     "agent": "bob",
+     "room": "u:dev/f:ops/r:exp-bob-1",
+     "candidate_hash": "sha256:abcdef0123456789",
+     "current_version": 1
+    },
+    "trial": {
+     "did": "did:orreth:agent:bob0000000000000000000000000000",
+     "life": 2,
+     "template_hash": "sha256:abcdef0123456789",
+     "scope": "u:dev/f:ops/r:exp-bob-1",
+     "wear_open": false
+    },
+    "standing_did": null
+   },
+   "expect": {
+    "claims": [
+     {
+      "claim": "who",
+      "kept": true,
+      "said": "joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the first life of this self; no standing life to compare"
+     },
+     {
+      "claim": "what",
+      "kept": true,
+      "said": "stood on the candidate's declaration (sha256:a)"
+     },
+     {
+      "claim": "where",
+      "kept": true,
+      "said": "stood in the experiment room, nowhere else"
+     },
+     {
+      "claim": "left",
+      "kept": true,
+      "said": "left the room \u2014 its wear closed when it stopped"
+     }
+    ],
+    "words": "every claim kept: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the first life of this self; no standing life to compare; what \u2014 stood on the candidate's declaration (sha256:a); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
+   }
+  },
+  {
+   "name": "chip_claims: another self joined \u2014 rule 1 broken",
+   "kind": "chip_claims",
+   "input": {
+    "experiment": {
+     "experiment_id": "exp_1",
+     "agent": "bob",
+     "room": "u:dev/f:ops/r:exp-bob-1",
+     "candidate_hash": "sha256:abcdef0123456789",
+     "current_version": 1
+    },
+    "trial": {
+     "did": "did:orreth:agent:bob0000000000000000000000000000",
+     "life": 2,
+     "template_hash": "sha256:abcdef0123456789",
+     "scope": "u:dev/f:ops/r:exp-bob-1",
+     "wear_open": false
+    },
+    "standing_did": "did:orreth:agent:other000000000000000000000000000"
+   },
+   "expect": {
+    "claims": [
+     {
+      "claim": "who",
+      "kept": false,
+      "said": "joined as did:orreth:agent:bob0000000000000000000000000000 but the standing life is did:orreth:agent:other000000000000000000000000000 \u2014 another self (rule 1)"
+     },
+     {
+      "claim": "what",
+      "kept": true,
+      "said": "stood on the candidate's declaration (sha256:a)"
+     },
+     {
+      "claim": "where",
+      "kept": true,
+      "said": "stood in the experiment room, nowhere else"
+     },
+     {
+      "claim": "left",
+      "kept": true,
+      "said": "left the room \u2014 its wear closed when it stopped"
+     }
+    ],
+    "words": "1 of 4 claims broken: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 but the standing life is did:orreth:agent:other000000000000000000000000000 \u2014 another self (rule 1); what \u2014 stood on the candidate's declaration (sha256:a); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
+   }
+  },
+  {
+   "name": "chip_claims: the wrong hash, the wrong room, the wear still open",
+   "kind": "chip_claims",
+   "input": {
+    "experiment": {
+     "experiment_id": "exp_1",
+     "agent": "bob",
+     "room": "u:dev/f:ops/r:exp-bob-1",
+     "candidate_hash": "sha256:abcdef0123456789",
+     "current_version": 1
+    },
+    "trial": {
+     "did": "did:orreth:agent:bob0000000000000000000000000000",
+     "life": 2,
+     "template_hash": "sha256:ffff000011112222",
+     "scope": "u:dev/f:ops",
+     "wear_open": true
+    },
+    "standing_did": "did:orreth:agent:bob0000000000000000000000000000"
+   },
+   "expect": {
+    "claims": [
+     {
+      "claim": "who",
+      "kept": true,
+      "said": "joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2)"
+     },
+     {
+      "claim": "what",
+      "kept": false,
+      "said": "said it was sha256:f but the candidate is sha256:a"
+     },
+     {
+      "claim": "where",
+      "kept": false,
+      "said": "stood at u:dev/f:ops \u2014 not the experiment room u:dev/f:ops/r:exp-bob-1"
+     },
+     {
+      "claim": "left",
+      "kept": false,
+      "said": "its wear is still open \u2014 the trial life did not stop whole"
+     }
+    ],
+    "words": "3 of 4 claims broken: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2); what \u2014 said it was sha256:f but the candidate is sha256:a; where \u2014 stood at u:dev/f:ops \u2014 not the experiment room u:dev/f:ops/r:exp-bob-1; left \u2014 its wear is still open \u2014 the trial life did not stop whole"
+   }
+  },
+  {
+   "name": "chip_claims: no trial life joined the room",
+   "kind": "chip_claims",
+   "input": {
+    "experiment": {
+     "experiment_id": "exp_1",
+     "agent": "bob",
+     "room": "u:dev/f:ops/r:exp-bob-1",
+     "candidate_hash": "sha256:abcdef0123456789",
+     "current_version": 1
+    },
+    "trial": null,
+    "standing_did": "did:orreth:agent:bob0000000000000000000000000000"
+   },
+   "expect": {
+    "claims": [
+     {
+      "claim": "who",
+      "kept": false,
+      "said": "no trial life joined the experiment room \u2014 the candidate never stood"
+     },
+     {
+      "claim": "what",
+      "kept": false,
+      "said": "no trial life joined the experiment room \u2014 the candidate never stood"
+     },
+     {
+      "claim": "where",
+      "kept": false,
+      "said": "no trial life joined the experiment room \u2014 the candidate never stood"
+     },
+     {
+      "claim": "left",
+      "kept": false,
+      "said": "no trial life joined the experiment room \u2014 the candidate never stood"
+     }
+    ],
+    "words": "4 of 4 claims broken: who \u2014 no trial life joined the experiment room \u2014 the candidate never stood; what \u2014 no trial life joined the experiment room \u2014 the candidate never stood; where \u2014 no trial life joined the experiment room \u2014 the candidate never stood; left \u2014 no trial life joined the experiment room \u2014 the candidate never stood"
+   }
+  },
+  {
+   "name": "chip_diff: a first version \u2014 everything new",
+   "kind": "chip_diff",
+   "input": {
+    "current": null,
+    "candidate": {
+     "capabilities": [
+      "ask",
+      "tools:propose"
+     ],
+     "graph": "bob.v0"
+    }
+   },
+   "expect": {
+    "diff": {
+     "first": true,
+     "widened": [
+      "ask",
+      "tools:propose"
+     ],
+     "narrowed": [],
+     "graph": [
+      null,
+      "bob.v0"
+     ],
+     "mind": null,
+     "policy": null,
+     "binding": null,
+     "summonable": null
+    },
+    "words": "a first version \u2014 every capability it declares is new; WIDENED: ask, tools:propose; the graph unset \u2192 bob.v0"
+   }
+  },
+  {
+   "name": "chip_diff: a tool widened and the graph changed",
+   "kind": "chip_diff",
+   "input": {
+    "current": {
+     "capabilities": [
+      "ask"
+     ],
+     "graph": "bob.v0",
+     "mind": {
+      "model": "m1"
+     }
+    },
+    "candidate": {
+     "capabilities": [
+      "ask",
+      "tools:propose"
+     ],
+     "graph": "bob.v1",
+     "mind": {
+      "model": "m1"
+     }
+    }
+   },
+   "expect": {
+    "diff": {
+     "first": false,
+     "widened": [
+      "tools:propose"
+     ],
+     "narrowed": [],
+     "graph": [
+      "bob.v0",
+      "bob.v1"
+     ],
+     "mind": null,
+     "policy": null,
+     "binding": null,
+     "summonable": null
+    },
+    "words": "WIDENED: tools:propose; the graph bob.v0 \u2192 bob.v1"
+   }
+  },
+  {
+   "name": "chip_diff: nothing changes",
+   "kind": "chip_diff",
+   "input": {
+    "current": {
+     "capabilities": [
+      "ask"
+     ],
+     "graph": "bob.v0"
+    },
+    "candidate": {
+     "capabilities": [
+      "ask"
+     ],
+     "graph": "bob.v0"
+    }
+   },
+   "expect": {
+    "diff": {
+     "first": false,
+     "widened": [],
+     "narrowed": [],
+     "graph": null,
+     "mind": null,
+     "policy": null,
+     "binding": null,
+     "summonable": null
+    },
+    "words": "nothing changes in what the candidate may do \u2014 the same capabilities, graph, mind and policy"
+   }
+  },
+  {
+   "name": "chip_diff: narrowed, the mind pinned, the policy and the binding changed, summonable now",
+   "kind": "chip_diff",
+   "input": {
+    "current": {
+     "capabilities": [
+      "ask",
+      "tools:mark"
+     ],
+     "graph": "bob.v0",
+     "mind": {
+      "model": "m1"
+     },
+     "policy": "p.v1",
+     "binding": null
+    },
+    "candidate": {
+     "capabilities": [
+      "ask"
+     ],
+     "graph": "bob.v0",
+     "mind": {
+      "model": "m1",
+      "pin": "sonnet"
+     },
+     "policy": "p.v2",
+     "binding": "bindings/x.v0.json",
+     "summonable": true
+    }
+   },
+   "expect": {
+    "diff": {
+     "first": false,
+     "widened": [],
+     "narrowed": [
+      "tools:mark"
+     ],
+     "graph": null,
+     "mind": [
+      "m1",
+      "sonnet"
+     ],
+     "policy": [
+      "p.v1",
+      "p.v2"
+     ],
+     "binding": [
+      null,
+      "bindings/x.v0.json"
+     ],
+     "summonable": [
+      false,
+      true
+     ]
+    },
+    "words": "narrowed: tools:mark; the mind m1 \u2192 sonnet; the policy p.v1 \u2192 p.v2; the binding unset \u2192 bindings/x.v0.json; summonable now"
+   }
+  },
+  {
+   "name": "chip_verdict: identity kept, bold form",
+   "kind": "chip_verdict",
+   "input": {
+    "reviewer": "identity",
+    "text": "the claims hold.\n**identity: KEPT** \u2014 the same self in the room"
+   },
+   "expect": {
+    "verdict": {
+     "identity": "kept",
+     "line": "the same self in the room"
+    },
+    "kept": true
+   }
+  },
+  {
+   "name": "chip_verdict: identity broken",
+   "kind": "chip_verdict",
+   "input": {
+    "reviewer": "identity",
+    "text": "identity: broken \u2014 another self joined"
+   },
+   "expect": {
+    "verdict": {
+     "identity": "broken",
+     "line": "another self joined"
+    },
+    "kept": true
+   }
+  },
+  {
+   "name": "chip_verdict: identity no form",
+   "kind": "chip_verdict",
+   "input": {
+    "reviewer": "identity",
+    "text": "I cannot say."
+   },
+   "expect": {
+    "verdict": {
+     "identity": null,
+     "line": null
+    },
+    "kept": false
+   }
+  },
+  {
+   "name": "chip_verdict: security clear",
+   "kind": "chip_verdict",
+   "input": {
+    "reviewer": "security",
+    "text": "nothing widened.\nsecurity: clear \u2014 the same capabilities"
+   },
+   "expect": {
+    "verdict": {
+     "security": "clear",
+     "line": "the same capabilities"
+    },
+    "kept": true
+   }
+  },
+  {
+   "name": "chip_verdict: security concern, no reason line",
+   "kind": "chip_verdict",
+   "input": {
+    "reviewer": "security",
+    "text": "security: concern"
+   },
+   "expect": {
+    "verdict": {
+     "security": "concern",
+     "line": null
+    },
+    "kept": true
+   }
+  },
+  {
+   "name": "chip_verdict: security no form",
+   "kind": "chip_verdict",
+   "input": {
+    "reviewer": "security",
+    "text": "risk: low \u2014 wrong form for a chip"
+   },
+   "expect": {
+    "verdict": {
+     "security": null,
+     "line": null
+    },
+    "kept": false
+   }
+  },
+  {
+   "name": "chip_slot_words: identity kept with a line",
+   "kind": "chip_slot_words",
+   "input": {
+    "reviewer": "identity",
+    "slot": {
+     "identity": "kept",
+     "line": "the same self"
+    }
+   },
+   "expect": {
+    "words": "the identity chip finds the trial life's claims kept: the same self"
+   }
+  },
+  {
+   "name": "chip_slot_words: identity missing",
+   "kind": "chip_slot_words",
+   "input": {
+    "reviewer": "identity",
+    "slot": {
+     "missing": "the identity is not seated here \u2014 no verdict"
+    }
+   },
+   "expect": {
+    "words": "the identity chip: the identity is not seated here \u2014 no verdict"
+   }
+  },
+  {
+   "name": "chip_slot_words: identity waiting",
+   "kind": "chip_slot_words",
+   "input": {
+    "reviewer": "identity",
+    "slot": {
+     "ask_id": "ask_1"
+    }
+   },
+   "expect": {
+    "words": "the identity chip: no verdict yet"
+   }
+  },
+  {
+   "name": "chip_slot_words: security concern",
+   "kind": "chip_slot_words",
+   "input": {
+    "reviewer": "security",
+    "slot": {
+     "security": "concern",
+     "line": "a tool widened"
+    }
+   },
+   "expect": {
+    "words": "the security chip reads the candidate as concern: a tool widened"
+   }
+  },
+  {
+   "name": "chip_slot_words: security waiting",
+   "kind": "chip_slot_words",
+   "input": {
+    "reviewer": "security",
+    "slot": null
+   },
+   "expect": {
+    "words": "the security chip: no review yet"
+   }
+  },
+  {
+   "name": "chip_holds: nothing holds",
+   "kind": "chip_holds",
+   "input": {
+    "reviewers": {
+     "identity": {
+      "identity": "kept"
+     },
+     "security": {
+      "security": "clear"
+     }
+    }
+   },
+   "expect": {
+    "holds": []
+   }
+  },
+  {
+   "name": "chip_holds: both hold",
+   "kind": "chip_holds",
+   "input": {
+    "reviewers": {
+     "identity": {
+      "identity": "broken"
+     },
+     "security": {
+      "security": "concern"
+     }
+    }
+   },
+   "expect": {
+    "holds": [
+     "the identity chip finds the trial life's claims broken",
+     "the security chip reads a concern"
+    ]
+   }
+  },
+  {
+   "name": "chip_holds: missing holds nothing",
+   "kind": "chip_holds",
+   "input": {
+    "reviewers": {
+     "identity": {
+      "missing": "x"
+     },
+     "security": {}
+    }
+   },
+   "expect": {
+    "holds": []
+   }
+  },
+  {
+   "name": "chip_form: identity",
+   "kind": "chip_form",
+   "input": {
+    "reviewer": "identity"
+   },
+   "expect": {
+    "form": "Judge whether the trial life is WHO and WHAT it says \u2014 the claims above are the kernel's record. End with exactly one line `identity: kept` or `identity: broken` \u2014 <one line of reason>."
+   }
+  },
+  {
+   "name": "chip_form: security",
+   "kind": "chip_form",
+   "input": {
+    "reviewer": "security"
+   },
+   "expect": {
+    "form": "Judge what the candidate may do that the standing version may not, and whether anything on the refusals ground speaks against it. End with exactly one line `security: clear` or `security: concern` \u2014 <one line of reason>."
+   }
+  },
+  {
+   "name": "keycheck_due: never asked",
+   "kind": "keycheck_due",
+   "input": {
+    "last_asked_s_ago": null,
+    "cadence": 300
+   },
+   "expect": {
+    "due": true
+   }
+  },
+  {
+   "name": "keycheck_due: past the cadence",
+   "kind": "keycheck_due",
+   "input": {
+    "last_asked_s_ago": 301.0,
+    "cadence": 300
+   },
+   "expect": {
+    "due": true
+   }
+  },
+  {
+   "name": "keycheck_due: inside the cadence",
+   "kind": "keycheck_due",
+   "input": {
+    "last_asked_s_ago": 10.0,
+    "cadence": 300
+   },
+   "expect": {
+    "due": false
+   }
+  },
+  {
+   "name": "keycheck_due: the cadence off",
+   "kind": "keycheck_due",
+   "input": {
+    "last_asked_s_ago": null,
+    "cadence": 0
+   },
+   "expect": {
+    "due": false
+   }
+  },
+  {
+   "name": "keycheck_due: at the cadence",
+   "kind": "keycheck_due",
+   "input": {
+    "last_asked_s_ago": 300.0,
+    "cadence": 300
+   },
+   "expect": {
+    "due": true
+   }
+  },
+  {
+   "name": "keycheck_payload: the desk's challenge repeated",
+   "kind": "keycheck_payload",
+   "input": {
+    "did": "did:orreth:agent:abc",
+    "nonce": "n0"
+   },
+   "expect": {
+    "payload": {
+     "did": "did:orreth:agent:abc",
+     "join_nonce": "n0"
+    }
+   }
+  },
+  {
+   "name": "keycheck_verdict: proven \u2014 who and what",
+   "kind": "keycheck_verdict",
+   "input": {
+    "did": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "answer": {
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "6342250c6de3bd685ff99f6a399f1b360a013ac8f89077fe506571ae7401e7ff6cc0922c08237211d4a64fa3ef914cb8b6a2f4b47e773fa11b8ce058ad4c3f0e"
+     },
+     "public_key": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+     "what": "sha256:what0000"
+    },
+    "joined_as": "sha256:what0000",
+    "waited_s": 3.0
+   },
+   "expect": {
+    "verdict": {
+     "ok": true,
+     "words": "proven \u2014 who it says (bf2bcab7) and what it says (sha256:w)"
+    }
+   }
+  },
+  {
+   "name": "keycheck_verdict: proven \u2014 no join hash to compare",
+   "kind": "keycheck_verdict",
+   "input": {
+    "did": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "answer": {
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "6342250c6de3bd685ff99f6a399f1b360a013ac8f89077fe506571ae7401e7ff6cc0922c08237211d4a64fa3ef914cb8b6a2f4b47e773fa11b8ce058ad4c3f0e"
+     },
+     "public_key": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+     "what": "sha256:what0000"
+    },
+    "joined_as": null,
+    "waited_s": 3.0
+   },
+   "expect": {
+    "verdict": {
+     "ok": true,
+     "words": "proven \u2014 who it says (bf2bcab7) and what it says (sha256:w)"
+    }
+   }
+  },
+  {
+   "name": "keycheck_verdict: a signature that does not stand",
+   "kind": "keycheck_verdict",
+   "input": {
+    "did": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "answer": {
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+     },
+     "public_key": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+     "what": "sha256:what0000"
+    },
+    "joined_as": "sha256:what0000",
+    "waited_s": 3.0
+   },
+   "expect": {
+    "verdict": {
+     "ok": false,
+     "words": "the signature does not stand over the kernel's nonce under the key behind this DID \u2014 not WHO it says"
+    }
+   }
+  },
+  {
+   "name": "keycheck_verdict: a key that does not derive the DID",
+   "kind": "keycheck_verdict",
+   "input": {
+    "did": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "answer": {
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "6342250c6de3bd685ff99f6a399f1b360a013ac8f89077fe506571ae7401e7ff6cc0922c08237211d4a64fa3ef914cb8b6a2f4b47e773fa11b8ce058ad4c3f0e"
+     },
+     "public_key": "79b5562e8fe654f94078b112e8a98ba7901f853ae695bed7e0e3910bad049664",
+     "what": "sha256:what0000"
+    },
+    "joined_as": "sha256:what0000",
+    "waited_s": 3.0
+   },
+   "expect": {
+    "verdict": {
+     "ok": false,
+     "words": "the signature does not stand over the kernel's nonce under the key behind this DID \u2014 not WHO it says"
+    }
+   }
+  },
+  {
+   "name": "keycheck_verdict: not what it says",
+   "kind": "keycheck_verdict",
+   "input": {
+    "did": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "answer": {
+     "sig": {
+      "alg": "ed25519",
+      "by": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+      "sig": "6342250c6de3bd685ff99f6a399f1b360a013ac8f89077fe506571ae7401e7ff6cc0922c08237211d4a64fa3ef914cb8b6a2f4b47e773fa11b8ce058ad4c3f0e"
+     },
+     "public_key": "03a107bff3ce10be1d70dd18e74bc09967e4d6309ba50d5f1ddc8664125531b8",
+     "what": "sha256:what0000"
+    },
+    "joined_as": "sha256:other000",
+    "waited_s": 3.0
+   },
+   "expect": {
+    "verdict": {
+     "ok": false,
+     "words": "it says it stands on sha256:w but joined as sha256:o \u2014 not WHAT it says"
+    }
+   }
+  },
+  {
+   "name": "keycheck_verdict: waiting",
+   "kind": "keycheck_verdict",
+   "input": {
+    "did": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "answer": null,
+    "joined_as": "sha256:what0000",
+    "waited_s": 30.0
+   },
+   "expect": {
+    "verdict": {
+     "ok": null,
+     "words": "waiting for the body's proof"
+    }
+   }
+  },
+  {
+   "name": "keycheck_verdict: silent past the desk's wait",
+   "kind": "keycheck_verdict",
+   "input": {
+    "did": "did:orreth:agent:56475aa75463474c0285df5dbf2bcab7",
+    "nonce": "0123456789abcdef0123456789abcdef",
+    "answer": null,
+    "joined_as": "sha256:what0000",
+    "waited_s": 120.0
+   },
+   "expect": {
+    "verdict": {
+     "ok": false,
+     "words": "silent \u2014 no proof within 2 minutes of the kernel's challenge"
+    }
+   }
+  },
+  {
+   "name": "keycheck_watch: failed None",
+   "kind": "keycheck_watch",
+   "input": {
+    "failed": null
+   },
+   "expect": {
+    "watch": {
+     "metric": "key_checks_failed",
+     "op": ">",
+     "threshold": 0,
+     "severity": "red",
+     "state": "unknown",
+     "words": "every seated body proved itself on the cadence"
+    }
+   }
+  },
+  {
+   "name": "keycheck_watch: failed 0",
+   "kind": "keycheck_watch",
+   "input": {
+    "failed": 0
+   },
+   "expect": {
+    "watch": {
+     "metric": "key_checks_failed",
+     "op": ">",
+     "threshold": 0,
+     "severity": "red",
+     "state": "green",
+     "words": "every seated body proved itself on the cadence"
+    }
+   }
+  },
+  {
+   "name": "keycheck_watch: failed 1",
+   "kind": "keycheck_watch",
+   "input": {
+    "failed": 1
+   },
+   "expect": {
+    "watch": {
+     "metric": "key_checks_failed",
+     "op": ">",
+     "threshold": 0,
+     "severity": "red",
+     "state": "red",
+     "words": "1 key-check failed in the last day \u2014 a seated body could not prove itself"
+    }
+   }
+  },
+  {
+   "name": "keycheck_watch: failed 3",
+   "kind": "keycheck_watch",
+   "input": {
+    "failed": 3
+   },
+   "expect": {
+    "watch": {
+     "metric": "key_checks_failed",
+     "op": ">",
+     "threshold": 0,
+     "severity": "red",
+     "state": "red",
+     "words": "3 key-checks failed in the last day \u2014 a seated body could not prove itself"
+    }
+   }
+  },
+  {
+   "name": "keycheck_words: off",
+   "kind": "keycheck_words",
+   "input": {
+    "checked": 0,
+    "failed": 0,
+    "pending": 0,
+    "cadence": 0
+   },
+   "expect": {
+    "words": "the key-check cadence is off (SPINE_KEYCHECK_S=0) \u2014 no body is asked to prove itself"
+   }
+  },
+  {
+   "name": "keycheck_words: nothing yet",
+   "kind": "keycheck_words",
+   "input": {
+    "checked": 0,
+    "failed": 0,
+    "pending": 0,
+    "cadence": 300
+   },
+   "expect": {
+    "words": "no body has been asked to prove itself yet \u2014 every 300 s once one is seated"
+   }
+  },
+  {
+   "name": "keycheck_words: one check",
+   "kind": "keycheck_words",
+   "input": {
+    "checked": 1,
+    "failed": 0,
+    "pending": 0,
+    "cadence": 300
+   },
+   "expect": {
+    "words": "1 key-check in the last day, 0 failed, none waiting \u2014 every seated body is asked every 300 s to prove who and what it is"
+   }
+  },
+  {
+   "name": "keycheck_words: checks, a failure, one waiting",
+   "kind": "keycheck_words",
+   "input": {
+    "checked": 12,
+    "failed": 1,
+    "pending": 1,
+    "cadence": 60
+   },
+   "expect": {
+    "words": "12 key-checks in the last day, 1 failed, 1 waiting \u2014 every seated body is asked every 60 s to prove who and what it is"
+   }
+  },
+  {
+   "name": "refusals_words: nothing for bob",
+   "kind": "refusals_words",
+   "input": {
+    "rows": [],
+    "name": "bob"
+   },
+   "expect": {
+    "words": "THE REFUSALS GROUND for bob: nothing in the last day \u2014 no body was turned away at the join or the desk"
+   }
+  },
+  {
+   "name": "refusals_words: two refusals in the universe",
+   "kind": "refusals_words",
+   "input": {
+    "rows": [
+     {
+      "name": "bob",
+      "did": "did:orreth:agent:x",
+      "kind": "agent",
+      "reasons": [
+       "no room on floor ops"
+      ],
+      "at": "2026-10-09T10:00:00+00:00",
+      "door": "the join"
+     },
+     {
+      "name": "eve",
+      "did": "did:orreth:agent:y",
+      "kind": "agent",
+      "reasons": [
+       "denied at the desk"
+      ],
+      "at": "2026-10-09T09:00:00+00:00",
+      "door": "the desk"
+     }
+    ],
+    "name": null
+   },
+   "expect": {
+    "words": "THE REFUSALS GROUND in this universe: 2 refusals in the last day \u2014 bob (agent) turned away at the join 2026-10-09T10:00:00: no room on floor ops; eve (agent) turned away at the desk 2026-10-09T09:00:00: denied at the desk"
+   }
+  },
+  {
+   "name": "seats_words: the seats held",
+   "kind": "seats_words",
+   "input": {
+    "seats": {
+     "people": {
+      "owner": 1,
+      "person": 2
+     },
+     "bodies": 13,
+     "keychecks": {
+      "checked": 26,
+      "failed": 0,
+      "pending": 2,
+      "cadence": 300
+     }
+    }
+   },
+   "expect": {
+    "words": "THE SEATS: 1 owner, 2 person seated by the ceremony; 13 bodies alive on a lease; 26 key-checks in the last day, 0 failed, 2 waiting \u2014 every seated body is asked every 300 s to prove who and what it is"
+   }
+  },
+  {
+   "name": "seats_words: nobody",
+   "kind": "seats_words",
+   "input": {
+    "seats": {
+     "people": {},
+     "bodies": 1,
+     "keychecks": {
+      "checked": 0,
+      "failed": 0,
+      "pending": 0,
+      "cadence": 0
+     }
+    }
+   },
+   "expect": {
+    "words": "THE SEATS: nobody seated by the ceremony; 1 body alive on a lease; the key-check cadence is off (SPINE_KEYCHECK_S=0) \u2014 no body is asked to prove itself"
+   }
+  }
+ ]
+}

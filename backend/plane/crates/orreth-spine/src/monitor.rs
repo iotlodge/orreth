@@ -388,6 +388,12 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
     // the cure (2026-10-08): the ground's lines and its budget, watchable as `ground_connections`
     let ground_view = ground_card(g, alive).await?;
     values["ground_connections"] = ground_view["connections"].clone();
+    // Phase 8 sp6: THE KEY-CHECK — the failed proofs of the day, watchable; the card for the glass
+    let keychecks = crate::chips_live::keycheck_tally(g.client(), scope).await?;
+    values["key_checks_failed"] = keychecks["failed"].clone();
+    let kn = |k: &str| keychecks[k].as_i64().unwrap_or(0);
+    let mut keychecks_card = keychecks.clone();
+    keychecks_card["words"] = json!(crate::chips::keycheck_words(kn("checked"), kn("failed"), kn("pending"), kn("cadence")));
     let stable_view = stable_face(g, scope).await;
     let rows = g
         .client()
@@ -477,6 +483,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "doors": doors,
         "pool": pool,
         "ground": ground_view, // the cure (2026-10-08): connections now · ceiling · reserve · per_body · seats · seated
+        "keychecks": keychecks_card, // Phase 8 sp6: the key-check's card — checked · failed · pending · last · cadence · words
         "parked": parked,
     }))
 }

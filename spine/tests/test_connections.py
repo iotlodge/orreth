@@ -81,7 +81,7 @@ def test_the_seat_budget_is_the_ceiling_less_the_reserve_in_lines_per_serving_bo
     # the kernel's sixth watch: red at the ceiling less the reserve — the bodies' share spent
     assert operating.ground_watch(c) == {"name": "ground_connections", "metric": "ground_connections",
                                          "op": ">=", "threshold": 70.0}
-    assert "ground_connections" in monitor.METRICS and len(monitor.METRICS) == 21
+    assert "ground_connections" in monitor.METRICS and len(monitor.METRICS) == 22      # Phase 8 sp6: key_checks_failed joined
 
 
 # ---- the ground's own ceiling, the metric, the card ---------------------------------------
@@ -105,7 +105,7 @@ def test_the_ground_reads_its_own_ceiling_and_the_monitor_counts_its_lines(pg, m
     assert snap["ground"]["seats"] == declared["seats"] and snap["ground"]["seated"] == 0
     # the kernel's watches at light: the five and the ground's, once
     made = operating.watches_at_light(pg)
-    assert made[-1] == "ground_connections" and operating.watches_at_light(pg) == []
+    assert made[-2] == "ground_connections" and made[-1] == "key_checks_failed" and operating.watches_at_light(pg) == []   # Phase 8 sp6: the seventh after the sixth
     w = {x["metric"]: x for x in monitor.snapshot(pg, rails=False)["watches"]}["ground_connections"]
     assert (w["op"], w["threshold"], w["red"]) == (">=", float(declared["ceiling"] - 30), False)
     assert w["reads"].startswith("red when ground_connections >= ")

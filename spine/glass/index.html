@@ -1671,7 +1671,7 @@ async function onNotice(n){
     if (!n.kind.includes("ask.received")) return; // the kernel's, on the interest law:
     const v0 = await askRead(n.ref);                 // sp2: one read, shared with the panel
     if (v0 && v0.origin && v0.origin.kind === "intention" && v0.session !== SESSION){   // 0007: born of an intention
-      const inc = ["planner", "critic", "grader", "mitl"].includes(v0.target);
+      const inc = ["planner", "critic", "grader", "mitl"].includes(v0.target);   // the base includes; the chips come by summon (Phase 8 sp6)
       const whose = v0.origin.by === "the kernel" ? "on the kernel's word" : `on ${esc(whoIs(v0.origin.by))}'s word · owned by the kernel`;
       const words = `“${esc((v0.origin.words || "").slice(0, 80))}”`;
       if (inc){ sysline(`${whose} · ${words} → ${esc(v0.target)}: the next objective?`); return; }
@@ -2584,6 +2584,15 @@ async function serviceWords(text){                 // "what services are here?" 
     toggleMonitor(true);
     return true;
   }
+  m = t.match(/^show\s+(?:me\s+)?(?:the\s+)?key[ -]?checks$/);   // Phase 8 sp6: THE KEY-CHECK — every seated body's proofs
+  if (m){
+    el("msg mine", esc(text));
+    const r = await fetch("/keychecks").then(x=>x.json()).catch(()=>null);
+    if (!r){ sysline("the key-check door did not answer"); return true; }
+    sysline(esc(r.words || ""));
+    for (const k of (r.keychecks || []).slice(0, 20)) sysline(`<b>${esc(k.name)}</b> · asked ${esc(String(k.asked_at).slice(11, 19))} · ${k.verified_at ? (k.ok ? "proven" : "FAILED") + (k.words ? " — " + esc(k.words) : "") : (k.answered_at ? "answered, not yet verified" : "waiting for its proof")}`);
+    return true;
+  }
   m = t.match(/^show\s+(?:me\s+)?(?:the\s+)?(experiments|seats)$/);
   if (m){
     el("msg mine", esc(text));
@@ -3358,6 +3367,7 @@ async function loadMonitor(){
        // it can fill so that every body could serve at once (a body holds lines only while it serves)
        (s.ground ? kv("ground connections", `${s.ground.connections} of ${s.ground.ceiling} held · ${s.ground.reserve} the kernel's · ${s.ground.seated} of ${s.ground.seats} seats taken (${s.ground.per_body} lines per serving body; an idle body holds none)`,
                       s.ground.connections >= s.ground.ceiling - s.ground.reserve ? "red" : "ok") : "") +
+       (s.keychecks ? kv("key-check", s.keychecks.words || "", s.keychecks.failed ? "red" : "ok") : "") +   // Phase 8 sp6: THE KEY-CHECK — the identity chip's cadence
        kv("poison held at (the rail waits for a person)", v.parked || 0, v.parked ? "red" : "ok") +
        (s.parked || []).map(pk => line({label: esc(pk.words), sub: `parked:${pk.parked_id} · ${pk.bytes} bytes · ${esc(String(pk.hash).slice(0, 23))}… · since ${hm(pk.parked_at)}`,
          lever: lever("advance", pk.parked_id, "advance past it", "the operator's explicit decision: the dispatcher commits past this event and goes on — recorded in your name")})).join("") +
@@ -3495,12 +3505,14 @@ function experimentCard(id, x){                      // Phase 8 sp4: THE EXPERIM
   const arm = (side, a) => a === null || a === undefined ? `${side}: none — the first version` : a.skipped ? `${side}: ${esc(a.skipped)}` : a.passed === null || a.passed === undefined ? `${side}: running` : `${side}: ${a.passed} passed, ${a.failed} failed`;
   const who = (name, slot) => slot && slot.verdict ? `${name}${slot.signed ? " (signed)" : ""}: candidate ${esc(slot.verdict.candidate || "?")}${slot.verdict.current ? ", current " + esc(slot.verdict.current) : ""} → ${esc(slot.verdict.verdict || "no side")}`
                             : slot && slot.risk ? `${name}${slot.signed ? " (signed)" : ""}: risk ${esc(slot.risk)}${slot.line ? " — " + esc(slot.line) : ""}`
-                            : `${name}: ${esc((slot && slot.missing) || "waiting")}`;
+                            : slot && slot.identity ? `${name}${slot.signed ? " (signed)" : ""}: claims ${esc(slot.identity)}${slot.line ? " — " + esc(slot.line) : ""}`
+                            : slot && slot.security ? `${name}${slot.signed ? " (signed)" : ""}: ${esc(slot.security)}${slot.line ? " — " + esc(slot.line) : ""}`
+                            : `${name}: ${esc((slot && slot.missing) || "waiting")}`;   // Phase 8 sp6: the two chips' words
   const lean = {promote: "leans to promote", hold: "says hold", unsure: "is unsure"}[x.leaning] || "is running";
   const b = el("msg theirs", `<div class="who">THE EXPERIMENT · ${esc(x.agent)} · ${esc(x.state)}</div>` +
     `<div class="meta">${esc(id)} · ${esc(x.room)}</div>` +
     `<div>${arm("candidate", arms.candidate)} · ${arm("current", arms.current)}</div>` +
-    `<div class="meta">${who("the grader", rv.grader)} · ${who("the critic", rv.critic)} · ${esc((rv.security || {}).missing || "security — waiting")} · ${esc((rv.identity || {}).missing || "identity — waiting")}</div>` +
+    `<div class="meta">${who("the grader", rv.grader)} · ${who("the critic", rv.critic)} · ${who("the identity chip", rv.identity)} · ${who("the security chip", rv.security)}</div>` +
     `<div class="meta">resiliency: ${x.resiliency ? (x.resiliency.reds ? x.resiliency.reds + " watch(es) turned red while the arms ran" : "no watch turned red while the arms ran") : "running"} · the evidence ${lean}</div>` +
     (x.state === "proposed" ? `<div class="acts"><button class="ws-btn p" data-promote>promote ${esc(x.agent)}</button> <button class="ws-btn" data-decline>decline</button><span class="meta"> · or say “promote ${esc(x.agent)} to floor ops”</span></div>` : ""));
   const pb = b.querySelector("[data-promote]"); if (pb) pb.onclick = () => send(`promote ${x.agent}`);
@@ -3901,7 +3913,9 @@ function panelMonitorOrgan(){                      // the MONITOR organ and the 
   document.getElementById("o-ground-s").textContent = `${Object.values(a).reduce((x, y) => x + y, 0)} asks in this world` + (a["awaiting-confirm"] ? ` · ${a["awaiting-confirm"]} held at the interlock` : "");
   const pool = s.pool;                             // panel sp3: THE POOL — the lines to the ground (the reference has none: null, said plainly)
   const gr = s.ground;                             // the ground connections cure (2026-10-08): the lines the ground holds now, of its ceiling
+  const kc = s.keychecks;                          // Phase 8 sp6: THE KEY-CHECK — the proofs the kernel asked of its seated bodies
   document.getElementById("p-ground").textContent = (gr ? `${gr.connections} of ${gr.ceiling} connections held · ${gr.seated} of ${gr.seats} seats · ` : "") +
+    (kc ? `${kc.checked} key-check${kc.checked === 1 ? "" : "s"} today, ${kc.failed} failed · ` : "") +
     (pool ? `pool ${pool.busy} of ${pool.ceiling} lines busy${pool.waiting ? ` · ${pool.waiting} WAITING for a line` : ""} · ${pool.opened_total} opened for ${pool.borrowed_total} knocks` : "no pool — a connection per knock") +
     ` · outbox ${ob.pending ?? "?"} pending · oldest ${ob.oldest_age_s != null ? Number(ob.oldest_age_s).toFixed(1) + " s" : "—"}`;
   document.getElementById("p-monitor").textContent = `${w.length} watch${w.length === 1 ? "" : "es"} judged every 3 s` + doorLine(["/monitor", "/levers", "/harness"]);

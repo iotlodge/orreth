@@ -33,7 +33,7 @@ On one laptop, Orreth is five processes in Docker and, inside the kernel's own p
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/arch-anatomy-dark.svg">
-  <img alt="The anatomy of a running Orreth world: people with a seat, the kernel's six organs and five rails, the crew of ten, the four boxes" src="images/arch-anatomy-light.svg" width="100%">
+  <img alt="The anatomy of a running Orreth world: people with a seat, the kernel's six organs and five rails, the crew of thirteen, the four boxes" src="images/arch-anatomy-light.svg" width="100%">
 </picture>
 
 **`orrethd`, the kernel** (`backend/plane/crates/orreth-spine`) is one Rust program: the door on
@@ -83,7 +83,7 @@ hash, the authority chain (who acted for whom) and the marker (why). The browser
 broker: the glass listens to the **feed**, a stream of small pointers, and reads each fact through
 a door.
 
-**The crew** is ten bodies the kernel spawns and governs as its own processes, declared in one
+**The crew** is thirteen bodies the kernel spawns and governs as its own processes, declared in one
 manifest (`spine/crew.v0.json`), each a template plus, for the workspace agents, a binding. The
 manifest also declares the **levels** of the world (Phase 8 sp1, THE PATH): a universe is the
 cell itself; inside it a kernel serves **floors** and their **rooms** on one scope path
@@ -97,8 +97,11 @@ recalls what the world knows, keeps your words in the Record, reviews its day on
 **echo** (repeats your words with no mind, so the road an ask takes can be seen). Firmware bodies
 have a function and no persona: the **planner**, **critic**, **grader**, **mitl** (the Master Mind
 In The Loop, which has read the architecture and the covenant from disk and says what an act
-touches before you decide), **toolkeeper**, **stablekeeper**, and the **crew** and **monitor**
-workspace agents. A body that dies comes back as the same self after a backoff; one that dies three
+touches before you decide), **toolkeeper**, **stablekeeper**, the two chips — **identity** (holds
+the ceremony and the seats; judges a trial life's claims at the Experiment's gate; runs the
+standing key-check that asks every seated body, on a cadence, to prove it is who and what it says)
+and **security** (reads what a candidate may do that the standing version may not, and the ground
+where bodies were turned away) — and the **crew**, **monitor** and **workshop** workspace agents. A body that dies comes back as the same self after a backoff; one that dies three
 times in five minutes is parked, as a fact carrying its last words, and comes back only on a
 person's word.
 
@@ -145,7 +148,11 @@ A **lease** is a body's, and it is earned at the join desk:
 </picture>
 
 A body — the crew's or a stranger's — never simply connects. It knocks with its DID and public key,
-is challenged with the kernel's own nonce, proves it by signing, and waits. The crew is admitted at
+is challenged with the kernel's own nonce, proves it by signing, and waits. And the proof is not
+once: on a cadence (`SPINE_KEYCHECK_S`, five minutes at stock) the kernel repeats the desk's challenge
+to every seated body over the rail — the body signs the fresh nonce with the key behind its DID and
+names the declaration it stands on, never marking itself proven; the kernel verifies and records the
+verdict; a body silent, forged or not what it says is a failed check the Monitor watches. The crew is admitted at
 once on the manifest's spawn ticket; a self admitted here before is admitted on its standing
 welcome; a stranger is **staged**, and its hold appears in the chat with Cancel as the default. Only
 a governing seat's yes admits it. Then the body collects its lease with the same key: chained to
@@ -251,8 +258,11 @@ card with its proposal, the stamped promotion that seats the agent's next life w
 rest · decommission · restore; Phase 8 sp5: THE OPERATING STATE — JB's five measurements on the Monitor pull, unknown
 until there is something to measure, watched by the kernel and owned by one intention beside Resiliency; the grader
 hearing every live reply and signing its verdict; 👍 👎 under every reply; the critic's proposals landing under a body's
-owner; "summon critic"; a repo'd graph run inside the hull by an import node) are the same truth from the same doors, and
-every row is a door.
+owner; "summon critic"; a repo'd graph run inside the hull by an import node; Phase 8 sp6: THE TWO CHIPS — the identity
+and security chips reviewing at the gate beside the grader and the critic, so no slot on the card stands empty, and THE
+KEY-CHECK: every seated body challenged on a cadence to prove who and what it is, the join desk's challenge repeated,
+its verdict a fact, the day's failures the kernel's seventh watch — "show the key checks") are the same truth from the
+same doors, and every row is a door.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/monitor-dark.jpg">

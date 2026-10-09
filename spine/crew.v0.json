@@ -1,7 +1,7 @@
 {
   "format": "orreth-crew/1",
-  "version": "0.3.0",
-  "words": "the crew a kernel seats at light — one body per seat, one process per body when the kernel spawns them (P7 sp6); the Python Bridge seats the same crew in-process as the reference; Phase 8 sp1 THE PATH: `levels` declares the floors and rooms a seat may stand on (`at`, relative to the universe), opened at light in the universe's mode unless a tighter one is asked; Phase 8 sp3 THE WORKSHOP v0: a third workspace seat wears the `workshop` binding",
+  "version": "0.4.0",
+  "words": "the crew a kernel seats at light — one body per seat, one process per body when the kernel spawns them (P7 sp6); the Python Bridge seats the same crew in-process as the reference; Phase 8 sp1 THE PATH: `levels` declares the floors and rooms a seat may stand on (`at`, relative to the universe), opened at light in the universe's mode unless a tighter one is asked; Phase 8 sp3 THE WORKSHOP v0: a third workspace seat wears the `workshop` binding; Phase 8 sp6 THE TWO CHIPS: the identity and security chips — firmware of the third kind — seated beside the grader and the critic so the Experiment's gate closes whole",
   "levels": [
     {
       "at": "f:ops",
@@ -24,6 +24,12 @@
     },
     {
       "template": "templates/firmware-grader.v0.json"
+    },
+    {
+      "template": "templates/firmware-identity.v0.json"
+    },
+    {
+      "template": "templates/firmware-security.v0.json"
     },
     {
       "template": "templates/firmware-mitl.v0.json"

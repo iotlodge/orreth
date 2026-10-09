@@ -388,4 +388,15 @@ the same files, unchanged — before any module earns the word "ported".
     connections less the kernel's R, 2 lines per serving body — and S are seated already"); `ground_watch` (watch-v0) —
     `input.connections` → `expect.watch` (the kernel's sixth watch: `ground_connections >= ceiling − reserve`, never below 1).
     `watch_metrics` 20 → 21 (`ground_connections`).
+  - **Phase 8 sp6, THE TWO CHIPS (`chips-v0.json`, contract `orreth.chips/1`, 50 cases)** — `chip_claims` (the trial
+    life's claims against the kernel's record: who · what · where · left, each kept or broken in words) · `chip_diff`
+    (the candidate's diff against the standing version: widened · narrowed · graph · mind · policy · binding · summonable;
+    a first version) · `chip_verdict` (the forms `identity: kept | broken` · `security: clear | concern` read off the
+    words; stars tolerated; nothing guessed) · `chip_slot_words` (a chip's line on the card) · `chip_holds` (what holds
+    a promotion) · `chip_form` · `keycheck_due` · `keycheck_payload` (the join desk's challenge, repeated) ·
+    `keycheck_verdict` (a real Ed25519 proof: proven · a forged signature · a foreign key · not what it says · waiting ·
+    silent past the desk's two minutes) · `keycheck_watch` (the kernel's seventh watch) · `keycheck_words` ·
+    `refusals_words` · `seats_words`. `exp_proposal_words` and `exp_leaning` re-pinned to the chips' lines (experiments-v0
+    61 → 64); `schema_version` 9 · `schema_tables` 50 (`spine_keychecks`); `beat_lock` gains `keycheck` 9;
+    `watch_metrics` 21 → 22 (`key_checks_failed`). 1,099 cases on both kernels.
 

@@ -98,6 +98,7 @@ pub mod levels; // Phase 8 sp1: THE PATH — the levels' pure laws
 pub mod crafts; // Phase 8 sp2: THE SHELF WIDENED — the craft kinds' pure laws
 pub mod experiments; // Phase 8 sp4: THE EXPERIMENT AND THE CUT — the pure laws
 pub mod operating; // Phase 8 sp5: THE OPERATING STATE — the pure laws
+pub mod chips; // Phase 8 sp6: THE TWO CHIPS — the pure laws (the claims, the diff, the forms, the key-check)
 pub mod levers;
 pub mod markers; // re-base sp1: the kind-name law, pure
 pub mod mcp;
@@ -159,6 +160,8 @@ pub mod crafts_live; // Phase 8 sp2: the wear table, the draft shelf, the cut, t
 pub mod experiments_live; // Phase 8 sp4: the experiments, the verdicts, the seats, the ladder, the beats
 #[cfg(feature = "rails")]
 pub mod operating_live; // Phase 8 sp5: the five measured, the watches and the intention at light, feedback, summon, the grade beat
+#[cfg(feature = "rails")]
+pub mod chips_live; // Phase 8 sp6: THE TWO CHIPS — the chips' evidence off the record, the key-check beat
 #[cfg(feature = "rails")]
 pub mod levers_live;
 #[cfg(feature = "rails")]

@@ -158,13 +158,13 @@ async fn the_operating_state_is_measured_watched_and_the_grader_hears_live_repli
     assert!(res["watches"].is_null());
     // the ground connections cure (2026-10-08): the kernel's SIXTH watch, the ground's, stands beside the five
     let snap = wait_for(port, "/monitor", &jb_wire, Duration::from_secs(60), |v| {
-        v["watches"].as_array().is_some_and(|a| a.iter().filter(|w| w["added_by"] == json!("the kernel")).count() == 6)
+        v["watches"].as_array().is_some_and(|a| a.iter().filter(|w| w["added_by"] == json!("the kernel")).count() == 7) // the five, the ground's, the key-check's (Phase 8 sp6)
     })
     .await;
     let kernels: Vec<&Value> = snap["watches"].as_array().unwrap().iter().filter(|w| w["added_by"] == json!("the kernel")).collect();
     let ground = kernels.iter().find(|w| w["metric"] == json!("ground_connections")).expect("the ground's watch stands");
     assert!(ground["op"] == json!(">=") && ground["red"] == json!(false) && ground["value"].as_i64().is_some_and(|n| n >= 1), "{ground}");
-    let five: Vec<&Value> = kernels.iter().copied().filter(|w| w["metric"] != json!("ground_connections")).collect();
+    let five: Vec<&Value> = kernels.iter().copied().filter(|w| w["metric"] != json!("ground_connections") && w["metric"] != json!("key_checks_failed")).collect();
     assert_eq!(five.len(), 5);
     assert!(five.iter().all(|w| w["red"] == json!(false) && w["value"].is_null() && w["op"] == json!("<")), "{five:?}");
     assert!(five.iter().any(|w| w["reads"].as_str().unwrap() == "red when trust < 1.0 · now unknown (nothing to measure yet) → green"), "{five:?}");

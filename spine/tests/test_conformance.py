@@ -444,6 +444,49 @@ def test_fixture(contract, case):
     elif kind == "ground_watch":                 # the kernel's sixth watch (watch-v0)
         from orreth_spine import operating as _op
         assert _op.ground_watch(inp["connections"]) == exp["watch"]
+    # ---- orreth.chips/1 (Phase 8 sp6): THE TWO CHIPS — the claims, the diff, the forms, the card's lines, the key-check ----
+    elif kind == "chip_claims":
+        from orreth_spine import chips as _ch
+        claims = _ch.lease_claims(inp["experiment"], inp["trial"], inp["standing_did"])
+        assert claims == exp["claims"] and _ch.claims_words(claims) == exp["words"]
+    elif kind == "chip_diff":
+        from orreth_spine import chips as _ch
+        d = _ch.capability_diff(inp["current"], inp["candidate"])
+        assert d == exp["diff"] and _ch.diff_words(d) == exp["words"]
+    elif kind == "chip_verdict":
+        from orreth_spine import chips as _ch
+        v, kept = _ch.verdict_of(inp["reviewer"], inp["text"])
+        assert v == exp["verdict"] and kept == exp["kept"]
+    elif kind == "chip_slot_words":
+        from orreth_spine import chips as _ch
+        assert _ch.slot_words(inp["reviewer"], inp["slot"]) == exp["words"]
+    elif kind == "chip_holds":
+        from orreth_spine import chips as _ch
+        assert _ch.chip_holds(inp["reviewers"]) == exp["holds"]
+    elif kind == "chip_form":
+        from orreth_spine import chips as _ch
+        assert _ch.review_form(inp["reviewer"]) == exp["form"]
+    elif kind == "keycheck_due":
+        from orreth_spine import chips as _ch
+        assert _ch.keycheck_due(inp["last_asked_s_ago"], inp["cadence"]) == exp["due"]
+    elif kind == "keycheck_payload":
+        from orreth_spine import chips as _ch
+        assert _ch.keycheck_payload(inp["did"], inp["nonce"]) == exp["payload"]
+    elif kind == "keycheck_verdict":
+        from orreth_spine import chips as _ch
+        assert _ch.keycheck_verdict(inp["did"], inp["nonce"], inp["answer"], inp["joined_as"], inp["waited_s"]) == exp["verdict"]
+    elif kind == "keycheck_watch":
+        from orreth_spine import chips as _ch
+        assert _ch.keycheck_watch(inp["failed"]) == exp["watch"]
+    elif kind == "keycheck_words":
+        from orreth_spine import chips as _ch
+        assert _ch.keycheck_words(inp["checked"], inp["failed"], inp["pending"], inp["cadence"]) == exp["words"]
+    elif kind == "refusals_words":
+        from orreth_spine import chips as _ch
+        assert _ch.refusals_words(inp["rows"], inp["name"]) == exp["words"]
+    elif kind == "seats_words":
+        from orreth_spine import chips as _ch
+        assert _ch.seats_words(inp["seats"]) == exp["words"]
     # ---- orreth.rails/1 (P7 sp2): the rails' NAMES and SHAPES the Rust ground and rails stand on ----
     elif kind == "rail_names":                   # queues wear the namespace, facts wear the world
         with _dials(SPINE_QUEUE_NS=inp["ns"], SPINE_SCOPE=inp["scope"]):

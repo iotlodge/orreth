@@ -80,5 +80,6 @@ def test_the_crew_door_answers_over_http_with_the_whole_rig(pg, rig):
                      "critic": "firmware", "grader": "firmware", "crew": "firmware", "stablekeeper": "firmware",
                      "monitor": "firmware",
                      "workshop": "firmware",  # Phase 8 sp3: the Workshop's agent, the third workspace seat
+                     "identity": "firmware", "security": "firmware",   # Phase 8 sp6: THE TWO CHIPS
                      "mitl": "firmware",      # P6 sp3: MITL, the fourth include, is born with the rig
                      "toolkeeper": "firmware"}   # P6.5 sp2: the Tools keeper, born with the rig

@@ -16,8 +16,9 @@ The evidence is the agent's GOLDEN SET (required — every engineered agent is b
 the shadow replay of recent real asks is optional and not built in v0). The reviewers come by
 the interest law: the GRADER and the CRITIC now — each asked by the kernel under the
 experiment's marker (the hull's EVENT edge) and each writing a SIGNED VERDICT under its own
-DID (rule 2: nothing grades its own yardstick); SECURITY and IDENTITY are honest empty slots
-named on the card until spoonful 6. Resiliency is the room's watches staying green. THE
+DID (rule 2: nothing grades its own yardstick); since spoonful 6 THE TWO CHIPS review beside them —
+IDENTITY the trial life's claims (who · what · where · left), SECURITY the candidate's diff against
+the standing version and the refusals ground (`chips.py`). Resiliency is the room's watches staying green. THE
 VERDICT IS A PROPOSAL. Promotion is the human's stamped act `experiment.promote` (L2 for an
 agent, L3 for a resident): the new version lands as a sibling on the shelf, the draft is
 spent, the agent's SEAT (where its next life stands — floor and room are fields of the
@@ -68,9 +69,8 @@ MARKER_KIND = "experiment"                    # the marker the arms and the revi
 STATES = ("running", "proposed", "promoted", "declined")
 ARMS = ("current", "candidate")
 LADDER = ("active", "rested", "decommissioned")
-REVIEWERS = ("grader", "critic", "security", "identity")
-EMPTY_SLOTS = {"security": "security — an honest empty slot until the security chip (spoonful 6)",
-               "identity": "identity — an honest empty slot until the identity chip (spoonful 6)"}
+REVIEWERS = ("grader", "critic", "security", "identity")      # Phase 8 sp6: all four are asked — the empty slots are filled
+CHIP_REVIEWERS = ("identity", "security")
 REVIEW_WAIT_S = 600                           # a reviewer silent this long is said, and the proposal stands without it
 GRADES = ("A", "B", "C", "D", "F")
 RISKS = ("low", "medium", "high")
@@ -124,12 +124,16 @@ def open_words(agent: str, room: str, current_version: int | None, golden_n: int
     from . import levels
     return (f"opening an experiment on the {agent} agent — {levels.words(room)} opens as an experiment room; "
             f"{arms_plan(current_version)}; the evidence is its golden set ({golden_n} case{'s' if golden_n != 1 else ''}); "
-            "the grader and the critic review under their own names; the verdict is a proposal and the promotion is yours")
+            "the grader, the critic, the identity chip and the security chip review under their own names; "
+            "the verdict is a proposal and the promotion is yours")
 
 
 def review_ask(reviewer: str, exp: dict) -> str:
-    """The kernel's ask of a reviewer (grader · critic), with the evidence IN the ask — the
-    arms' runs case by case — and the form the answer takes, so the verdict reads by law."""
+    """The kernel's ask of a reviewer (grader · critic · identity · security), with the evidence IN
+    the ask — the arms' runs case by case; for the chips the trial life's claims and the candidate's
+    diff the kernel read off its own record (`exp["claims"]` · `exp["diff"]` · `exp["refusals"]`,
+    packed by the beat) — and the form the answer takes, so the verdict reads by law."""
+    from . import chips
     arms = exp.get("arms") or {}
     lines = [f"{reviewer}, review experiment {exp['experiment_id']} on the {exp['agent']} agent "
              f"({arms_plan(exp.get('current_version'))}). The evidence, case by case:"]
@@ -145,7 +149,14 @@ def review_ask(reviewer: str, exp: dict) -> str:
         for i, d in enumerate(a.get("details") or [], 1):
             lines.append(f"  case {i}: asked {d.get('ask')!r}; expected {', '.join(map(str, d.get('expect') or []))}; "
                          f"replied {str(d.get('reply') or '')[:200]!r} — {'passed' if d.get('ok') else 'FAILED'}")
-    if reviewer == "grader":
+    if reviewer == "identity":
+        lines.append("THE TRIAL LIFE'S CLAIMS, from the kernel's record — " + chips.claims_words(exp.get("claims") or []))
+        lines.append(chips.review_form("identity"))
+    elif reviewer == "security":
+        lines.append("THE CANDIDATE'S DIFF against the standing version — " + chips.diff_words(exp.get("diff") or {"first": True}))
+        lines.append(chips.refusals_words(exp.get("refusals") or [], exp.get("agent")))
+        lines.append(chips.review_form("security"))
+    elif reviewer == "grader":
         lines.append("Answer in exactly this form, one line each: `current: <A-F> — <one line of reason>` (write "
                      "`current: none` when no current arm ran), `candidate: <A-F> — <one line>`, then "
                      "`verdict: candidate` or `verdict: current` or `verdict: neither`. Grade the replies against "
@@ -203,6 +214,7 @@ def leaning_of(exp: dict) -> str:
     """Where the evidence leans — promote · hold · unsure. A proposal, never an act."""
     arms = exp.get("arms") or {}
     cand, cur = arms.get("candidate") or {}, arms.get("current")
+    from . import chips
     rv = exp.get("reviewers") or {}
     g = (rv.get("grader") or {}).get("verdict") or {}
     risk = (rv.get("critic") or {}).get("risk")
@@ -210,6 +222,8 @@ def leaning_of(exp: dict) -> str:
     if cand.get("passed") is None:
         return "unsure"
     if int(cand.get("failed") or 0) > 0 or g.get("verdict") == "current" or risk == "high" or reds > 0:
+        return "hold"
+    if chips.chip_holds(rv):                      # Phase 8 sp6: broken claims or a security concern hold the promotion
         return "hold"
     if cur and not cur.get("skipped") and cur.get("passed") is not None and int(cand["passed"]) < int(cur["passed"]):
         return "hold"
@@ -219,8 +233,9 @@ def leaning_of(exp: dict) -> str:
 
 
 def proposal_words(exp: dict) -> str:
-    """THE PROPOSAL in plain words — the arms, every reviewer by name (the empty slots said as
-    such), resiliency, where it leans, and the two words the human may say."""
+    """THE PROPOSAL in plain words — the arms, every reviewer by name (a chip not seated or silent
+    said as such), resiliency, where it leans, and the two words the human may say."""
+    from . import chips
     arms = exp.get("arms") or {}
     rv = exp.get("reviewers") or {}
     bits = [arm_words("candidate", arms.get("candidate"), exp)]
@@ -244,8 +259,8 @@ def proposal_words(exp: dict) -> str:
         bits.append(f"the critic reads the risk as {c['risk']}" + (f": {c['line']}" if c.get("line") else ""))
     else:
         bits.append(f"the critic: {c.get('missing') or 'no review yet'}")
-    bits.append(EMPTY_SLOTS["security"])
-    bits.append(EMPTY_SLOTS["identity"])
+    bits.append(chips.slot_words("identity", rv.get("identity")))
+    bits.append(chips.slot_words("security", rv.get("security")))
     res = exp.get("resiliency") or {}
     reds = int(res.get("reds") or 0)
     bits.append("resiliency: no watch turned red while the arms ran" if reds == 0
@@ -365,9 +380,9 @@ def _fact(cur, type_: str, ref: str, payload: dict, by: list[str], marker: dict 
 def _row(r) -> dict:
     keys = ("experiment_id", "scope", "person", "draft_id", "agent", "template", "current_version", "candidate",
             "candidate_hash", "golden", "room", "state", "arms", "reviewers", "resiliency", "proposal", "leaning",
-            "ask", "marker", "opened_at", "proposed_at", "settled_at", "settled_by", "at_path")
+            "ask", "marker", "opened_at", "proposed_at", "settled_at", "settled_by", "at_path", "claims", "diff")
     d = dict(zip(keys, r))
-    for k in ("candidate", "arms", "reviewers", "resiliency"):
+    for k in ("candidate", "arms", "reviewers", "resiliency", "claims", "diff"):
         d[k] = json.loads(d[k]) if d[k] else None
     for k in ("opened_at", "proposed_at", "settled_at"):
         d[k] = d[k].isoformat() if d[k] else None
@@ -376,7 +391,7 @@ def _row(r) -> dict:
 
 _COLS = ("experiment_id, scope, person, draft_id, agent, template, current_version, candidate, candidate_hash,"
          " golden, room, state, arms, reviewers, resiliency, proposal, leaning, ask, marker, opened_at, proposed_at,"
-         " settled_at, settled_by, at_path")
+         " settled_at, settled_by, at_path, claims, diff")      # claims · diff: Phase 8 sp6, the chips' evidence (chips.DDL adds them)
 
 
 def get(conn, experiment_id: str) -> dict | None:
@@ -504,8 +519,7 @@ def open_in(conn, args: dict, by: str, ask: str | None = None, marker: str | Non
     arms = {"candidate": {"hash": services.pin(c["draft"]["body"]), "run_id": None, "passed": None, "failed": None, "details": None},
             "current": ({"version": c["current_version"], "run_id": None, "passed": None, "failed": None, "details": None}
                         if c["current_version"] else None)}
-    reviewers = {"grader": {"ask_id": None}, "critic": {"ask_id": None},
-                 "security": {"missing": EMPTY_SLOTS["security"]}, "identity": {"missing": EMPTY_SLOTS["identity"]}}
+    reviewers = {who: {"ask_id": None} for who in REVIEWERS}        # Phase 8 sp6: four reviewers, no empty slot
     cur.execute(
         "INSERT INTO spine_experiments (experiment_id, scope, person, draft_id, agent, template, current_version,"
         " candidate, candidate_hash, golden, room, state, arms, reviewers, ask, marker)"
@@ -628,9 +642,14 @@ def beat(conn, *, spawn_trial=None, publish=None) -> list[str]:
                 moved.append(f"{exp['experiment_id']}: the current ran — {r['passed']} passed, {r['failed']} failed")
             else:
                 continue
-        # 3. the reviewers, under the experiment's marker (the hull's EVENT edge)
+        # 3. the reviewers, under the experiment's marker (the hull's EVENT edge) — Phase 8 sp6: all four; the chips'
+        # evidence (the trial life's claims · the candidate's diff · the refusals ground) read off the kernel's record now
         asked_now = False
-        for who in ("grader", "critic"):
+        from . import chips
+        exp["claims"] = chips.claims_for(conn, exp)
+        exp["diff"] = chips.diff_for(conn, exp)
+        exp["refusals"] = chips.refusals_for(conn, exp["agent"])
+        for who in REVIEWERS:
             slot = rv.get(who) or {}
             if slot.get("ask_id") is None and not slot.get("missing"):
                 if dispatch.absent(conn, who):
@@ -643,14 +662,15 @@ def beat(conn, *, spawn_trial=None, publish=None) -> list[str]:
                     asked_now = True
                 rv[who] = slot
         if asked_now:
-            _update(conn, exp["experiment_id"], reviewers=rv)
-            moved.append(f"{exp['experiment_id']}: the grader and the critic were asked")
+            _update(conn, exp["experiment_id"], reviewers=rv, claims=exp["claims"], diff=exp["diff"])
+            asked = [w for w in REVIEWERS if rv[w].get("ask_id")]
+            moved.append(f"{exp['experiment_id']}: the reviewers were asked — " + ", ".join(asked))
             continue
         # 4. the verdicts as they land (written by the reviewers themselves, signed)
         done = True
-        for who in ("grader", "critic"):
+        for who in REVIEWERS:
             slot = rv[who]
-            if slot.get("missing") or slot.get("verdict") or slot.get("risk"):
+            if slot.get("missing") or slot.get("verdict") or slot.get("risk") or slot.get("identity") or slot.get("security"):
                 continue
             cur = conn.cursor()
             cur.execute("SELECT verdict, words, sig, by_did FROM spine_verdicts WHERE experiment_id = %s AND reviewer = %s"
@@ -660,8 +680,11 @@ def beat(conn, *, spawn_trial=None, publish=None) -> list[str]:
                 v = json.loads(vr[0])
                 if who == "grader":
                     slot["verdict"] = v
-                else:
+                elif who == "critic":
                     slot["risk"] = v.get("risk") or "unsaid"
+                    slot["line"] = v.get("line")
+                else:                                     # Phase 8 sp6: a chip's word — identity: kept|broken · security: clear|concern
+                    slot[who] = v.get(who) or "unsaid"
                     slot["line"] = v.get("line")
                 slot["words"], slot["signed"], slot["by"] = vr[1], bool(vr[2]), vr[3]
                 continue

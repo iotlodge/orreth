@@ -53,7 +53,10 @@ METRICS = ("outbox_pending", "oldest_outbox_age_s", "asks_received",
            "trust", "recall", "efficiency", "experience", "cost",
            # THE GROUND CONNECTIONS CURE (2026-10-08): the lines the ground holds right now — every kernel's, every
            # body's, every person's — so a watch sees the ground filling BEFORE Postgres refuses the next one
-           "ground_connections")
+           "ground_connections",
+           # Phase 8 sp6: THE TWO CHIPS — the key-checks of the last day a seated body FAILED (silent, a signature that does
+           # not stand, a hash that is not the join's): the identity chip's cadence, watched
+           "key_checks_failed")
 OPS = {"<=": lambda v, t: v <= t, ">=": lambda v, t: v >= t,
        "<": lambda v, t: v < t, ">": lambda v, t: v > t, "==": lambda v, t: v == t}
 
@@ -293,6 +296,9 @@ def snapshot(conn, *, rails: bool = True) -> dict:
     values.update({k: v["value"] for k, v in measurements.items()})
     ground_view = ground_card(conn, len(alive))       # the cure (2026-10-08): the ground's lines and its budget
     values["ground_connections"] = ground_view["connections"]
+    from . import chips                           # Phase 8 sp6: THE KEY-CHECK — the failed proofs of the day, watchable
+    keychecks = chips.keycheck_tally(conn)
+    values["key_checks_failed"] = keychecks["failed"]
     stable_view = _stable(conn)
     cur.execute("SELECT watch_id, name, metric, op, threshold, added_by, last_ok, since"
                 " FROM spine_watches WHERE scope = %s AND active ORDER BY added_at", (ev.universe(),))  # sp2: the active alone
@@ -332,6 +338,8 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "doors": doors_read,                          # panel sp3: per-door p50 · p95 · max over the window
         "pool": None,                                 # panel sp3: the reference has no pool — a connection per knock, said plainly
         "ground": ground_view,                        # the cure (2026-10-08): connections now · ceiling · reserve · per_body · seats · seated
+        "keychecks": {**keychecks, "words": chips.keycheck_words(keychecks["checked"], keychecks["failed"], keychecks["pending"],
+                                                                 keychecks["cadence"])},   # Phase 8 sp6: the key-check's card
         "parked": parked,                             # re-base sp1: the poison events held at, newest first
     }
 

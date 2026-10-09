@@ -612,6 +612,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         tasks.push(tokio::spawn(async move {
             let mut next_grade = tokio::time::Instant::now() + Duration::from_secs(20);
             let mut next_prune = tokio::time::Instant::now() + Duration::from_secs(60);
+            let mut next_keycheck = tokio::time::Instant::now() + Duration::from_secs(15); // Phase 8 sp6: THE KEY-CHECK BEAT
             while !stop.load(Ordering::Relaxed) {
                 match beats.borrow().await {
                     Ok(mut g) => {
@@ -661,6 +662,29 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                                     Ok(false) => {}
                                     Err(e) => {
                                         eprintln!("the grade beat could not be claimed: {e}");
+                                        break;
+                                    }
+                                }
+                            }
+                            if now >= next_keycheck {
+                                // Phase 8 sp6: THE KEY-CHECK BEAT under `keycheck` — every seated body asked on the cadence to prove
+                                // who and what it is; the proofs verified; the cadence is the dial's (SPINE_KEYCHECK_S, 0 = off)
+                                next_keycheck = now + Duration::from_secs(crate::chips::KEYCHECK_EVERY_S);
+                                match crate::beat::try_beat(&g, &w.scope, "keycheck").await {
+                                    Ok(true) => {
+                                        match crate::chips_live::beat(&mut g, &w, true).await {
+                                            Ok(moved) => {
+                                                for m in moved {
+                                                    eprintln!("  [keycheck] {m}");
+                                                }
+                                            }
+                                            Err(e) => eprintln!("the key-check beat stumbled: {e}"),
+                                        }
+                                        let _ = crate::beat::end_beat(&g, &w.scope, "keycheck").await;
+                                    }
+                                    Ok(false) => {}
+                                    Err(e) => {
+                                        eprintln!("the key-check beat could not be claimed: {e}");
                                         break;
                                     }
                                 }
@@ -767,6 +791,11 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                                                         eprintln!("  [operating] the kernel watches {n} >= {} (the ground's ceiling {} less its reserve {}; {} seats)",
                                                                   c.ceiling - c.reserve, c.ceiling, c.reserve, c.seats);
                                                     }
+                                                    continue;
+                                                }
+                                                if n == crate::chips::KEYCHECK_WATCH {
+                                                    // Phase 8 sp6: the key-check's watch, in its own words
+                                                    eprintln!("  [operating] the kernel watches {n} > 0 (a seated body that could not prove who and what it is; the cadence is {} s)", crate::chips::cadence_s());
                                                     continue;
                                                 }
                                                 eprintln!("  [operating] the kernel watches {n} < {} (unknown turns nothing red)", crate::operating::TARGET);
@@ -952,6 +981,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/experiments/decline", post(experiments_post)) // the human's no — routine, recorded
         .route("/seats", get(seats_door)) // the promoted agents' seats — where each stands and its rung
         .route("/measurements", get(measurements_door)) // Phase 8 sp5: THE OPERATING STATE — the five, measured live
+        .route("/keychecks", get(keychecks_door)) // Phase 8 sp6: THE KEY-CHECK — every seated body's proofs, newest first, and the tally
         .route("/includes", get(includes_door)) // the session's crew: the four, and the summoned
         .route("/feedback", post(feedback_post)) // a thumb on a reply — routine, recorded
         .route("/summon", post(summon_post)) // summon generalized — a summonable body into the session's crew
@@ -2591,7 +2621,7 @@ async fn experiments_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<S
         Ok((200, json!({"experiments": crate::experiments_live::listing(g.client(), sc, agent, state).await?,
                         "seats": crate::experiments_live::seats(g.client(), sc, None).await?,
                         "reviewers": crate::experiments::REVIEWERS,
-                        "empty_slots": {"security": crate::experiments::EMPTY_SECURITY, "identity": crate::experiments::EMPTY_IDENTITY}})))
+                        "empty_slots": {}}))) // Phase 8 sp6: no slot stands empty — the chips review
     }
     .await;
     match out {
@@ -2601,6 +2631,19 @@ async fn experiments_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<S
 }
 
 /// `GET /measurements` — Phase 8 sp5: THE OPERATING STATE's five, measured live.
+/// `GET /keychecks` — Phase 8 sp6: THE KEY-CHECK — the proofs the kernel asked of its seated bodies, the tally, the line.
+async fn keychecks_door(State(app): State<Arc<App>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        crate::chips_live::card(g.client(), scope(&app)).await
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
 async fn measurements_door(State(app): State<Arc<App>>) -> Response {
     let out = async {
         let g = ground(&app).await?;

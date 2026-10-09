@@ -5,15 +5,15 @@
  "generated_at": "2026-10-08",
  "cases": [
   {
-   "name": "schema_version: both kernels carry the same number - 8: THE OPERATING STATE (spine_feedback, spine_includes, spine_grading; the meter's ask; a verdict on a live reply; an intention's watches; Phase 8 sp5, 2026-10-08), after 7: the experiments, 6: the wear table and the draft shelf, 5: the levels, 4: an ask's resent_at (W91), 3: a watch's rest and a peer's forgetting, 2: the indexes; bumped together whenever any DDL statement changes",
+   "name": "schema_version: both kernels carry the same number - 9: THE TWO CHIPS (spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row; Phase 8 sp6, 2026-10-09), after 8: THE OPERATING STATE, 7: the experiments, 6: the wear table and the draft shelf, 5: the levels, 4: an ask's resent_at (W91), 3: a watch's rest and a peer's forgetting, 2: the indexes; bumped together whenever any DDL statement changes",
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 8
+    "version": 9
    }
   },
   {
-   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 49 tables at schema 8 (spine_feedback, spine_includes and spine_grading join at Phase 8 sp5)",
+   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 50 tables at schema 9 (spine_keychecks joins at Phase 8 sp6)",
    "kind": "schema_tables",
    "input": {},
    "expect": {
@@ -35,6 +35,7 @@
      "spine_intent_turns",
      "spine_intentions",
      "spine_joins",
+     "spine_keychecks",
      "spine_leases",
      "spine_levels",
      "spine_marker_kinds",
@@ -68,7 +69,7 @@
      "spine_wear",
      "spine_world"
     ],
-    "count": 49
+    "count": 50
    }
   }
  ]

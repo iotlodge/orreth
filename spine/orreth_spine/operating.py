@@ -258,9 +258,10 @@ def ground_watch(connections: dict) -> dict:
 
 def watches_at_light(conn) -> list[str]:
     """The kernel's watches, once per world: the five `trust < 1.0` … — red when a measurement
-    falls below the ideal; an unknown turns none red — and the ground's (`ground_connections >=
-    ceiling − reserve`, the cure). Returns the names declared now."""
-    from . import monitor, placement
+    falls below the ideal; an unknown turns none red — the ground's (`ground_connections >=
+    ceiling − reserve`, the cure) and the key-check's (`key_checks_failed > 0`, THE TWO CHIPS:
+    a seated body that could not prove who and what it is). Returns the names declared now."""
+    from . import chips, monitor, placement
     monitor.ensure_schema(conn)
     cur = conn.cursor()
     cur.execute("SELECT name FROM spine_watches WHERE scope = %s AND added_by = %s", (ev.universe(), KERNEL))
@@ -276,6 +277,10 @@ def watches_at_light(conn) -> list[str]:
         w = ground_watch(placement.connections_declared(conn=conn))
         monitor.add_watch(conn, w["name"], w["metric"], w["op"], w["threshold"], KERNEL)
         made.append(GROUND_WATCH)
+    if chips.KEYCHECK_WATCH not in have:          # Phase 8 sp6: the kernel's SEVENTH watch — the identity chip's cadence
+        w = chips.keycheck_watch(None)
+        monitor.add_watch(conn, chips.KEYCHECK_WATCH, w["metric"], w["op"], float(w["threshold"]), KERNEL)
+        made.append(chips.KEYCHECK_WATCH)
     return made
 
 
@@ -394,7 +399,8 @@ def grade_beat(conn, *, limit: int = GRADE_PER_BEAT) -> list[str]:
         return []
     u = ev.universe()
     cur = conn.cursor()
-    cur.execute("SELECT DISTINCT did FROM spine_joins WHERE name IN ('grader', 'critic') AND (scope = %s OR scope LIKE %s || '/%%')", (u, u))
+    cur.execute("SELECT DISTINCT did FROM spine_joins WHERE name IN ('grader', 'critic', 'identity', 'security')"
+                " AND (scope = %s OR scope LIKE %s || '/%%')", (u, u))   # Phase 8 sp6: a chip's verdict is never graded either
     reviewers = [r[0] for r in cur.fetchall()] or ["-"]
     cur.execute(
         "SELECT a.ask_id, a.person, a.text, a.reply, coalesce(j.name, 'a body'), a.marker FROM spine_asks a"

@@ -97,6 +97,11 @@ required-features = ["bridge"]
 name = "connections"
 required-features = ["bridge"]
 
+# Phase 8 sp6, THE TWO CHIPS: the key-check live — a real crew body proving who and what it is over the rail; the chips seated.
+[[test]]
+name = "chips"
+required-features = ["bridge"]
+
 # re-base sp2 (2026-09-29): the kernel's binary is `orrethd` — the old `orrethd` crate retired, the name re-based here.
 [[bin]]
 name = "orrethd"

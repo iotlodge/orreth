@@ -1,7 +1,7 @@
 {
  "contract": "orreth.experiments/1",
  "version": 0,
- "generated_by": "orreth_spine.experiments (the Python reference) - rearch Phase 8 sp4, THE EXPERIMENT AND THE CUT: the room's name, the arms in words, the opening's words, the reviewers' form (a grade per arm and a side; a risk), the proposal's leaning and words, the promotion's demand by class, the decom ladder and its words, where a next life stands, the prune beat's words",
+ "generated_by": "orreth_spine.experiments (the Python reference) - rearch Phase 8 sp4, THE EXPERIMENT AND THE CUT: the room's name, the arms in words, the opening's words, the reviewers' form (a grade per arm and a side; a risk), the proposal's leaning and words, the promotion's demand by class, the decom ladder and its words, where a next life stands, the prune beat's words; Phase 8 sp6: the chips' lines on the card, their holds",
  "generated_at": "2026-10-07",
  "cases": [
   {
@@ -77,7 +77,7 @@
     "golden_n": 2
    },
    "expect": {
-    "words": "opening an experiment on the bob agent \u2014 room exp-bob-1 on floor ops of universe dev opens as an experiment room; one arm \u2014 the candidate alone; no version of it stands on the shelf yet; the evidence is its golden set (2 cases); the grader and the critic review under their own names; the verdict is a proposal and the promotion is yours"
+    "words": "opening an experiment on the bob agent \u2014 room exp-bob-1 on floor ops of universe dev opens as an experiment room; one arm \u2014 the candidate alone; no version of it stands on the shelf yet; the evidence is its golden set (2 cases); the grader, the critic, the identity chip and the security chip review under their own names; the verdict is a proposal and the promotion is yours"
    }
   },
   {
@@ -90,7 +90,7 @@
     "golden_n": 1
    },
    "expect": {
-    "words": "opening an experiment on the bob agent \u2014 room exp-bob-2 on floor ops of universe dev opens as an experiment room; two arms \u2014 the standing version 1 and the candidate; the evidence is its golden set (1 case); the grader and the critic review under their own names; the verdict is a proposal and the promotion is yours"
+    "words": "opening an experiment on the bob agent \u2014 room exp-bob-2 on floor ops of universe dev opens as an experiment room; two arms \u2014 the standing version 1 and the candidate; the evidence is its golden set (1 case); the grader, the critic, the identity chip and the security chip review under their own names; the verdict is a proposal and the promotion is yours"
    }
   },
   {
@@ -280,7 +280,7 @@
     }
    },
    "expect": {
-    "words": "THE EXPERIMENT on bob proposes: the candidate passed 3 of 3 \u00b7 the standing version 1 passed 2 of 3 \u00b7 the grader (signed) grades the candidate A and the current B and names candidate \u00b7 the critic reads the risk as low: one node \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence leans to promote. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 3 of 3 \u00b7 the standing version 1 passed 2 of 3 \u00b7 the grader (signed) grades the candidate A and the current B and names candidate \u00b7 the critic reads the risk as low: one node \u00b7 the identity chip: no verdict yet \u00b7 the security chip: no review yet \u00b7 resiliency: no watch turned red while the arms ran. the evidence leans to promote. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
    }
   },
   {
@@ -342,7 +342,7 @@
     }
    },
    "expect": {
-    "words": "THE EXPERIMENT on bob proposes: the candidate passed 1 of 1 \u00b7 no current arm \u2014 the first version \u00b7 the grader: the grader is not seated here \u2014 no verdict \u00b7 the critic: the critic is not seated here \u2014 no verdict \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence is unsure \u2014 read the arms yourself. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 1 of 1 \u00b7 no current arm \u2014 the first version \u00b7 the grader: the grader is not seated here \u2014 no verdict \u00b7 the critic: the critic is not seated here \u2014 no verdict \u00b7 the identity chip: no verdict yet \u00b7 the security chip: no review yet \u00b7 resiliency: no watch turned red while the arms ran. the evidence is unsure \u2014 read the arms yourself. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
    }
   },
   {
@@ -420,7 +420,7 @@
     }
    },
    "expect": {
-    "words": "THE EXPERIMENT on bob proposes: the candidate passed 2 of 3 \u00b7 current: no standing life was serving \u2014 the current arm is empty \u00b7 the grader (signed) grades the candidate C and names neither \u00b7 the critic reads the risk as high: it drops the covenant node \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: 2 watches turned red while the arms ran. the evidence says hold \u2014 fix the draft and cut again, or promote on your own judgement. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 2 of 3 \u00b7 current: no standing life was serving \u2014 the current arm is empty \u00b7 the grader (signed) grades the candidate C and names neither \u00b7 the critic reads the risk as high: it drops the covenant node \u00b7 the identity chip: no verdict yet \u00b7 the security chip: no review yet \u00b7 resiliency: 2 watches turned red while the arms ran. the evidence says hold \u2014 fix the draft and cut again, or promote on your own judgement. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
    }
   },
   {
@@ -498,7 +498,7 @@
     }
    },
    "expect": {
-    "words": "THE EXPERIMENT on bob proposes: the candidate passed 2 of 2 \u00b7 the standing version 1 passed 3 of 3 \u00b7 the grader (unsigned) grades the candidate B and the current A and names current \u00b7 the critic reads the risk as low \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence says hold \u2014 fix the draft and cut again, or promote on your own judgement. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 2 of 2 \u00b7 the standing version 1 passed 3 of 3 \u00b7 the grader (unsigned) grades the candidate B and the current A and names current \u00b7 the critic reads the risk as low \u00b7 the identity chip: no verdict yet \u00b7 the security chip: no review yet \u00b7 resiliency: no watch turned red while the arms ran. the evidence says hold \u2014 fix the draft and cut again, or promote on your own judgement. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
    }
   },
   {
@@ -542,7 +542,7 @@
     }
    },
    "expect": {
-    "words": "THE EXPERIMENT on bob proposes: candidate: running \u00b7 no current arm \u2014 the first version \u00b7 the grader: no verdict yet \u00b7 the critic: no review yet \u00b7 security \u2014 an honest empty slot until the security chip (spoonful 6) \u00b7 identity \u2014 an honest empty slot until the identity chip (spoonful 6) \u00b7 resiliency: no watch turned red while the arms ran. the evidence is unsure \u2014 read the arms yourself. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+    "words": "THE EXPERIMENT on bob proposes: candidate: running \u00b7 no current arm \u2014 the first version \u00b7 the grader: no verdict yet \u00b7 the critic: no review yet \u00b7 the identity chip: no verdict yet \u00b7 the security chip: no review yet \u00b7 resiliency: no watch turned red while the arms ran. the evidence is unsure \u2014 read the arms yourself. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
    }
   },
   {
@@ -1022,6 +1022,150 @@
    },
    "expect": {
     "words": "pruned by the beat \u2014 worn by no body since bob was decommissioned"
+   }
+  },
+  {
+   "name": "exp_proposal_words: case 6 \u2014 the two chips on the card (Phase 8 sp6)",
+   "kind": "exp_proposal_words",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 3,
+       "failed": 0
+      },
+      "current": {
+       "passed": 2,
+       "failed": 1
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "B",
+        "candidate": "A",
+        "verdict": "candidate"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "low",
+       "line": "one node"
+      },
+      "identity": {
+       "identity": "kept",
+       "line": "the same self"
+      },
+      "security": {
+       "security": "clear",
+       "line": "nothing widened"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "words": "THE EXPERIMENT on bob proposes: the candidate passed 3 of 3 \u00b7 the standing version 1 passed 2 of 3 \u00b7 the grader (signed) grades the candidate A and the current B and names candidate \u00b7 the critic reads the risk as low: one node \u00b7 the identity chip finds the trial life's claims kept: the same self \u00b7 the security chip reads the candidate as clear: nothing widened \u00b7 resiliency: no watch turned red while the arms ran. the evidence leans to promote. The verdict is a proposal: say \u201cpromote bob\u201d (or \u201cpromote bob to floor <name>\u201d) \u2014 or \u201cdecline the bob experiment\u201d."
+   }
+  },
+  {
+   "name": "exp_leaning: case 6 \u2014 a security concern holds (Phase 8 sp6)",
+   "kind": "exp_leaning",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 3,
+       "failed": 0
+      },
+      "current": {
+       "passed": 2,
+       "failed": 1
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "B",
+        "candidate": "A",
+        "verdict": "candidate"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "low",
+       "line": "one node"
+      },
+      "identity": {
+       "identity": "kept",
+       "line": "the same self"
+      },
+      "security": {
+       "security": "concern",
+       "line": "a tool widened"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "leaning": "hold"
+   }
+  },
+  {
+   "name": "exp_leaning: case 7 \u2014 broken claims hold (Phase 8 sp6)",
+   "kind": "exp_leaning",
+   "input": {
+    "experiment": {
+     "agent": "bob",
+     "current_version": 1,
+     "arms": {
+      "candidate": {
+       "passed": 3,
+       "failed": 0
+      },
+      "current": {
+       "passed": 2,
+       "failed": 1
+      }
+     },
+     "reviewers": {
+      "grader": {
+       "verdict": {
+        "current": "B",
+        "candidate": "A",
+        "verdict": "candidate"
+       },
+       "signed": true
+      },
+      "critic": {
+       "risk": "low",
+       "line": "one node"
+      },
+      "identity": {
+       "identity": "broken",
+       "line": "another self"
+      },
+      "security": {
+       "security": "clear",
+       "line": "nothing widened"
+      }
+     },
+     "resiliency": {
+      "reds": 0
+     }
+    }
+   },
+   "expect": {
+    "leaning": "hold"
    }
   }
  ]

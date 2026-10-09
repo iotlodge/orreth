@@ -56,6 +56,7 @@ from . import body as _body, desk, levers as _levers, rails, stable as _stable, 
 from . import doors as _doors                                                          # panel sp3: THE CLOCK at every door
 from . import projector as _projector                                                  # re-base sp1: the parked, the advance
 from . import experiments as _xp                                                       # Phase 8 sp4: THE EXPERIMENT AND THE CUT
+from . import chips as _chips                                                          # Phase 8 sp6: THE TWO CHIPS — the key-check
 from . import operating as _op                                                         # Phase 8 sp5: THE OPERATING STATE
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
@@ -91,7 +92,9 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                _xp.EXPERIMENT_OPENED, _xp.EXPERIMENT_PROPOSED, _xp.EXPERIMENT_SETTLED, _xp.VERDICT,
                _xp.BODY_RESTED, _xp.BODY_DECOMMISSIONED, _xp.BODY_RESTORED,
                # Phase 8 sp5: THE OPERATING STATE — a thumb given, a body summoned · dismissed, a draft proposed
-               _op.FEEDBACK_GIVEN, _op.INCLUDE_SUMMONED, _op.INCLUDE_DISMISSED, _op.DRAFT_PROPOSED]
+               _op.FEEDBACK_GIVEN, _op.INCLUDE_SUMMONED, _op.INCLUDE_DISMISSED, _op.DRAFT_PROPOSED,
+               # Phase 8 sp6: THE TWO CHIPS — a body challenged to prove who and what it is · the kernel's verdict on its proof
+               _chips.KEYCHECK_ASKED, _chips.KEYCHECK_VERDICT]
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -804,7 +807,12 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(200, {"experiments": _xp.listing(conn, agent=str(qs.get("agent") or "") or None,
                                                                        state=str(qs.get("state") or "") or None),
                                             "seats": _xp.seats(conn), "reviewers": list(_xp.REVIEWERS),
-                                            "empty_slots": _xp.EMPTY_SLOTS})
+                                            "empty_slots": {}})       # Phase 8 sp6: no slot stands empty — the chips review
+            if path == "/keychecks":                     # Phase 8 sp6: THE KEY-CHECK — every seated body's proofs, newest first, and the tally
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    t = _chips.keycheck_tally(conn)
+                    return self._json(200, {"keychecks": _chips.listing(conn), "tally": t,
+                                            "words": _chips.keycheck_words(t["checked"], t["failed"], t["pending"], t["cadence"])})
             if path == "/measurements":                  # Phase 8 sp5: THE OPERATING STATE — the five, measured live
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"measurements": _op.measure(conn), "target": _op.TARGET,
@@ -1491,6 +1499,7 @@ class BridgeRig:
             next_bench = time.monotonic() + 30                # W91 THE BENCH SWEEP: every 30 s, one kernel
             next_crafts = time.monotonic() + 60               # Phase 8 sp4 THE PRUNE BEAT: the first sweep a minute in, then hourly
             next_grade = time.monotonic() + 20                # Phase 8 sp5 THE GRADE BEAT: twenty seconds in, then every minute
+            next_keycheck = time.monotonic() + 15             # Phase 8 sp6 THE KEY-CHECK BEAT: fifteen seconds in, then every ten (the cadence is the dial's)
             self._sign_in("schedule")
             while not self._stop.is_set():
                 if self._yielding("schedule"):
@@ -1541,6 +1550,15 @@ class BridgeRig:
                                     print(f"  [grade] {w}", file=sys.stderr, flush=True)
                     except Exception as e:            # noqa: BLE001
                         print(f"the grade beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
+                if time.monotonic() >= next_keycheck: # Phase 8 sp6: THE KEY-CHECK BEAT — every seated body asked on the cadence to prove itself
+                    next_keycheck = time.monotonic() + 10
+                    try:
+                        with ground.beat(conn, "keycheck") as ours:
+                            if ours:
+                                for w in _chips.beat(conn, publish=dispatch.publish_command):
+                                    print(f"  [keycheck] {w}", file=sys.stderr, flush=True)
+                    except Exception as e:            # noqa: BLE001
+                        print(f"the key-check beat stumbled: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
                 if time.monotonic() >= next_crafts:   # Phase 8 sp4: THE PRUNE BEAT — hourly, the crafts nobody wears retired
                     next_crafts = time.monotonic() + _xp.PRUNE_EVERY_S
                     try:

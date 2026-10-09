@@ -113,4 +113,9 @@ and a cloud element extends the chip rather than the kernel. Fixture `identity-v
 identity layer this seed already names. **Amended 2026-10-05 (`../0010` lock
 8): v0 of the `identity` chip lands in Phase 8 sp6 as a reviewer at the
 Experiment gate (the ceremony and the seats · a candidate's lease claims · the
-key-check cadence); the cloud identity layer still follows.**
+key-check cadence); the cloud identity layer still follows.** **BUILT 2026-10-09
+(Phase 8 sp6): `templates/firmware-identity.v0.json` on the crew; the chip's
+recall holds the seats; it judges the trial life's claims at the gate; THE
+KEY-CHECK runs on `SPINE_KEYCHECK_S` (`chips.py` · `chips_live.rs`). The
+cloud identity layer, the opaque DID, step-up at grave acts and the
+device-bound seat stay this seed's rows 2 and 3.**

@@ -26,13 +26,27 @@
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, desk, doors, envelope, export, intent,
     kernel_self, levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services,
-    stable, tools, watch, levels, crafts, experiments, operating};
+    stable, tools, watch, levels, crafts, experiments, operating, chips};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 /// The kinds this crate has ported — one explicit list, so the report is honest.
 const PORTED_KINDS: &[&str] = &[
+    // Phase 8 sp6: THE TWO CHIPS (chips-v0)
+    "chip_claims",
+    "chip_diff",
+    "chip_verdict",
+    "chip_slot_words",
+    "chip_holds",
+    "chip_form",
+    "keycheck_due",
+    "keycheck_payload",
+    "keycheck_verdict",
+    "keycheck_watch",
+    "keycheck_words",
+    "refusals_words",
+    "seats_words",
     // Phase 8 sp5: THE OPERATING STATE
     "op_ratio",
     "op_latency_class",
@@ -884,6 +898,40 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
         ),
         "exp_grade" => same!(experiments::grade_of(s(&inp["text"])), exp["verdict"], "the verdict"),
         "exp_risk" => same!(json!(experiments::risk_of(s(&inp["text"]))), exp["risk"], "the risk"),
+        // ---- orreth.chips/1 (Phase 8 sp6): THE TWO CHIPS — the claims, the diff, the forms, the card's lines, the key-check ----
+        "chip_claims" => {
+            let claims = chips::lease_claims(&inp["experiment"], &inp["trial"], inp["standing_did"].as_str());
+            same!(claims, exp["claims"], "the claims");
+            same!(chips::claims_words(&claims), s(&exp["words"]), "the words");
+        }
+        "chip_diff" => {
+            let d = chips::capability_diff(&inp["current"], &inp["candidate"]);
+            same!(d, exp["diff"], "the diff");
+            same!(chips::diff_words(&d), s(&exp["words"]), "the words");
+        }
+        "chip_verdict" => {
+            let (v, kept) = chips::verdict_of(s(&inp["reviewer"]), s(&inp["text"]));
+            same!(v, exp["verdict"], "the verdict");
+            same!(kept, exp["kept"].as_bool().unwrap(), "kept");
+        }
+        "chip_slot_words" => same!(chips::slot_words(s(&inp["reviewer"]), &inp["slot"]), s(&exp["words"]), "the words"),
+        "chip_holds" => same!(json!(chips::chip_holds(&inp["reviewers"])), exp["holds"], "the holds"),
+        "chip_form" => same!(chips::review_form(s(&inp["reviewer"])), s(&exp["form"]), "the form"),
+        "keycheck_due" => same!(chips::keycheck_due(inp["last_asked_s_ago"].as_f64(), inp["cadence"].as_i64().unwrap()), exp["due"].as_bool().unwrap(), "due"),
+        "keycheck_payload" => same!(chips::keycheck_payload(s(&inp["did"]), s(&inp["nonce"])), exp["payload"], "the payload"),
+        "keycheck_verdict" => same!(
+            chips::keycheck_verdict(s(&inp["did"]), s(&inp["nonce"]), &inp["answer"], inp["joined_as"].as_str(), inp["waited_s"].as_f64().unwrap()),
+            exp["verdict"],
+            "the verdict"
+        ),
+        "keycheck_watch" => same!(chips::keycheck_watch(inp["failed"].as_i64()), exp["watch"], "the watch"),
+        "keycheck_words" => same!(
+            chips::keycheck_words(inp["checked"].as_i64().unwrap(), inp["failed"].as_i64().unwrap(), inp["pending"].as_i64().unwrap(), inp["cadence"].as_i64().unwrap()),
+            s(&exp["words"]),
+            "the words"
+        ),
+        "refusals_words" => same!(chips::refusals_words(&inp["rows"], inp["name"].as_str()), s(&exp["words"]), "the words"),
+        "seats_words" => same!(chips::seats_words(&inp["seats"]), s(&exp["words"]), "the words"),
         "exp_leaning" => same!(experiments::leaning_of(&inp["experiment"]), s(&exp["leaning"]), "the leaning"),
         "exp_proposal_words" => same!(experiments::proposal_words(&inp["experiment"]), s(&exp["words"]), "the words"),
         "exp_arm_words" => same!(

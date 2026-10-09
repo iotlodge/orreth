@@ -133,6 +133,12 @@ pub async fn watches_at_light(g: &Ground, scope: &str) -> Result<Vec<String>, Ro
         crate::monitor::add_watch(g, scope, operating::GROUND_WATCH, operating::GROUND_WATCH, ">=", w["threshold"].as_f64().unwrap_or(70.0), KERNEL).await?;
         made.push(operating::GROUND_WATCH.to_string());
     }
+    if !have.iter().any(|h| h == crate::chips::KEYCHECK_WATCH) {
+        // Phase 8 sp6: the kernel's SEVENTH watch — a seated body that could not prove who and what it is
+        let w = crate::chips::keycheck_watch(None);
+        crate::monitor::add_watch(g, scope, crate::chips::KEYCHECK_WATCH, crate::chips::KEYCHECK_WATCH, ">", w["threshold"].as_f64().unwrap_or(0.0), KERNEL).await?;
+        made.push(crate::chips::KEYCHECK_WATCH.to_string());
+    }
     Ok(made)
 }
 
@@ -293,7 +299,7 @@ pub async fn grade_beat(g: &mut Ground, w: &World) -> Result<Vec<String>, RoadEr
     let mut reviewers: Vec<String> = g
         .client()
         .query(
-            "SELECT DISTINCT did FROM spine_joins WHERE name IN ('grader', 'critic') AND (scope = $1 OR scope LIKE $1 || '/%')",
+            "SELECT DISTINCT did FROM spine_joins WHERE name IN ('grader', 'critic', 'identity', 'security') AND (scope = $1 OR scope LIKE $1 || '/%')",
             &[&w.scope],
         )
         .await?

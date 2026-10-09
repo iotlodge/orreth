@@ -33,7 +33,7 @@ use tokio_postgres::{GenericClient, Transaction};
 
 const COLS: &str = "experiment_id, scope, person, draft_id, agent, template, current_version, candidate, candidate_hash, \
                     golden, room, state, arms, reviewers, resiliency, proposal, leaning, ask, marker, opened_at, \
-                    proposed_at, settled_at, settled_by, at_path";
+                    proposed_at, settled_at, settled_by, at_path, claims, diff"; // claims · diff: Phase 8 sp6, the chips' evidence
 
 fn row_of(r: &tokio_postgres::Row) -> Value {
     let t = |i: usize| r.get::<_, Option<SystemTime>>(i).map(isoformat);
@@ -48,6 +48,7 @@ fn row_of(r: &tokio_postgres::Row) -> Value {
         "ask": r.get::<_, Option<String>>(17), "marker": r.get::<_, Option<String>>(18),
         "opened_at": t(19), "proposed_at": t(20), "settled_at": t(21), "settled_by": r.get::<_, Option<String>>(22),
         "at_path": r.get::<_, Option<String>>(23),
+        "claims": json_text(r.get::<_, Option<String>>(24).as_deref()), "diff": json_text(r.get::<_, Option<String>>(25).as_deref()),
     })
 }
 
@@ -311,7 +312,7 @@ pub async fn open_in(tx: &Transaction<'_>, w: &World, args: &Value, by: &str, as
         "current": cv.map(|v| json!({"version": v, "run_id": null, "passed": null, "failed": null, "details": null})).unwrap_or(Value::Null),
     });
     let reviewers = json!({"grader": {"ask_id": null}, "critic": {"ask_id": null},
-                           "security": {"missing": experiments::EMPTY_SECURITY}, "identity": {"missing": experiments::EMPTY_IDENTITY}});
+                           "security": {"ask_id": null}, "identity": {"ask_id": null}}); // Phase 8 sp6: four reviewers, no empty slot
     let candidate_txt = crate::canonical::canonical_string(body);
     let cv32: Option<i32> = cv.map(|v| v as i32);
     tx.execute(
@@ -467,10 +468,14 @@ pub async fn beat(g: &mut Ground, w: &World, spawn_trial: Option<&SpawnTrial>) -
             }
         }
         exp["arms"] = arms.clone();
-        // 3. the reviewers, under the experiment's marker (the hull's EVENT edge)
+        // 3. the reviewers, under the experiment's marker (the hull's EVENT edge) — Phase 8 sp6: all four; the chips'
+        // evidence (the trial life's claims · the candidate's diff · the refusals ground) read off the kernel's record now
         let mut rv = exp["reviewers"].clone();
         let mut asked_now = false;
-        for who in ["grader", "critic"] {
+        exp["claims"] = crate::chips_live::claims_for(g.client(), &w.scope, &exp).await?;
+        exp["diff"] = crate::chips_live::diff_for(g.client(), &w.scope, &exp).await?;
+        exp["refusals"] = crate::chips_live::refusals_for(g.client(), &w.scope, Some(&agent), 24).await?;
+        for who in experiments::REVIEWERS {
             if rv[who]["ask_id"].is_null() && !truthy(&rv[who]["missing"]) {
                 if crate::asks::absent(g, &w.scope, who).await?.is_some() {
                     rv[who]["missing"] = json!(format!("the {who} is not seated here — no verdict"));
@@ -495,13 +500,16 @@ pub async fn beat(g: &mut Ground, w: &World, spawn_trial: Option<&SpawnTrial>) -
         }
         if asked_now {
             update(g.client(), &exp_id, "reviewers", &rv).await?;
-            moved.push(format!("{exp_id}: the grader and the critic were asked"));
+            update(g.client(), &exp_id, "claims", &exp["claims"]).await?;
+            update(g.client(), &exp_id, "diff", &exp["diff"]).await?;
+            let asked: Vec<&str> = experiments::REVIEWERS.iter().copied().filter(|who| truthy(&rv[*who]["ask_id"])).collect();
+            moved.push(format!("{exp_id}: the reviewers were asked — {}", asked.join(", ")));
             continue;
         }
         // 4. the verdicts as they land (written by the reviewers themselves, signed)
         let mut done = true;
-        for who in ["grader", "critic"] {
-            if truthy(&rv[who]["missing"]) || truthy(&rv[who]["verdict"]) || truthy(&rv[who]["risk"]) {
+        for who in experiments::REVIEWERS {
+            if truthy(&rv[who]["missing"]) || truthy(&rv[who]["verdict"]) || truthy(&rv[who]["risk"]) || truthy(&rv[who]["identity"]) || truthy(&rv[who]["security"]) {
                 continue;
             }
             let vr = g
@@ -515,8 +523,12 @@ pub async fn beat(g: &mut Ground, w: &World, spawn_trial: Option<&SpawnTrial>) -
                 let v = json_text(Some(&r.get::<_, String>(0))).unwrap_or(json!({}));
                 if who == "grader" {
                     rv[who]["verdict"] = v;
-                } else {
+                } else if who == "critic" {
                     rv[who]["risk"] = if truthy(&v["risk"]) { v["risk"].clone() } else { json!("unsaid") };
+                    rv[who]["line"] = v["line"].clone();
+                } else {
+                    // Phase 8 sp6: a chip's word — identity: kept|broken · security: clear|concern
+                    rv[who][who] = if truthy(&v[who]) { v[who].clone() } else { json!("unsaid") };
                     rv[who]["line"] = v["line"].clone();
                 }
                 rv[who]["words"] = json!(r.get::<_, String>(1));

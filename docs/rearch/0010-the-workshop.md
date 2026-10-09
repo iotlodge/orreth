@@ -153,8 +153,10 @@ whether it is in use and by how many agents.*
   **golden set (required)** and a **shadow replay of recent real asks into
   the room (optional)**. The **grader grades both arms under its own DID**
   (rule 2: nothing grades its own yardstick). Reviewers come by the interest
-  law: **grader and critic now; security and identity as honest empty slots**
-  named on the card until lock 8 builds them. Resiliency is the room's
+  law: **grader and critic (sp4), identity and security (sp6 — the two chips:
+  the trial life's claims · the candidate's diff against the standing version
+  and the refusals ground)**, each signing under its own DID; broken claims or
+  a concern hold the leaning. Resiliency is the room's
   watches staying green through the run. **The verdict is a proposal.**
 - **The cut.** Promotion is the human's stamped act: L2 for an agent, L3
   for a resident. The new version is a sibling; the wear table re-points;
@@ -406,6 +408,29 @@ Each spoonful is a thing a human proves in the glass before the next opens
    (a beat over the ground stands in); the planner routing to "the right
    crew" (the critic runs every measurement at v0).
 6. **THE TWO CHIPS.** Identity and security v0 as the gate's reviewers.
+   **BUILT 2026-10-09 (JB's word: "Phase 8 sp6 THE TWO CHIPS — go ahead and
+   build it"); walk OWED (SPEC-CHIPS-01).** What landed: two firmware
+   templates of the third kind on the crew manifest (`identity` · `security`,
+   summonable); all four reviewers asked at the gate, the chips' evidence read
+   off the kernel's record and packed into the ask — the identity chip judging
+   THE TRIAL LIFE'S CLAIMS (who · what · where · left; `identity: kept |
+   broken`), the security chip THE CANDIDATE'S DIFF and THE REFUSALS GROUND
+   (`security: clear | concern`) — each signing under its own DID, broken
+   claims or a concern holding the leaning, a chip not seated an honest
+   missing; the identity chip's recall holding the ceremony and the seats, the
+   security chip's the refusals ground; THE KEY-CHECK (JB's pin of 2026-09-26
+   lifted): every seated body asked on a cadence (`SPINE_KEYCHECK_S`, 300 s;
+   0 off) to prove it is WHO and WHAT it says — the join desk's challenge
+   repeated over the rail, the body signing the kernel's nonce with the key
+   behind its DID and naming the hash it stands on, never marking itself
+   proven, the kernel verifying and recording each verdict as a fact; the
+   metric `key_checks_failed` and the kernel's seventh watch at light; schema
+   9 (`spine_keychecks`; the chips' `claims` · `diff` on the experiment's row);
+   fixture `chips-v0.json` ×50 (conformance 1,099 on both kernels). Named,
+   not in sp6: the cloud identity layer; the content rails; a person's refused
+   held act on the refusals ground; a per-class cadence; an automatic rest on
+   a failed check (the stop stays the human's lever until a Security
+   intention owns it).
 
 **The proof is Bob.** One engineered agent walked create → cut → experiment
 → promote → chat and summon → driven red → improved through the critic's
@@ -426,8 +451,11 @@ evolves.
 - The five measurements' v0 formulas are coverage ratios, not the measures
   JB ultimately means; each is refined when its richer source lands (the
   grader's verdicts, human feedback, itemised cost).
-- Security and identity are empty slots at the gate until spoonful 6; the
-  card says so.
+- The two chips at v0 judge from the kernel's record alone — the trial
+  life's join, the manifests' diff, the doors' refusals — not from the cloud
+  identity layer, the content rails or a person's refused held acts, which are
+  named seeds; a body that fails its key-check is said and watched, never
+  stopped by the kernel (the stop stays the human's lever, rule 11).
 - A body running outside the kernel's spawn (the stranger) is not chat-able
   in this phase; import means a repo'd graph the kernel runs.
 - The lessons digest, the architect resident, RAG and the embedding lane,
@@ -479,4 +507,5 @@ evolves.
   Faculty + Agent Lab row absorbed; the resolver and rollup rows unparked
   into spoonful 1.
 - **Seeds** — graded learning (verdicts here, digest after); identity and
-  security (v0 here, architect held); the Costs Panel (Cost v0 here).
+  security (v0 BUILT here, sp6 2026-10-09; the cloud identity layer and the
+  content rails stay seeds; architect held); the Costs Panel (Cost v0 here).

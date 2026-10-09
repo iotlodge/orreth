@@ -80,6 +80,8 @@ REPLY = "orreth.reply.v1"
 CONFIRM_NEEDED = "orreth.confirm.needed.v1"
 CONFIRM_CMD = "orreth.resident.confirm.v1"
 HARNESS_CMD = "orreth.resident.harness.v1"   # P7 sp6: the kernel asks a body to run its golden cases
+KEYCHECK_CMD = "orreth.resident.keycheck.v1"  # Phase 8 sp6: the kernel asks a body to prove who and what it is (chips.KEYCHECK_CMD)
+_CHIP_FUNCTIONS = {"identify": "identity", "secure": "security"}   # Phase 8 sp6: a chip's template function → the reviewer it is
 
 
 # W26 (P7 sp4): a mind that returns no words is asked again ONCE; a second
@@ -518,8 +520,9 @@ class Resident:
                 # kernel asks a reviewer to judge the arms; the evidence is the kernel's record of
                 # the runs, packed here so a grader has another's words to grade (rule 2), never its own
                 xm = self._current_marker or {}
+                from . import experiments as _xp
+                xp = None
                 if xm.get("parent"):
-                    from . import experiments as _xp
                     xid = None
                     cur.execute("SELECT kind, ref FROM spine_markers WHERE marker_id = %s", (xm["parent"],))
                     xr = cur.fetchone()
@@ -541,6 +544,27 @@ class Resident:
                                              f"declaration is {json.dumps(xp.get('candidate'), sort_keys=True)[:1200]}")
                             if _xp.KERNEL not in read:
                                 read.append(_xp.KERNEL)   # the evidence is the kernel's record — another's words, never mine
+                # Phase 8 sp6: THE TWO CHIPS — the identity chip holds the ceremony and the seats, the security chip
+                # the refusals ground; under an experiment each reads its evidence off the kernel's record (the trial
+                # life's claims · the candidate's diff), never its own words
+                if self.function in _CHIP_FUNCTIONS:
+                    from . import chips as _ch
+                    chip = _CHIP_FUNCTIONS[self.function]
+                    if self._experiment:
+                        xp = xp if xp else _xp.get(conn, self._experiment)
+                        if chip == "identity":
+                            notes.append("THE TRIAL LIFE'S CLAIMS (the kernel's record) — "
+                                         + _ch.claims_words(xp.get("claims") or _ch.claims_for(conn, xp)))
+                        else:
+                            notes.append("THE CANDIDATE'S DIFF against the standing version — "
+                                         + _ch.diff_words(xp.get("diff") or _ch.diff_for(conn, xp)))
+                            notes.append(_ch.refusals_words(_ch.refusals_for(conn, xp["agent"]), xp["agent"]))
+                    elif chip == "identity":
+                        notes.append(_ch.seats_words(_ch.seats_held(conn)))
+                    else:
+                        notes.append(_ch.refusals_words(_ch.refusals_for(conn)))
+                    if _xp.KERNEL not in read:
+                        read.append(_xp.KERNEL)
                 # Phase 8 sp5: THE OPERATING STATE — a live reply handed to the grader by the grade beat: the
                 # reply IS the evidence (another body's words, never mine); the grader's verdict feeds Trust
                 if self.function == "grade" and self._current_ask:
@@ -1228,24 +1252,30 @@ class Resident:
                 self._journey(cur, ask_id, [f"wrote my signed verdict on {self._grading} under my own name — grade {v['grade']}"], full_chain)
             else:
                 self._journey(cur, ask_id, [f"no verdict written on {self._grading} — my reply did not keep the form `grade: <A-F> — …`"], full_chain)
-        if self._experiment and self.function in ("grade", "critique"):
+        if self._experiment and (self.function in ("grade", "critique") or self.function in _CHIP_FUNCTIONS):
             # Phase 8 sp4: a reviewer's SIGNED VERDICT on an Experiment — written by the reviewer
             # itself, under its own DID, in its reply's transaction (rule 2: nothing grades its own
-            # yardstick; the evidence was the kernel's record of the arms, packed at recall)
-            from . import experiments as _xp
+            # yardstick; the evidence was the kernel's record of the arms, packed at recall).
+            # Phase 8 sp6: the two chips the same — identity: kept|broken · security: clear|concern
+            from . import chips as _ch, experiments as _xp
             reply = out.get("reply") or ""
             if self.function == "grade":
-                verdict = _xp.grade_of(reply)
+                reviewer, verdict = "grader", _xp.grade_of(reply)
                 kept = verdict["candidate"] is not None or verdict["verdict"] is not None
-            else:
+            elif self.function == "critique":
                 r = _xp.risk_of(reply)
                 line = next((ln.split("—", 1)[1].strip() for ln in reply.splitlines() if ln.lower().lstrip("* ").startswith("risk:") and "—" in ln), None)
-                verdict, kept = {"risk": r, "line": line}, r is not None
+                reviewer, verdict, kept = "critic", {"risk": r, "line": line}, r is not None
+            else:
+                reviewer = _CHIP_FUNCTIONS[self.function]
+                verdict, kept = _ch.verdict_of(reviewer, reply)
             if kept:
                 _xp.verdict_in(cur, experiment_id=self._experiment, identity=self.identity, by_name=self.name,
-                               reviewer="grader" if self.function == "grade" else "critic", ask_id=ask_id,
-                               verdict=verdict, words=reply, scope=self.scope)
+                               reviewer=reviewer, ask_id=ask_id, verdict=verdict, words=reply, scope=self.scope)
                 self._journey(cur, ask_id, [f"wrote my signed verdict on the experiment {self._experiment} under my own name"],
+                              full_chain)
+            else:
+                self._journey(cur, ask_id, [f"no verdict written on the experiment {self._experiment} — my reply did not keep the form"],
                               full_chain)
 
     def _full_chain(self, read: list | None) -> list[str]:
@@ -1423,6 +1453,9 @@ class Resident:
                 elif env.get("type") == HARNESS_CMD:          # P7 sp6: the kernel's run, through MY graph
                     from . import harness as _hz
                     effect = (lambda cur, e=env: _hz.run_command(conn, self, e))
+                elif env.get("type") == KEYCHECK_CMD:         # Phase 8 sp6: THE KEY-CHECK — I sign the kernel's nonce; the verdict is the kernel's
+                    from . import chips as _ch
+                    effect = (lambda cur, e=env: _ch.answer(conn, self, e))
                 else:
                     effect = (lambda cur, a=ask_id, c=chain:
                               self._serve_ask(cur, a, c))
