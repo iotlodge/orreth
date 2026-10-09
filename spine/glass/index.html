@@ -977,15 +977,18 @@ addEventListener("keydown", e => {
     e.preventDefault(); toggleChat();                                            // (never while typing; Esc still closes one thing)
   }
 });
-/* ---- FULL SCREEN (JB's ask, 2026-09-28): the panel alone, edge to edge. JB's correction (2026-10-09): the page no longer asks
-   the browser for ITS full screen — the browser's own Esc left it before the page ever saw the key, so one Esc un-fullscreened
-   and a second closed the chat. The wall is the page's (F, or the sill's button); the browser's full screen is the browser's
-   own command, where Esc stays the page's and closes one thing. `gesture` is kept for the callers; it asks the browser nothing. ---- */
+/* ---- FULL SCREEN (JB's ask, 2026-09-28): the panel alone, edge to edge, AND the browser's own full screen (the whole monitor).
+   `gesture` = a click or a key, when the browser's full screen may be asked for; on load the remembered layout is applied without
+   it (the browser's law). JB's correction (2026-10-09, W109): in the browser's full screen Esc is the BROWSER'S — it leaves full
+   screen before the page ever sees the key — so the chat closes with C there (and Esc still closes one thing outside it). ---- */
 function wall(on, gesture){
   document.body.classList.toggle("wall", on);
   const b = document.getElementById("wallbtn"); if (b){ b.classList.toggle("lit", on); b.innerHTML = `<span class="glyph">⛶</span>${on ? "LEAVE FULL SCREEN" : "FULL SCREEN"}`; }
   try { localStorage.setItem("orreth.panel.wall", on ? "1" : "0"); } catch (e) {}
-  void gesture;                                              // the browser's full screen is never asked for (2026-10-09)
+  if (gesture){
+    if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
+    if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+  }
 }
 document.addEventListener("fullscreenchange", () => {     // the browser's own Esc leaves the browser's full screen: the panel follows
   if (!document.fullscreenElement && document.body.classList.contains("wall")) wall(false, false);
