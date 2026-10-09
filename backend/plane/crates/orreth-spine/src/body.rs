@@ -206,6 +206,14 @@ mod tests {
     use super::*;
 
     #[test]
+    fn the_keepers_reading_wears_its_age() {
+        assert_eq!(as_of_words(40.0, 600.0), "as of the Stable keeper's beat 40 s ago (it reads the gateway every 10 min)");
+        assert_eq!(as_of_words(125.0, 30.0), "as of the Stable keeper's beat 2 min ago (it reads the gateway every 30 s)");
+        let out = assemble(vec![json!(1), json!(2), json!(3), json!(4), json!(5), json!(6), json!(9), json!(10), json!(11)], vec![json!(7), json!(8)]);
+        assert_eq!(out, (1..=11).map(|n| json!(n)).collect::<Vec<_>>());
+    }
+
+    #[test]
     fn the_park_law() {
         assert_eq!(backoff_s(0), 0.0);
         assert_eq!(backoff_s(3), 4.0);
@@ -224,4 +232,49 @@ mod tests {
         assert!(parked_words("echo", 1, 60, None).contains("died 1 time in 1 minute"));
         assert_eq!(window_words(90), "90 seconds");
     }
+}
+
+// ---- THE HARNESS DOOR CURE (2026-10-09): the pure law of the keeper's reading ----
+
+pub const GATEWAY_CHECKS: [&str; 2] = ["the gateway answers and holds every mind", "the meter and the gateway agree"];
+/// Where the two gateway checks stand in the eleven (after "every mind answers").
+pub const GATEWAY_CHECKS_AT: usize = 6;
+
+/// `harness.assemble`: the eleven in their one order — the ground's nine with the gateway's two at their place.
+pub fn assemble(ground: Vec<Value>, gateway: Vec<Value>) -> Vec<Value> {
+    let mut out = ground;
+    let at = GATEWAY_CHECKS_AT.min(out.len());
+    for (i, c) in gateway.into_iter().enumerate() {
+        out.insert(at + i, c);
+    }
+    out
+}
+
+fn span_words(s: f64) -> String {
+    if s < 60.0 {
+        format!("{} s", s.round() as i64)
+    } else if s < 3600.0 {
+        format!("{} min", (s / 60.0).round() as i64)
+    } else {
+        format!("{:.1} h", s / 3600.0)
+    }
+}
+
+/// `harness.as_of_words`: how old the keeper's reading is, and its cadence, in plain words.
+pub fn as_of_words(age_s: f64, every_s: f64) -> String {
+    format!("as of the Stable keeper's beat {} ago (it reads the gateway every {})", span_words(age_s.max(0.0)), span_words(every_s))
+}
+
+/// `harness.as_of`: the keeper's reading tagged with its age — `as_of` · `age_s` on each check, the words on its detail.
+pub fn as_of(checks: Vec<Value>, checked_at_iso: &str, age_s: f64, every_s: f64) -> Vec<Value> {
+    checks
+        .into_iter()
+        .map(|mut c| {
+            let detail = crate::py::python_str(&c["detail"]);
+            c["detail"] = json!(format!("{detail} · {}", as_of_words(age_s, every_s)));
+            c["as_of"] = json!(checked_at_iso);
+            c["age_s"] = json!(age_s);
+            c
+        })
+        .collect()
 }

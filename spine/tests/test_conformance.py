@@ -402,6 +402,10 @@ def test_fixture(contract, case):
         e["message_id"], e["occurred_at"] = inp["message_id"], inp["occurred_at"]
         assert (e["payload"], e["type"], e["authority_chain"]) == (exp["payload"], exp["type"], exp["chain"])
         assert ev.encode(e).decode("ascii") == exp["bytes"]
+    elif kind == "check_as_of":                 # THE HARNESS DOOR CURE (2026-10-09): the keeper's reading wears its age
+        assert harness.as_of_words(inp["age_s"], inp["every_s"]) == exp["words"]
+    elif kind == "check_assemble":              # the gateway's two at their place among the eleven
+        assert [c["name"] for c in harness.assemble(inp["ground"], inp["gateway"])] == exp["names"]
     elif kind == "harness_verdict":             # a case passes when every expected word is in the reply, case folded
         assert harness.verdict(inp["cases"], inp["replies"]) == exp
     elif kind == "harness_command":             # the kernel's ask of a body: run these cases as this run id

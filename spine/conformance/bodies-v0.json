@@ -1,7 +1,7 @@
 {
  "contract": "orreth.bodies/1",
  "version": 0,
- "generated_by": "orreth_spine.body + orreth_spine.harness (Python reference), canon 0008 \u00b7 P7 sp6",
+ "generated_by": "orreth_spine.body + orreth_spine.harness (Python reference), canon 0008 \u00b7 P7 sp6; THE HARNESS DOOR CURE (2026-10-09): check_as_of \u00b7 check_assemble",
  "generated_at": "2026-09-24",
  "cases": [
   {
@@ -849,6 +849,108 @@
     ],
     "correlation_id": "did:orreth:agent:plan0000",
     "bytes": "{\"authority_chain\":[\"did:orreth:agent:plan0000\"],\"correlation_id\":\"did:orreth:agent:plan0000\",\"message_id\":\"msg_0000000000000000000000e4\",\"message_kind\":\"event\",\"occurred_at\":\"2026-09-28T19:10:00.000Z\",\"payload\":{\"did\":\"did:orreth:agent:plan0000\",\"hash\":\"sha256:74158e16c80108e3922546fa10e97ee26f7b7827129e72f2446f75d3707c2d08\",\"kind\":\"firmware\",\"life\":4,\"nature\":\"a planner of the third kind\",\"ref\":\"planner\"},\"scope_path\":\"u:dev\",\"specversion\":\"orreth.transport/1\",\"type\":\"orreth.body.joined.v1\",\"universe_id\":\"u:dev\"}"
+   }
+  },
+  {
+   "name": "check_as_of: fresh, the stock cadence",
+   "kind": "check_as_of",
+   "input": {
+    "age_s": 40.0,
+    "every_s": 600.0
+   },
+   "expect": {
+    "words": "as of the Stable keeper's beat 40 s ago (it reads the gateway every 10 min)"
+   }
+  },
+  {
+   "name": "check_as_of: minutes old, a fast dial",
+   "kind": "check_as_of",
+   "input": {
+    "age_s": 125.0,
+    "every_s": 30.0
+   },
+   "expect": {
+    "words": "as of the Stable keeper's beat 2 min ago (it reads the gateway every 30 s)"
+   }
+  },
+  {
+   "name": "check_as_of: an hour old",
+   "kind": "check_as_of",
+   "input": {
+    "age_s": 5400.0,
+    "every_s": 600.0
+   },
+   "expect": {
+    "words": "as of the Stable keeper's beat 1.5 h ago (it reads the gateway every 10 min)"
+   }
+  },
+  {
+   "name": "check_as_of: a clock skew is never negative",
+   "kind": "check_as_of",
+   "input": {
+    "age_s": -3.0,
+    "every_s": 600.0
+   },
+   "expect": {
+    "words": "as of the Stable keeper's beat 0 s ago (it reads the gateway every 10 min)"
+   }
+  },
+  {
+   "name": "check_assemble: the gateway's two take their place after \"every mind answers\" (THE HARNESS DOOR CURE, 2026-10-09)",
+   "kind": "check_assemble",
+   "input": {
+    "ground": [
+     {
+      "name": "g1"
+     },
+     {
+      "name": "g2"
+     },
+     {
+      "name": "g3"
+     },
+     {
+      "name": "g4"
+     },
+     {
+      "name": "g5"
+     },
+     {
+      "name": "g6"
+     },
+     {
+      "name": "g7"
+     },
+     {
+      "name": "g8"
+     },
+     {
+      "name": "g9"
+     }
+    ],
+    "gateway": [
+     {
+      "name": "the gateway answers and holds every mind"
+     },
+     {
+      "name": "the meter and the gateway agree"
+     }
+    ]
+   },
+   "expect": {
+    "names": [
+     "g1",
+     "g2",
+     "g3",
+     "g4",
+     "g5",
+     "g6",
+     "the gateway answers and holds every mind",
+     "the meter and the gateway agree",
+     "g7",
+     "g8",
+     "g9"
+    ]
    }
   }
  ]

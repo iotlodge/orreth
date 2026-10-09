@@ -468,8 +468,15 @@ pub async fn reds_answered(g: &Ground, scope: &str, minutes: i64) -> Result<Valu
     )
 }
 
-/// Every world check, read off the ground — the harness door lists them (eleven, as the reference's).
-pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>, RoadError> {
+/// THE HARNESS DOOR CURE (JB, 2026-10-09: "8 seconds seems extreme"): the two checks that leave the
+/// ground for the gateway — the gateway's readiness and models, and the meter's reconcile (one
+/// spend-log query per keyed body) — are THE STABLE KEEPER'S BEAT'S reading, not the door's: the
+/// beat refreshes them every `SPINE_MIND_CHECK_S`, the door serves them with their age. A read door
+/// reads; a beat audits. `?now=1` runs every check live (the walk's and the proofs' word).
+pub use crate::body::{as_of, as_of_words, assemble, GATEWAY_CHECKS, GATEWAY_CHECKS_AT}; // the pure law lives in body.rs (fixture `check_as_of` · `check_assemble`)
+
+/// The nine checks read off the ground alone — milliseconds, live on every knock.
+pub async fn ground_checks(g: &Ground, scope: &str) -> Result<Vec<Value>, RoadError> {
     Ok(vec![
         duty_answered(g, scope).await?,
         offers_are_holds(g, scope, 5).await?,
@@ -477,12 +484,22 @@ pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>,
         mcp_servers_answer(g, scope).await?,
         keeper_proposes(g, scope).await?,
         minds_answer(g, scope).await?,
-        gateway_holds(g, scope, gw).await?,
-        meter_agrees(g, scope, gw).await?,
         changes_announced(g).await?,
         crate::cells_live::sealed(g).await?, // P7 sp7: the TENTH — this cell's role reaches no other database
         reds_answered(g, scope, 2).await?, // P7 sp8 row 3c: the ELEVENTH — the remediation rail graded
     ])
+}
+
+/// The two checks that go out to the gateway — the keeper's beat runs them; the door serves the reading.
+pub async fn gateway_checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>, RoadError> {
+    Ok(vec![gateway_holds(g, scope, gw).await?, meter_agrees(g, scope, gw).await?])
+}
+
+/// Every world check, LIVE — the ground's nine and the gateway's two (eleven, as the reference's).
+pub async fn checks(g: &Ground, scope: &str, gw: &Gateway) -> Result<Vec<Value>, RoadError> {
+    let ground = ground_checks(g, scope).await?;
+    let gateway = gateway_checks(g, scope, gw).await?;
+    Ok(assemble(ground, gateway))
 }
 
 // ---- the run, over the rail (P7 sp6) ----------------------------------------------------------
@@ -638,4 +655,10 @@ pub async fn ab(
     }
     let _ = verdict; // the shared law lives in `body::verdict`; the body applies it
     Ok(json!({"template": template, "arms": runs, "best": best, "words": sentence}))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
 }

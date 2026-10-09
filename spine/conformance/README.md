@@ -399,4 +399,8 @@ the same files, unchanged — before any module earns the word "ported".
     `refusals_words` · `seats_words`. `exp_proposal_words` and `exp_leaning` re-pinned to the chips' lines (experiments-v0
     61 → 64); `schema_version` 9 · `schema_tables` 50 (`spine_keychecks`); `beat_lock` gains `keycheck` 9;
     `watch_metrics` 21 → 22 (`key_checks_failed`). 1,099 cases on both kernels.
+  - THE HARNESS DOOR CURE (2026-10-09, bodies-v0 +5): `check_as_of` — `input.age_s` · `input.every_s` → `expect.words` (the
+    Stable keeper's reading wears its age: "as of the Stable keeper's beat 40 s ago (it reads the gateway every 10 min)";
+    never negative); `check_assemble` — `input.ground` (the nine) · `input.gateway` (the two) → `expect.names` (the two at
+    their place after "every mind answers"). 1,104 cases on both kernels.
 

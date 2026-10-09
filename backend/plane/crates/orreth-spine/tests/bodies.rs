@@ -454,6 +454,13 @@ async fn the_rust_kernel_alone_seats_and_governs_the_crew() {
     assert!(facts >= 1, "a failing run is a fact on the rail");
     let (_, hz) = get(port, "/harness").await;
     assert_eq!(hz["last"]["template"], json!("librarian"));
+    // THE HARNESS DOOR CURE (2026-10-09): the gateway's two are the keeper's reading, served with their age
+    assert!(hz["as_of"]["age_s"].is_number() && hz["as_of"]["live"] == json!(false), "{}", hz["as_of"]);
+    let meter = &hz["checks"][7];
+    assert_eq!(meter["name"], json!("the meter and the gateway agree"));
+    assert!(meter["as_of"].is_string() && meter["detail"].as_str().unwrap_or_default().contains("as of the Stable keeper's beat"), "{meter}");
+    let (_, live) = get(port, "/harness?now=1").await;
+    assert!(live["as_of"]["live"] == json!(true) && live["checks"][7]["as_of"].is_null(), "{}", live["as_of"]);
     assert_eq!(
         hz["checks"].as_array().unwrap().len(),
         11,

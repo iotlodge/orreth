@@ -421,3 +421,27 @@ def test_w108_a_stalls_line_reads_plain_in_every_case():
     assert stable.stall_words(bare) == f"sonnet — anthropic {SONNET} · standard · UNPRICED — the meter would read $0; say “stablekeeper, repin sonnet” · healthy · spent $0.0001 over 2 calls"
     priced = {"name": "haiku", "state": "healthy", "manifest": stable.deal(HAIKU, "anthropic", klass="fast", price={"in_per_m": 1, "out_per_m": 5}, context=200000)}
     assert stable.stall_words(priced) == f"haiku — anthropic {HAIKU} · fast · $1 in / $5 out per million · context 200,000 · healthy · never called"
+
+
+def test_the_gateway_checks_are_the_keepers_reading_and_the_door_says_their_age(pg):
+    """THE HARNESS DOOR CURE (JB, 2026-10-09: "8 seconds seems extreme"): the two checks that go out to the
+    gateway are the Stable keeper's beat's reading, served by the door with their age; the nine ground
+    checks stay live; `?now=1` (cached=None) runs all eleven; the words of the age are the fixture's."""
+    import time
+    from orreth_spine import ground, harness
+    ground.ensure_all(pg)
+    assert harness.GATEWAY_CHECKS == ("the gateway answers and holds every mind", "the meter and the gateway agree")
+    nine = harness.ground_checks(pg)
+    assert len(nine) == 9 and not any(c["name"] in harness.GATEWAY_CHECKS for c in nine)
+    two = [{"name": harness.GATEWAY_CHECKS[0], "ok": True, "detail": "the gateway answers · 2 of 2 minds held"},
+           {"name": harness.GATEWAY_CHECKS[1], "ok": True, "detail": "the meter agrees"}]
+    at = time.time() - 40
+    served = harness.checks(pg, cached=(at, two, 600.0))
+    assert [c["name"] for c in served][6:8] == list(harness.GATEWAY_CHECKS) and len(served) == 11
+    assert served[6]["detail"].startswith("the gateway answers · 2 of 2 minds held · as of the Stable keeper's beat 40 s ago (it reads the gateway every 10 min)")
+    assert 39.0 <= served[7]["age_s"] <= 45.0 and served[7]["as_of"].endswith("+00:00") and "as_of" not in served[5]
+    assert harness.as_of_words(125, 30) == "as of the Stable keeper's beat 2 min ago (it reads the gateway every 30 s)"
+    assert harness.as_of_words(-3, 600).startswith("as of the Stable keeper's beat 0 s ago")
+    # live (the walk's `?now=1`): the eleven, no age — the two read now, through the gateway (dark here: said)
+    live = harness.checks(pg)
+    assert len(live) == 11 and [c["name"] for c in live][6:8] == list(harness.GATEWAY_CHECKS) and "as_of" not in live[6]

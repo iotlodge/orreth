@@ -34,6 +34,8 @@ use std::path::PathBuf;
 /// The kinds this crate has ported — one explicit list, so the report is honest.
 const PORTED_KINDS: &[&str] = &[
     // Phase 8 sp6: THE TWO CHIPS (chips-v0)
+    "check_as_of",
+    "check_assemble",
     "chip_claims",
     "chip_diff",
     "chip_verdict",
@@ -2394,6 +2396,12 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 s(&exp["bytes"]).to_string(),
                 "the fact's bytes"
             );
+        }
+        // THE HARNESS DOOR CURE (2026-10-09): the keeper's reading wears its age; the gateway's two at their place
+        "check_as_of" => same!(body::as_of_words(inp["age_s"].as_f64().unwrap(), inp["every_s"].as_f64().unwrap()), s(&exp["words"]), "the words"),
+        "check_assemble" => {
+            let out = body::assemble(inp["ground"].as_array().cloned().unwrap_or_default(), inp["gateway"].as_array().cloned().unwrap_or_default());
+            same!(json!(out.iter().map(|c| c["name"].clone()).collect::<Vec<_>>()), exp["names"], "the names");
         }
         "harness_verdict" => {
             let cases = inp["cases"].as_array().cloned().unwrap_or_default();

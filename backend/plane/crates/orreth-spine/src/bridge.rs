@@ -173,6 +173,17 @@ struct App {
     pool: Arc<Pool>, // row 4, panel sp3: THE POOL — the doors' lines to the ground, borrowed per knock
     lit_at: String, // JB's ask 2026-09-28: the version whisper — when this kernel was lit, said by the health door
     schema: crate::ground::Migration, // re-base sp1 (lock 2): what the birth found on the ground and what it did
+    gateway_checks: GatewayReading, // THE HARNESS DOOR CURE (2026-10-09): the keeper's reading of the two gateway checks
+}
+
+/// The Stable keeper's reading of the two gateway checks: when it was read, and the two verdicts.
+type GatewayReading = Arc<tokio::sync::RwLock<Option<(std::time::SystemTime, Vec<Value>)>>>;
+
+/// Refresh the keeper's reading (the beat's hand; the door's first knock when nothing is read yet).
+async fn refresh_gateway_checks(g: &Ground, w: &World, gw: &Gateway, slot: &GatewayReading) -> Result<Vec<Value>, RoadError> {
+    let checks = harness::gateway_checks(g, &w.scope, gw).await?;
+    *slot.write().await = Some((std::time::SystemTime::now(), checks.clone()));
+    Ok(checks)
 }
 
 /// A lit bridge: its port, its readiness, its meter, and its stop.
@@ -353,6 +364,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
     // standing lines (they block on the rails). An idle kernel holds four lines; a lit crew adds none.
     let door_pool = Pool::new(&w.pg_dsn, crate::pool::ceiling_from_env());
     let beats = Pool::private(&w.pg_dsn, crate::pool::BEATS_CEILING, "orrethd beat");
+    let gateway_reading: GatewayReading = Arc::new(tokio::sync::RwLock::new(None));
     let app = Arc::new(App {
         cfg: cfg.clone(),
         kernel,
@@ -369,6 +381,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
         pool: door_pool.clone(),
         lit_at: crate::envelope::now_iso(),
         schema,
+        gateway_checks: gateway_reading.clone(),
     });
     let mut tasks = Vec::new();
     // the crew: the benches swept, the boot rite once, the kernel's duties declared, then every seat spawned
@@ -426,7 +439,7 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
             }
         }));
         // the keepers' beats (P6.5 sp2 · sp3), on the kernel that holds the keepers' bodies
-        let (w3, stop3, gw3, beats3) = (w.clone(), stop.clone(), gateway.clone(), beats.clone());
+        let (w3, stop3, gw3, beats3, reading3) = (w.clone(), stop.clone(), gateway.clone(), beats.clone(), gateway_reading.clone());
         tasks.push(tokio::spawn(async move {
             let mut next_tool = tokio::time::Instant::now()
                 + Duration::from_secs_f64(crate::mcp_live::tool_check_s());
@@ -445,6 +458,15 @@ pub async fn light(cfg: Config) -> Result<Lit, RoadError> {
                 if now >= next_mind {
                     next_mind = now + Duration::from_secs_f64(stable_live::mind_check_s());
                     keeper_beat(&beats3, &w3, "stablekeeper", Some(&gw3)).await;
+                    // THE HARNESS DOOR CURE: the two gateway checks are this beat's reading — the door serves it with its age
+                    match beats3.borrow().await {
+                        Ok(g) => {
+                            if let Err(e) = refresh_gateway_checks(&g, &w3, &gw3, &reading3).await {
+                                eprintln!("the keeper's reading of the gateway checks stumbled: {e}");
+                            }
+                        }
+                        Err(e) => eprintln!("the keeper's reading could not reach the ground: {e}"),
+                    }
                 }
             }
         }));
@@ -2878,14 +2900,36 @@ async fn schedules_rest(
 }
 
 /// The world checks, read off the ground; the last harness run beside them.
-async fn harness_door(State(app): State<Arc<App>>) -> Response {
+async fn harness_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> Response {
     let out = async {
         let g = ground(&app).await?;
         let sc = scope(&app);
-        let ch = harness::checks(&g, sc, &app.gateway).await?;
+        let w = &app.cfg.world;
+        let every_s = stable_live::mind_check_s();
+        // THE HARNESS DOOR CURE (2026-10-09): the ground's nine live; the gateway's two are the keeper's reading with
+        // its age — `?now=1` runs all eleven live (the walk's and the proofs' word)
+        let live = q.get("now").is_some_and(|v| matches!(v.as_str(), "1" | "true" | "yes"));
+        let ground_checks = harness::ground_checks(&g, sc).await?;
+        let (gateway_checks, as_of) = if live {
+            (refresh_gateway_checks(&g, w, &app.gateway, &app.gateway_checks).await?, json!({"live": true, "age_s": 0.0, "every_s": every_s}))
+        } else {
+            let held = app.gateway_checks.read().await.clone();
+            let (at, checks) = match held {
+                Some(x) => x,
+                None => {
+                    let c = refresh_gateway_checks(&g, w, &app.gateway, &app.gateway_checks).await?; // the first knock reads once
+                    (std::time::SystemTime::now(), c)
+                }
+            };
+            let age_s = at.elapsed().map(|d| d.as_secs_f64()).unwrap_or(0.0);
+            let iso = crate::world::isoformat(at);
+            (harness::as_of(checks, &iso, age_s, every_s), json!({"live": false, "checked_at": iso, "age_s": age_s, "every_s": every_s,
+                                                                   "words": harness::as_of_words(age_s, every_s)}))
+        };
+        let ch = harness::assemble(ground_checks, gateway_checks);
         let ok = ch.iter().all(|c| c["ok"] == json!(true));
         Ok::<_, RoadError>(
-            json!({"checks": ch, "ok": ok, "last": monitor::last_harness(&g, sc).await?}),
+            json!({"checks": ch, "ok": ok, "as_of": as_of, "last": monitor::last_harness(&g, sc).await?}),
         )
     }
     .await;

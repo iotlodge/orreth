@@ -521,6 +521,10 @@ def address_to(conn, text: str, to: list[str] | None, session: str | None = None
     return to
 
 
+GATEWAY_READING: dict = {"at": None, "checks": None}   # THE HARNESS DOOR CURE (2026-10-09): the Stable keeper's reading of the two
+                                                       # gateway checks — the beat writes it, the harness door serves it with its age
+
+
 def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = None,
                        gateway=None, services_home=None, kernel=None):
     Base = bridgefeed.make_handler(feed)
@@ -766,8 +770,24 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(500, {"error": f"the guide is not at {GUIDE} — {e}"})
             if path == "/harness":                       # walk #8: the world checks, off the ground
                 with psycopg.connect(dsn, autocommit=True) as conn:
-                    ch = harness.checks(conn)
-                    return self._json(200, {"checks": ch, "ok": all(c["ok"] for c in ch),
+                    # THE HARNESS DOOR CURE (2026-10-09): the gateway's two are the keeper's reading with its age;
+                    # `?now=1` runs all eleven live; a first knock before any beat reads the two once
+                    from urllib.parse import parse_qs
+                    hq = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} if "?" in self.path else {}
+                    live = str(hq.get("now") or "").lower() in ("1", "true", "yes")
+                    every_s = BridgeRig._mind_check_s()
+                    if live or GATEWAY_READING["at"] is None:
+                        GATEWAY_READING.update(at=time.time(), checks=harness.gateway_checks(conn))
+                    if live:
+                        ch = harness.assemble(harness.ground_checks(conn), GATEWAY_READING["checks"])
+                        as_of = {"live": True, "age_s": 0.0, "every_s": every_s}
+                    else:
+                        at = GATEWAY_READING["at"]
+                        ch = harness.checks(conn, cached=(at, GATEWAY_READING["checks"], every_s))
+                        age = max(0.0, time.time() - at)
+                        as_of = {"live": False, "checked_at": ch[harness.GATEWAY_CHECKS_AT]["as_of"], "age_s": age,
+                                 "every_s": every_s, "words": harness.as_of_words(age, every_s)}
+                    return self._json(200, {"checks": ch, "ok": all(c["ok"] for c in ch), "as_of": as_of,
                                             "last": monitor.snapshot(conn, rails=False)["harness"]})
             if path == "/markers/kinds":                 # the registry
                 with psycopg.connect(dsn, autocommit=True) as conn:
@@ -1599,6 +1619,10 @@ class BridgeRig:
             gw = stable.Gateway()
             out = stable.keeper_beat(conn, keeper=keeper.identity.did, gateway=self.gateway,
                                      gw=gw if gw.ready() else None)
+            try:                                     # THE HARNESS DOOR CURE: the two gateway checks are this beat's reading
+                GATEWAY_READING.update(at=time.time(), checks=harness.gateway_checks(conn, gw if gw.ready() else None))
+            except Exception as e:                   # noqa: BLE001
+                print(f"the keeper's reading of the gateway checks stumbled: {type(e).__name__}: {e}", flush=True)
             bad = [c["name"] for c in out["checked"] if c["ok"] is False]
             if bad or out["proposed"]:
                 print(f"the Stable keeper's beat: {len(out['checked'])} minds pinged"

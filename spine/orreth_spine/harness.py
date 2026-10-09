@@ -447,15 +447,76 @@ def reds_answered(conn, *, minutes: int = 2) -> dict:
             "detail": detail, "unanswered": unanswered, "unattributed": unattributed}
 
 
-def checks(conn) -> list[dict]:
-    """Every world check, read off the ground — the harness door lists
-    them; a failed check is a wound named in words."""
+# THE HARNESS DOOR CURE (JB, 2026-10-09: "8 seconds seems extreme"): the two checks that leave the
+# ground for the gateway — the gateway's readiness and models, and the meter's reconcile (one
+# spend-log query per keyed body) — are THE STABLE KEEPER'S BEAT'S reading, not the door's: the beat
+# refreshes them every SPINE_MIND_CHECK_S, the door serves them with their age. A read door reads; a
+# beat audits. `?now=1` runs every check live. Law for law with harness.rs.
+GATEWAY_CHECKS = ("the gateway answers and holds every mind", "the meter and the gateway agree")
+GATEWAY_CHECKS_AT = 6                            # where the two stand in the eleven (after "every mind answers")
+
+
+def _ensure(conn) -> None:
     from .resident import ensure_schema as _ground
     _ground(conn)
-    from . import cells, monitor, scheduler, services
+    from . import monitor, scheduler, services
     scheduler.ensure_schema(conn); monitor.ensure_schema(conn); services.ensure_schema(conn)
+
+
+def ground_checks(conn) -> list[dict]:
+    """The nine checks read off the ground alone — milliseconds, live on every knock."""
+    from . import cells
+    _ensure(conn)
     return [duty_answered(conn), offers_are_holds(conn), services_healthy(conn),
-            mcp_servers_answer(conn), keeper_proposes(conn),
-            minds_answer(conn), gateway_holds(conn), meter_agrees(conn), changes_announced(conn),
+            mcp_servers_answer(conn), keeper_proposes(conn), minds_answer(conn), changes_announced(conn),
             cells.sealed(conn),                      # P7 sp7: the TENTH — this cell's role reaches no other database
             reds_answered(conn)]                     # P7 sp8 row 3c: the ELEVENTH — the remediation rail graded
+
+
+def gateway_checks(conn, gw=None) -> list[dict]:
+    """The two checks that go out to the gateway — the keeper's beat runs them; the door serves the reading."""
+    _ensure(conn)
+    return [gateway_holds(conn, gw), meter_agrees(conn, gw)]
+
+
+def assemble(ground: list[dict], gateway: list[dict]) -> list[dict]:
+    """The eleven in their one order — the ground's nine with the gateway's two at their place."""
+    out = list(ground)
+    at = min(GATEWAY_CHECKS_AT, len(out))
+    for i, c in enumerate(gateway):
+        out.insert(at + i, c)
+    return out
+
+
+def _span_words(s: float) -> str:
+    if s < 60:
+        return f"{int(round(s))} s"
+    if s < 3600:
+        return f"{int(round(s / 60))} min"
+    return f"{s / 3600:.1f} h"
+
+
+def as_of_words(age_s: float, every_s: float) -> str:
+    """How old the keeper's reading is, and its cadence, in plain words (fixture `check_as_of`)."""
+    return f"as of the Stable keeper's beat {_span_words(max(0.0, float(age_s)))} ago (it reads the gateway every {_span_words(float(every_s))})"
+
+
+def as_of(checks: list[dict], checked_at_iso: str, age_s: float, every_s: float) -> list[dict]:
+    """The keeper's reading tagged with its age — `as_of` · `age_s` on each check, the words on its detail."""
+    return [{**c, "detail": f"{c.get('detail', '')} · {as_of_words(age_s, every_s)}", "as_of": checked_at_iso, "age_s": age_s}
+            for c in checks]
+
+
+def checks(conn, cached: tuple | None = None, gw=None) -> list[dict]:
+    """Every world check — the harness door lists them; a failed check is a wound named in
+    words. `cached` = (checked_at_epoch, the two gateway checks, every_s): the keeper's reading
+    served with its age; None runs all eleven live."""
+    ground = ground_checks(conn)
+    if cached is None:
+        return assemble(ground, gateway_checks(conn, gw))
+    import datetime as _dt
+    import time as _t
+    at, two, every_s = cached
+    age_s = max(0.0, _t.time() - float(at))
+    iso = _dt.datetime.fromtimestamp(float(at), _dt.timezone.utc).isoformat()
+    return assemble(ground, as_of(list(two), iso, age_s, float(every_s)))
