@@ -1,6 +1,6 @@
 {
   "format": "orreth-guide/1",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "title": "THE GUIDE · what you can say here, and what happens",
   "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
   "sections": [
@@ -8,7 +8,7 @@
       "id": "chat",
       "when": "chat",
       "title": "The chat",
-      "lead": "Type to the crew. A reply always arrives whole. Esc closes one thing at a time.",
+      "lead": "Type to the crew. A reply always arrives whole. C opens and closes the chat (when you are not typing); Esc closes one thing at a time.",
       "entries": [
         {
           "say": "what is the temperature outside?",
@@ -84,7 +84,7 @@
         },
         {
           "say": "(click FULL SCREEN on the sill, or press F)",
-          "does": "The panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away, the browser goes full screen too, and on a wide display the drawing is scaled up to be read from across the room. The sill stays as the one thin bar - the toggles, CHAT, ANALYZER and the way out. Esc or F leaves it. Remembered in this browser."
+          "does": "The panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away, the page no longer asks the browser for its own full screen (its Esc left it before the page saw the key — use the browser's own full-screen command if you want the chrome gone; Esc then stays the page's), and on a wide display the drawing is scaled up to be read from across the room. The sill stays as the one thin bar - the toggles, CHAT, ANALYZER and the way out. Esc or F leaves it. Remembered in this browser."
         },
         {
           "say": "(click a marker chip — structural · quality · resiliency)",

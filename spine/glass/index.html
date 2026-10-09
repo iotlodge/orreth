@@ -660,7 +660,7 @@
   <div id="ceiling">
     <span style="width:120px"><span class="daybtn" id="daybtn" onclick="themeFlip()" title="the Daylight Glass — flip the light (remembered in this browser)">☀</span></span>
     <span id="nameplate">O R R E T H<span class="vtag" id="vtag" title="the kernel that serves this page — its version, which kernel, and when it was lit; read live from its health door on every connection">…</span></span>
-    <span id="chat-tab" onclick="toggleChat()">C H A T ▾</span>
+    <span id="chat-tab" onclick="toggleChat()" title="the chat — C opens and closes it; Esc closes one thing at a time">C H A T ▾</span>
   </div>
   <div id="window-frame"><div id="space" aria-label="THE PANEL — the kernel drawn as a mimic panel: geometry is architecture, light is operations, colour is origin">
     <div><div class="prow-label"><span>the kernel's organs</span><span class="line"></span><span class="r">declared by the kernel · always seated · click one to open it</span></div>
@@ -911,7 +911,8 @@ async function unseated(){                        // the seat form, once WHILE I
     stepDone(msg, row, `enrolling ${esc(name.value.trim())}`);
     drawEnroll(c.b, false, name.value.trim());
   };
-  msg.appendChild(row); name.focus(); SEAT_ROW = row;
+  msg.appendChild(row); SEAT_ROW = row;
+  toggleChat(true); name.focus();                   // the one open the page makes itself: the kernel is asking for the human (2026-10-09)
 }
 async function takeSeat(name, code, msg, row){   // the code proves the person; the token comes back; the page wakes seated
   const r = await _fetch("/seat", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({person: name, code})})
@@ -968,20 +969,23 @@ addEventListener("keydown", e => {
   if (tourOpen() && (e.key === "ArrowRight" || e.key === "ArrowLeft") && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "")){
     e.preventDefault(); tourStep(e.key === "ArrowRight" ? 1 : -1); return;
   }
-  if ((e.key === "f" || e.key === "F") && !e.metaKey && !e.ctrlKey && !e.altKey && !/^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "") && !(e.target && e.target.isContentEditable)){
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target && e.target.tagName) || "") || (e.target && e.target.isContentEditable);
+  if ((e.key === "f" || e.key === "F") && !e.metaKey && !e.ctrlKey && !e.altKey && !typing){
     e.preventDefault(); wall(!document.body.classList.contains("wall"), true);   // F: full screen on or off (never while typing)
   }
+  if ((e.key === "c" || e.key === "C") && !e.metaKey && !e.ctrlKey && !e.altKey && !typing){   // JB's ask (2026-10-09): C opens and closes the chat
+    e.preventDefault(); toggleChat();                                            // (never while typing; Esc still closes one thing)
+  }
 });
-/* ---- FULL SCREEN (JB's ask, 2026-09-28): the panel alone, edge to edge. `gesture` = a click or a key, when the browser's
-   own full screen may be asked for; on load the remembered layout is applied without it (the browser's law). ---- */
+/* ---- FULL SCREEN (JB's ask, 2026-09-28): the panel alone, edge to edge. JB's correction (2026-10-09): the page no longer asks
+   the browser for ITS full screen — the browser's own Esc left it before the page ever saw the key, so one Esc un-fullscreened
+   and a second closed the chat. The wall is the page's (F, or the sill's button); the browser's full screen is the browser's
+   own command, where Esc stays the page's and closes one thing. `gesture` is kept for the callers; it asks the browser nothing. ---- */
 function wall(on, gesture){
   document.body.classList.toggle("wall", on);
   const b = document.getElementById("wallbtn"); if (b){ b.classList.toggle("lit", on); b.innerHTML = `<span class="glyph">⛶</span>${on ? "LEAVE FULL SCREEN" : "FULL SCREEN"}`; }
   try { localStorage.setItem("orreth.panel.wall", on ? "1" : "0"); } catch (e) {}
-  if (gesture){
-    if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
-    if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-  }
+  void gesture;                                              // the browser's full screen is never asked for (2026-10-09)
 }
 document.addEventListener("fullscreenchange", () => {     // the browser's own Esc leaves the browser's full screen: the panel follows
   if (!document.fullscreenElement && document.body.classList.contains("wall")) wall(false, false);
@@ -4311,7 +4315,8 @@ async function versionRead(){
 versionRead();
 panelHydrate().catch(()=>{});            /* row 4: the still panel, read through the doors */
 connectFeed();
-toggleChat(true);            /* the chat greets you (profile setting later) */
+/* the chat no longer greets you (JB's correction, 2026-10-09): the Panel lands alone; C opens the chat (never while typing),
+   Esc closes one thing; the one open the page still makes itself is the seat form — the kernel asking for the human. */
 </script>
 </body>
 </html>
