@@ -422,19 +422,43 @@
   #workshop.open{transform:translateX(0)}
   /* W102 (JB, 2026-10-07): the Workshop NEVER covers the chat — with both open the chat DOCKS as a full-height column on
      the right and the Workshop yields to it (its right edge set by layoutWorkshop); the Workshop's own header offers CHAT */
-  body:has(#workshop.open) #chat{right:0;border-radius:0;border-left:1px solid var(--seam);border-bottom:none;box-shadow:none}
+  body:has(#workshop.open) #chat{border-radius:0;border-left:none;border-bottom:none;box-shadow:none}
   body:has(#workshop.open) #chat #grip{display:none}
   #workshop>header{display:flex;align-items:center;gap:14px;padding:9px 16px;border-bottom:1px solid var(--seam);color:var(--amber);font-size:11px;letter-spacing:.12em;flex-wrap:wrap}
   #workshop>header .x{margin-left:auto;color:var(--dim);cursor:pointer;letter-spacing:.08em;font-size:10.5px} #workshop>header .x:hover{color:var(--amber)}
   #ws-chip{display:inline-flex;gap:8px;align-items:center;color:var(--dim);letter-spacing:.06em;font-size:10.5px;cursor:help}
   #ws-chip select{font:inherit;font-size:11px;color:var(--ink);background:var(--field);border:1px solid var(--seam);border-radius:7px;padding:3px 6px;max-width:28em}
-  #ws-body{display:grid;grid-template-columns:minmax(230px,21%) minmax(0,1fr) minmax(280px,25%);grid-template-rows:minmax(0,1fr) auto;min-height:0}
-  #ws-rail{grid-column:1;grid-row:1/3;border-right:1px solid var(--seam);overflow-y:auto;padding:8px 10px;font-size:12px}
-  #ws-canvas{grid-column:2;grid-row:1;position:relative;overflow:auto;min-height:0;background:radial-gradient(circle at 1px 1px,var(--grid) 1px,transparent 1.5px) 0 0/22px 22px}
-  #ws-canvas svg{display:block} #ws-insp{grid-column:3;grid-row:1/3;border-left:1px solid var(--seam);overflow-y:auto;padding:10px 12px;font-size:12px;color:var(--ink)}
-  #ws-decl{grid-column:2;grid-row:2;border-top:1px solid var(--seam);padding:8px 12px 10px;display:flex;flex-direction:column;gap:6px;min-height:0}
-  #ws-decl textarea{font:inherit;font-size:11.5px;color:var(--ink);background:var(--field);border:1px solid var(--seam);border-radius:8px;padding:8px 10px;
-    min-height:110px;max-height:30vh;resize:vertical;outline:none;white-space:pre;overflow:auto} #ws-decl textarea.ro{opacity:.75}
+  /* THE WORKSPACE PASS (JB, 2026-10-09: "a professional looking WORKSPACE … resizable frames"): four panes on one grid — THE SHELF ·
+     THE CANVAS over THE DECLARATION · THE INSPECTOR — and, docked, THE CHAT as a fifth column; every seam between them is a
+     splitter the human drags (double-click: that seam back to its stock width), the layout remembered in this browser */
+  #workshop{--ws-rail:272px;--ws-insp:360px;--ws-chat:560px;--ws-decl:42%}
+  #ws-body{display:grid;grid-template-columns:var(--ws-rail) 6px minmax(360px,1fr) 6px var(--ws-insp);grid-template-rows:minmax(0,1fr);min-height:0}
+  #workshop.docked #ws-body{grid-template-columns:var(--ws-rail) 6px minmax(360px,1fr) 6px var(--ws-insp) 6px var(--ws-chat)}
+  #ws-chatcol{display:none;min-width:0} #workshop.docked #ws-chatcol{display:block}
+  #workshop:not(.docked) .ws-split[data-split="chat"]{display:none}
+  .ws-split{background:transparent;cursor:col-resize;position:relative;z-index:2;touch-action:none}
+  .ws-split::after{content:"";position:absolute;inset:0 2px;background:var(--seam);opacity:.6;transition:background .15s,opacity .15s}
+  .ws-split:hover::after,.ws-split.on::after{background:var(--amber-dim);opacity:1}
+  .ws-split.h{cursor:row-resize} .ws-split.h::after{inset:2px 0}
+  .ws-pane{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--glass)}
+  .ws-pane-h{display:flex;align-items:center;gap:10px;padding:7px 12px;border-bottom:1px solid var(--seam);color:var(--dim);font-size:10.5px;letter-spacing:.2em;flex:none;min-height:32px;box-sizing:border-box;white-space:nowrap;overflow:hidden}
+  .ws-pane-h b{color:var(--amber);font-weight:normal;flex:none} .ws-pane-h>span:not(.hint){flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;letter-spacing:.08em}
+  .ws-pane-h .hint{margin-left:auto;flex:0 1 auto;letter-spacing:.06em;font-size:10px;opacity:.8;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  #ws-insp-in>.ws-h:first-child{display:none}
+  .ws-pane-h .ws-btn{padding:3px 8px;font-size:10.5px;letter-spacing:.06em}
+  #ws-rail{grid-column:1;overflow:hidden} #ws-rail .ws-scroll{overflow-y:auto;padding:6px 10px 14px;font-size:12px;min-height:0;flex:1}
+  #ws-rail-h{gap:8px} #ws-rail-h #ws-filter{flex:1;min-width:0;margin-left:4px}
+  #ws-center{grid-column:3;display:grid;grid-template-rows:auto minmax(0,1fr) 6px var(--ws-decl);min-height:0;min-width:0}
+  #ws-center.declmax{grid-template-rows:auto 0 0 minmax(0,1fr)} #ws-center.declmax #ws-canvas,#ws-center.declmax #ws-split-decl{display:none}
+  #ws-canvas{position:relative;overflow:auto;min-height:0;background:radial-gradient(circle at 1px 1px,var(--grid) 1px,transparent 1.5px) 0 0/22px 22px}
+  #ws-canvas svg{display:block}
+  #ws-insp{grid-column:5;overflow:hidden} #ws-insp .ws-scroll{overflow-y:auto;padding:4px 14px 16px;font-size:12px;color:var(--ink);min-height:0;flex:1}
+  #ws-decl{display:flex;flex-direction:column;min-height:0;background:var(--glass)}
+  #ws-decl .ws-pane-h{border-top:1px solid var(--seam)} #ws-decl .ws-pane-h .acts{margin:0 0 0 auto;gap:5px;flex-wrap:nowrap}
+  #ws-decl textarea{flex:1;min-height:0;font:inherit;font-size:12px;line-height:1.45;color:var(--ink);background:var(--field);border:none;border-top:1px solid var(--seam);
+    padding:10px 14px;resize:none;outline:none;white-space:pre;overflow:auto;tab-size:2} #ws-decl textarea.ro{opacity:.75}
+  #ws-decl textarea:focus{box-shadow:inset 0 0 0 1px var(--amber-dim)}
+  #workshop>header .sub{color:var(--dim);letter-spacing:.06em;font-size:10.5px;font-weight:normal}
   .ws-h{font-size:10.5px;letter-spacing:.2em;color:var(--dim);margin:10px 0 4px} .ws-h.sub{margin:6px 0 2px;letter-spacing:.14em;opacity:.8}
   .ws-row{padding:4px 7px;border-radius:6px;cursor:pointer;color:var(--ink);display:flex;gap:8px;align-items:baseline;border-left:2px solid transparent}
   .ws-row:hover{background:var(--hover)} .ws-row.on{background:var(--well);border-left-color:var(--amber)} .ws-row.retired{opacity:.55} .ws-row.new{color:var(--amber)}
@@ -739,16 +763,25 @@
 <div id="workshop-tab" onclick="toggleWorkshop()" title="the Workshop — where a craft is authored: your drafts, the shelf's crafts, the graph drawn from its declaration, the cut">W O R K S H O P</div>
 <div id="workshop" role="region" aria-label="the Workshop">
   <header>
-    <span>THE WORKSHOP · the one place where all mutability occurs — your drafts · the shelf's crafts · the graph drawn from its declaration · the node inspector · the cut</span>
-    <span id="ws-chip">MIND <select id="ws-mind"><option value="">…</option></select><span id="ws-mind-card"></span></span>
-    <span class="x" onclick="toggleChat()" title="the chat — docked beside the Workshop; with a draft open it speaks to the Workshop agent">CHAT ▾</span>
+    <span>THE WORKSHOP <span class="sub">· the one place where all mutability occurs — a draft is yours until the cut</span></span>
+    <span id="ws-chip" title="the Workshop agent's mind — assigned through the Stable's own held door">MIND <select id="ws-mind"><option value="">…</option></select><span id="ws-mind-card"></span></span>
+    <span class="x" onclick="wsLayoutReset()" title="every pane back to its stock size">⟲ layout</span>
+    <span class="x" style="margin-left:0" onclick="toggleChat()" title="the chat — docked beside the Workshop as its own column; C opens and closes it">CHAT ▾</span>
     <span class="x" style="margin-left:0" onclick="toggleWorkshop(false)" title="close the Workshop">Esc · ▾ close</span>
   </header>
   <div id="ws-body">
-    <div id="ws-rail"><input id="ws-filter" placeholder="find a draft or a craft — by name, kind or words" autocomplete="off"><div id="ws-list"></div></div>
-    <div id="ws-canvas"></div>
-    <div id="ws-insp"></div>
-    <div id="ws-decl"><div class="ws-h" id="ws-decl-h">THE DECLARATION · the same truth as the canvas</div><textarea id="ws-json" spellcheck="false" readonly></textarea><div class="acts" id="ws-acts"></div></div>
+    <div id="ws-rail" class="ws-pane"><div class="ws-pane-h" id="ws-rail-h"><b>THE SHELF</b><input id="ws-filter" placeholder="find a draft or a craft" title="by name, kind or words" autocomplete="off"></div><div class="ws-scroll"><div id="ws-list"></div></div></div>
+    <div class="ws-split" data-split="rail" title="drag to size THE SHELF · double-click for the stock width"></div>
+    <div id="ws-center">
+      <div class="ws-pane-h" id="ws-canvas-h"><b>THE CANVAS</b><span id="ws-canvas-words">the graph drawn from its declaration · click a node or a way out to inspect it</span><span class="hint">entry ringed cyan · a violet arrow wears a when · the plain arrow is the default way out</span></div>
+      <div id="ws-canvas"></div>
+      <div class="ws-split h" id="ws-split-decl" data-split="decl" title="drag to size THE DECLARATION · double-click for the stock height"></div>
+      <div id="ws-decl"><div class="ws-pane-h"><b>THE DECLARATION</b><span id="ws-decl-h">the same truth as the canvas</span><div class="acts" id="ws-acts"></div><button class="ws-btn" id="ws-decl-max" title="the declaration alone in the middle — click again for the canvas back">⤢</button></div><textarea id="ws-json" spellcheck="false" readonly></textarea></div>
+    </div>
+    <div class="ws-split" data-split="insp" title="drag to size THE INSPECTOR · double-click for the stock width"></div>
+    <div id="ws-insp" class="ws-pane"><div class="ws-pane-h"><b>THE INSPECTOR</b><span class="hint">the craft · a node · a way out</span></div><div class="ws-scroll" id="ws-insp-in"></div></div>
+    <div class="ws-split" data-split="chat" title="drag to size THE CHAT · double-click for the stock width"></div>
+    <div id="ws-chatcol"></div>
   </div>
 </div>
 
@@ -3101,7 +3134,7 @@ function defaultLine(g){
 /* ---- the inspector: a node, a way out, the craft, or a new draft ---- */
 function opt(list, cur, none){ return (none ? `<option value="">${esc(none)}</option>` : "") + list.map(v => `<option value="${esc(v)}" ${String(v) === String(cur ?? "") ? "selected" : ""}>${esc(v)}</option>`).join(""); }
 function drawInspector(){
-  const box = document.getElementById("ws-insp"); if (!box) return;
+  const box = document.getElementById("ws-insp-in"); if (!box) return;
   if (!WS.open){ box.innerHTML = `<div class="ws-h">THE INSPECTOR</div><div class="meta">click a node or an arrow on the canvas, or a row on the left</div>`; return; }
   if (WS.open.source === "new"){
     box.innerHTML = `<div class="ws-h">A NEW DRAFT · yours alone until the cut</div><label>kind</label><select id="ws-new-kind">${opt(CRAFT_KINDS, "graph")}</select><label>name · lowercase letters, digits, - _ .</label><input id="ws-new-name" placeholder="bob.v0"><div class="acts"><button class="ws-btn p" id="ws-new-go">start the draft</button></div><div class="meta">saved under your seat at once (routine, L1); the Workshop agent can edit it on your words; “cut the &lt;name&gt; draft” puts it on the shelf (held at the interlock)</div>`;
@@ -3227,7 +3260,7 @@ function drawDecl(){
   if (!ta) return;
   const ro = !WS.open || WS.open.source !== "draft";
   ta.value = WS.decl ? JSON.stringify(WS.decl, null, 2) : ""; ta.readOnly = ro; ta.classList.toggle("ro", ro);
-  head.textContent = !WS.open ? "THE DECLARATION · the same truth as the canvas" : ro ? `THE DECLARATION · ${WS.open.source === "shelf" ? "as it stands on the shelf (read-only)" : "name the draft first"}` : `THE DECLARATION · ${plainKind(WS.open.kind)} ${WS.open.name} · edit here or on the canvas${WS.dirty ? " · UNSAVED" : ""}`;
+  head.textContent = !WS.open ? "the same truth as the canvas" : ro ? `${WS.open.source === "shelf" ? "as it stands on the shelf (read-only)" : "name the draft first"}` : `${plainKind(WS.open.kind)} ${WS.open.name} · edit here or on the canvas${WS.dirty ? " · UNSAVED" : ""}`;
   acts.innerHTML = ro ? "" : `<button class="ws-btn" id="ws-apply">apply the JSON to the canvas</button><button class="ws-btn p" id="ws-save">SAVE · routine, under your seat</button><button class="ws-btn hold" id="ws-cut">CUT onto the shelf → the interlock</button><button class="ws-btn" id="ws-undo">discard changes</button><button class="ws-btn" id="ws-discard">discard the draft</button><button class="ws-btn" id="ws-ask">ask the agent</button>`;
   if (ro) return;
   const q = (id) => document.getElementById(id);
@@ -3285,19 +3318,64 @@ function workshopWire(text, to){        // the open draft rides the ask BY ID so
 /* W102: the Workshop yields to the chat — the chat docks full-height on the right, the Workshop's right edge meets it */
 let WS_DOCK = null;                       // the chat's own size, kept while it is docked beside the Workshop
 function wsDocked(){ return workshopPull && workshopPull.classList.contains("open") && chat.classList.contains("open"); }
+/* THE WORKSPACE PASS (JB, 2026-10-09): the chat, docked, is the Workshop's FIFTH COLUMN — the grid reserves the column
+   (#ws-chatcol) and the chat is laid over exactly that cell, so nothing overlaps and the seam beside it is a splitter */
 function layoutWorkshop(){
   if (!workshopPull) return;
-  if (wsDocked()){
-    if (WS_DOCK === null) WS_DOCK = {w: chat.style.width || "", h: chat.style.height || ""};
-    const want = Math.max(320, Math.min(parseFloat(chat.style.width) || 560, Math.floor(window.innerWidth * 0.36)));
-    chat.style.width = want + "px"; chat.style.height = window.innerHeight + "px";
-    workshopPull.style.right = Math.ceil(chat.getBoundingClientRect().width) + "px";
-  } else {
-    workshopPull.style.right = "";
-    if (WS_DOCK !== null){ chat.style.width = WS_DOCK.w; chat.style.height = WS_DOCK.h; WS_DOCK = null; }
+  const docked = wsDocked();
+  workshopPull.classList.toggle("docked", docked);
+  if (docked){
+    if (WS_DOCK === null) WS_DOCK = {w: chat.style.width || "", h: chat.style.height || "", top: chat.style.top || "", left: chat.style.left || "", right: chat.style.right || ""};
+    const col = document.getElementById("ws-chatcol");             // offsets, never a rect: the pull's slide-in transform must not move the chat
+    chat.style.top = Math.round(col.offsetTop) + "px"; chat.style.left = Math.round(col.offsetLeft) + "px"; chat.style.right = "auto";
+    chat.style.width = Math.round(col.offsetWidth) + "px"; chat.style.height = Math.round(col.offsetHeight) + "px";
+  } else if (WS_DOCK !== null){
+    chat.style.width = WS_DOCK.w; chat.style.height = WS_DOCK.h; chat.style.top = WS_DOCK.top; chat.style.left = WS_DOCK.left; chat.style.right = WS_DOCK.right;
+    WS_DOCK = null;
   }
 }
-addEventListener("resize", layoutWorkshop);
+addEventListener("resize", () => requestAnimationFrame(layoutWorkshop));   // after the chat's own fit, never before it
+/* the splitters: every seam between two panes is dragged; the sizes live in this browser (orreth.ws.layout); ⟲ layout resets */
+const WS_STOCK = {rail: 272, insp: 360, chat: 560, decl: 42};              // px · px · px · % of the middle's height
+const WS_MIN = {rail: 200, insp: 280, chat: 340, decl: 14}, WS_MAX = {rail: 520, insp: 640, chat: 900, decl: 86};
+function wsLayoutRead(){ let v = {}; try { v = JSON.parse(localStorage.getItem("orreth.ws.layout") || "{}") || {}; } catch (e) {} return v; }
+function wsLayoutApply(){
+  const v = wsLayoutRead(); const el = workshopPull; if (!el) return;
+  for (const k of ["rail", "insp", "chat"]) el.style.setProperty("--ws-" + k, Math.max(WS_MIN[k], Math.min(WS_MAX[k], Number(v[k]) || WS_STOCK[k])) + "px");
+  el.style.setProperty("--ws-decl", Math.max(WS_MIN.decl, Math.min(WS_MAX.decl, Number(v.decl) || WS_STOCK.decl)) + "%");
+  layoutWorkshop();
+}
+function wsLayoutWrite(k, n){ const v = wsLayoutRead(); v[k] = n; try { localStorage.setItem("orreth.ws.layout", JSON.stringify(v)); } catch (e) {} }
+function wsLayoutReset(){ try { localStorage.removeItem("orreth.ws.layout"); } catch (e) {} wsLayoutApply(); sysline("the Workshop's panes are back to their stock sizes"); }
+(function wsSplitters(){
+  document.querySelectorAll("#workshop .ws-split").forEach(sp => {
+    const k = sp.dataset.split, horizontal = k === "decl";
+    let drag = null;
+    sp.addEventListener("pointerdown", e => {
+      const v = wsLayoutRead();
+      const center = document.getElementById("ws-center");
+      drag = {x: e.clientX, y: e.clientY, at: Number(v[k]) || WS_STOCK[k],
+              centerH: horizontal ? center.getBoundingClientRect().height : 0};
+      sp.setPointerCapture(e.pointerId); sp.classList.add("on"); e.preventDefault();
+    });
+    sp.addEventListener("pointermove", e => {
+      if (!drag) return;
+      let n;
+      if (horizontal){ const dy = e.clientY - drag.y; n = drag.at - (dy / Math.max(1, drag.centerH)) * 100; }   // the declaration grows upward
+      else if (k === "rail") n = drag.at + (e.clientX - drag.x);
+      else n = drag.at - (e.clientX - drag.x);                                       // the inspector and the chat grow leftward
+      n = Math.max(WS_MIN[k], Math.min(WS_MAX[k], n));
+      workshopPull.style.setProperty("--ws-" + k, horizontal ? n + "%" : Math.round(n) + "px");
+      drag.now = n; layoutWorkshop();
+    });
+    const done = () => { if (!drag) return; if (drag.now !== undefined) wsLayoutWrite(k, horizontal ? Math.round(drag.now * 10) / 10 : Math.round(drag.now)); drag = null; sp.classList.remove("on"); layoutWorkshop(); };
+    sp.addEventListener("pointerup", done); sp.addEventListener("pointercancel", done);
+    sp.addEventListener("dblclick", () => { wsLayoutWrite(k, WS_STOCK[k]); wsLayoutApply(); });
+  });
+  const mx = document.getElementById("ws-decl-max");
+  if (mx) mx.onclick = () => { const c = document.getElementById("ws-center"); c.classList.toggle("declmax"); mx.textContent = c.classList.contains("declmax") ? "⤡" : "⤢"; };
+  wsLayoutApply();
+})();
 
 let HC = null, HC_AT = 0;                        // the health checks, read every 30 s (nine laws, some through the gateway)
 async function loadMonitor(){
