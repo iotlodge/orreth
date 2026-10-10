@@ -22,7 +22,7 @@
   :root{color-scheme:dark;
     --hull:#14161c; --hull2:#1b1e27; --seam:#2a2e3a; --seam-soft:rgba(42,46,58,.55);
     --amber:#e8a84c; --amber-dim:#8a6428;
-    --space:#070a16; --space-glow:#0b1020; --glass:rgba(22,26,38,.82); --glass-chat:rgba(22,26,38,.66);
+    --space:#070a16; --space-glow:#0b1020; --glass:rgba(22,26,38,.82); --glass-chat:rgba(22,26,38,.66); --grid-ws:rgba(139,147,168,.13);
     --ink:#dfe3ee; --dim:#8b93a8; --jade:#7fd8a8; --red-ink:var(--red-ink); --dim-lamp:#5a5f70;
     --bubble-mine:#26304a; --bubble-mine-line:#334063; --bubble-theirs:#1d2230; --field:#141820; --card:#1a1f2c;
     --inspector:#0e121e; --btn-ink:#1a1408; --hover:rgba(255,255,255,.03); --well:rgba(0,0,0,.25); --tour-dim:rgba(4,6,12,.5);
@@ -37,7 +37,7 @@
   :root[data-theme="light"]{color-scheme:light;
     --hull:#E9E3D3; --hull2:#F1EDE2; --seam:#D6CDB8; --seam-soft:rgba(191,180,153,.6);
     --amber:#9C721D; --amber-dim:#A8863E;
-    --space:#F6F2E8; --space-glow:#FBF8F0; --glass:rgba(252,249,241,.86); --glass-chat:rgba(252,249,241,.78);
+    --space:#F6F2E8; --space-glow:#FBF8F0; --glass:rgba(252,249,241,.86); --glass-chat:rgba(252,249,241,.78); --grid-ws:rgba(96,80,40,.15);
     --ink:#262C3D; --dim:#5D6377; --jade:#237A50; --red-ink:#B0503F; --dim-lamp:#BFB499;
     --cyan:#2F6FA8; --violet:#6C4BB0; --red:#B0503F; --dark-lamp:#D6CDB8; --grid:rgba(96,80,40,.09);
     --bubble-mine:#DCE3F2; --bubble-mine-line:#B7C3DF; --bubble-theirs:#F7F3E9; --field:#FBF9F2; --card:#F3EEE2;
@@ -93,9 +93,15 @@
     cubic-bezier(.22,.9,.3,1),height .45s cubic-bezier(.22,.9,.3,1);
     z-index:10;display:flex;
     flex-direction:column;border:1px solid var(--seam);border-top:none;
-    border-radius:0 0 14px 14px;background:var(--glass-chat,var(--glass));
+    border-radius:0 0 14px 14px;
+    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/24px 24px,var(--glass-chat,var(--glass));
     backdrop-filter:blur(14px);box-shadow:0 18px 50px var(--shadow2)}
   #chat.open{transform:translateY(0)}
+  /* THE WINDOW (JB, 2026-10-09): the chat is a window — dragged by its header, sized by its grip, its place and size remembered
+     per context (the Panel · the wall · the Workshop), pinned into the Workshop's grid by its own ⌖ — one frame other windows reuse */
+  #chat.moved{border-radius:14px;border-top:1px solid var(--seam)} #chat.dragging{transition:none;user-select:none}
+  #chat header{cursor:move} #chat header a,#chat header .win{cursor:pointer}
+  #chat header .win{color:var(--amber-dim)} #chat header .win:hover{color:var(--amber)}
   /* the band open → the chat YIELDS: the two never overlap, so every
      band row stays a door and the ask box stays reachable (after-walk
      wound #1: the chat swallowed the band's clicks in the landing state) */
@@ -400,7 +406,8 @@
   #band.open{transform:translateY(0)}
   /* THE GUIDE (JB's seed, walk #13): a sheet over everything, opened to where you are */
   #guide{position:fixed;left:12vw;right:12vw;top:6vh;bottom:6vh;transform:translateY(-120%);transition:transform .4s cubic-bezier(.22,.9,.3,1);
-    z-index:12;display:flex;flex-direction:column;border:1px solid var(--seam);border-radius:14px;background:var(--glass);
+    z-index:12;display:flex;flex-direction:column;border:1px solid var(--seam);border-radius:14px;
+    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/24px 24px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/24px 24px,var(--glass);
     backdrop-filter:blur(12px);box-shadow:0 14px 44px var(--shadow2)}
   #guide.open{transform:translateY(0)}
   #guide header{font-size:10.5px;letter-spacing:.2em;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--seam)}
@@ -419,8 +426,8 @@
   #workshop-tab:hover{color:var(--amber)}
   #workshop{position:fixed;inset:0;transform:translateX(104%);transition:transform .45s cubic-bezier(.22,.9,.3,1);z-index:9;
     display:grid;grid-template-rows:auto minmax(0,1fr);border-left:1px solid var(--seam);
-    background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/24px 24px,
-      linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/24px 24px,
+    background:linear-gradient(var(--grid-ws) 1px,transparent 1px) 0 0/24px 24px,
+      linear-gradient(90deg,var(--grid-ws) 1px,transparent 1px) 0 0/24px 24px,
       radial-gradient(ellipse at 50% 30%,var(--space-glow) 0%,var(--space) 70%)}
   #workshop.open{transform:translateX(0)}
   /* W102 (JB, 2026-10-07): the Workshop NEVER covers the chat — with both open the chat DOCKS as a full-height column on
@@ -771,7 +778,6 @@
     <span>THE WORKSHOP <span class="sub">· the one place where all mutability occurs — a draft is yours until the cut</span></span>
     <span id="ws-chip" title="the Workshop agent's mind — assigned through the Stable's own held door">MIND <select id="ws-mind"><option value="">…</option></select><span id="ws-mind-card"></span></span>
     <span class="x" onclick="wsLayoutReset()" title="every pane back to its stock size">⟲ layout</span>
-    <span class="x" id="ws-pin" style="margin-left:0" onclick="wsPin()" title="pin the chat INTO the Workshop as its own column (the panes make room) — unpinned, the chat floats over it as on the Panel">⌖ pin the chat</span>
     <span class="x" style="margin-left:0" onclick="toggleChat()" title="the chat — C opens and closes it">CHAT ▾</span>
     <span class="x" style="margin-left:0" onclick="toggleWorkshop(false)" title="close the Workshop">Esc · ▾ close</span>
   </header>
@@ -811,7 +817,7 @@
        aria-label="resize the chat" role="separator"></div>
   <header><span id="chat-head">THE ONE CHAT · u:dev</span>
     <span class="hint"><a id="ses-list">sessions</a> · <a id="ses-new">new session</a>
-      · <a onclick="toggleChat(false)" title="close the chat, keep the pulls">▾ close</a>
+      <span id="chat-pin-wrap" hidden>· <a id="chat-pin" class="win" title="pin this window into the Workshop as its own column (the panes make room) — pinned, unpin lets it float again">⌖ pin</a> </span>· <a onclick="toggleChat(false)" title="close the chat, keep the pulls">▾ close</a>
       · [Esc] returns to the bridge</span></header>
   <div id="focus"><span>FOCUS</span><span id="focus-what"></span>
     <span class="hint">[Esc] returns the bridge, scope restored</span></div>
@@ -998,6 +1004,7 @@ addEventListener("keydown", e => {
     if (tourOpen()) tourEnd();                                       // THE TOUR is the lightest thing on top of everything
     else if (inspOpen()) inspClose();                                // the panel's inspector is the smallest thing open
     else if (guideBox.classList.contains("open")) toggleGuide(false); // the guide is on top of everything
+    else if (chat.classList.contains("open") && chat.contains(document.activeElement) && workshopPull && workshopPull.classList.contains("open")) toggleChat(false);   // in the chat, over the Workshop: the chat closes, the Workshop stays (JB, 2026-10-09)
     else if (band.classList.contains("open")) toggleBand(false);     // the pull on top closes first;
     else if (monitorPull.classList.contains("open")) toggleMonitor(false);   // the chat and the focus only
     else if (crewPull.classList.contains("open")) toggleCrew(false);         // when no pull is open —
@@ -1024,6 +1031,7 @@ function wall(on, gesture){
   document.body.classList.toggle("wall", on);
   const b = document.getElementById("wallbtn"); if (b){ b.classList.toggle("lit", on); b.innerHTML = `<span class="glyph">⛶</span>${on ? "LEAVE FULL SCREEN" : "FULL SCREEN"}`; }
   try { localStorage.setItem("orreth.panel.wall", on ? "1" : "0"); } catch (e) {}
+  if (typeof winApply === "function") requestAnimationFrame(winApply);   // the window's place for the wall, or the Panel's
   if (gesture){
     if (on && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(()=>{});
     if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(()=>{});
@@ -2923,7 +2931,8 @@ function toggleWorkshop(open){
                label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"});
   }
   if (!now && was) popFocusOf("ws_workshop");                    // W53: the pull closed, its focus goes with it
-  layoutWorkshop();                                              // W102: the chat docks beside it, never under it
+  layoutWorkshop();                                              // a pinned chat docks beside it; a floating one keeps its place
+  if (typeof winApply === "function") winApply();                // the window's place for THIS context (the Workshop's, or back to the Panel's)
 }
 let workshopTimer = null;
 async function loadWorkshop(){
@@ -3329,8 +3338,16 @@ function wsPinned(){ try { return localStorage.getItem("orreth.ws.pin") === "1";
 function wsPin(on){
   const now = on ?? !wsPinned();
   try { localStorage.setItem("orreth.ws.pin", now ? "1" : "0"); } catch (e) {}
-  const b = document.getElementById("ws-pin"); if (b) b.textContent = now ? "⌖ unpin the chat" : "⌖ pin the chat";
   layoutWorkshop();
+}
+function wsPinFace(){                                               // the pin on the chat's own header: shown with the Workshop open, worded by state
+  const w = document.getElementById("chat-pin-wrap"), b = document.getElementById("chat-pin");
+  if (!w || !b) return;
+  const open = workshopPull && workshopPull.classList.contains("open");
+  w.hidden = !open;
+  b.textContent = wsPinned() ? "⌖ unpin" : "⌖ pin to the Workshop";
+  b.title = wsPinned() ? "unpin this window — it floats over the Workshop again, where you last left it"
+                       : "pin this window into the Workshop as its own column (the panes make room)";
 }
 function wsDocked(){ return workshopPull && workshopPull.classList.contains("open") && chat.classList.contains("open") && wsPinned(); }
 /* THE WORKSPACE PASS (JB, 2026-10-09): the chat, docked, is the Workshop's FIFTH COLUMN — the grid reserves the column
@@ -3345,9 +3362,10 @@ function layoutWorkshop(){
     chat.style.top = Math.round(col.offsetTop) + "px"; chat.style.left = Math.round(col.offsetLeft) + "px"; chat.style.right = "auto";
     chat.style.width = Math.round(col.offsetWidth) + "px"; chat.style.height = Math.round(col.offsetHeight) + "px";
   } else if (WS_DOCK !== null){
-    chat.style.width = WS_DOCK.w; chat.style.height = WS_DOCK.h; chat.style.top = WS_DOCK.top; chat.style.left = WS_DOCK.left; chat.style.right = WS_DOCK.right;
     WS_DOCK = null;
+    if (typeof winApply === "function") winApply();                // the window's own place for this context, remembered
   }
+  wsPinFace();
 }
 addEventListener("resize", () => requestAnimationFrame(layoutWorkshop));   // after the chat's own fit, never before it
 /* the splitters: every seam between two panes is dragged; the sizes live in this browser (orreth.ws.layout); ⟲ layout resets */
@@ -3389,7 +3407,8 @@ function wsLayoutReset(){ try { localStorage.removeItem("orreth.ws.layout"); } c
   });
   const mx = document.getElementById("ws-decl-max");
   if (mx) mx.onclick = () => { const c = document.getElementById("ws-center"); c.classList.toggle("declmax"); mx.textContent = c.classList.contains("declmax") ? "⤡" : "⤢"; };
-  const pb = document.getElementById("ws-pin"); if (pb) pb.textContent = wsPinned() ? "⌖ unpin the chat" : "⌖ pin the chat";
+  const pb = document.getElementById("chat-pin"); if (pb) pb.onclick = () => wsPin();
+  wsPinFace();
   wsLayoutApply();
 })();
 
@@ -3798,38 +3817,86 @@ document.getElementById("ses-new").onclick = () => rollSession(true);
   await rollSession(false);
 })();
 
-/* ---- resizable: the upper-right corner is the origin, locked ---- */
-(() => {
-  const chat = document.getElementById("chat"), grip = document.getElementById("grip");
-  // W25 (walk #9, JB on the laptop screen): the remembered size is the human's WISH, the
-  // screen is the LAW — the chat is fitted to the viewport it wakes on and again on every
-  // resize, so the composer and the grip never stand beyond the edge; the wish is kept
-  // for the day the big screen returns (the stored value is never overwritten by a fit).
-  const fitChat = () => {
-    let s = null; try { s = JSON.parse(localStorage.getItem("orreth.chat.size") || "null"); } catch (e) {}
-    const maxW = Math.max(320, window.innerWidth - 24), maxH = Math.max(240, window.innerHeight - 24);
-    const w = s && s.w ? Math.min(s.w, maxW) : null, h = s && s.h ? Math.min(s.h, maxH) : null;
-    if (w) chat.style.width = w + "px"; else if (chat.getBoundingClientRect().width > maxW) chat.style.width = maxW + "px";
-    if (h) chat.style.height = h + "px"; else if (chat.getBoundingClientRect().height > maxH) chat.style.height = maxH + "px";
+/* ---- THE WINDOW (JB, 2026-10-09): one frame for a floating thing on the bridge. `windowize` makes an element a window:
+   dragged by its handle, sized by its grip, its place and size remembered PER CONTEXT (the Panel · the wall · the Workshop) in
+   this browser, never off the screen on a smaller display; a window the Workshop has pinned is laid out by the Workshop and
+   is not dragged. The chat is the first window; the guide and the pulls can wear the same frame. ---- */
+function winCtx(){
+  if (workshopPull && workshopPull.classList.contains("open")) return "workshop";
+  return document.body.classList.contains("wall") ? "wall" : "panel";
+}
+function windowize(el, opts){
+  const key = "orreth.win." + opts.key, handle = opts.handle, grip = opts.grip;
+  const read = () => { try { return JSON.parse(localStorage.getItem(key) || "{}") || {}; } catch (e) { return {}; } };
+  const write = (ctx, geo) => { const v = read(); v[ctx] = geo; try { localStorage.setItem(key, JSON.stringify(v)); } catch (e) {} };
+  const minW = opts.minW || 320, minH = opts.minH || 240;
+  const clamp = (g) => {                                       // the screen is the law: a window stays reachable
+    const maxW = Math.max(minW, window.innerWidth - 24), maxH = Math.max(minH, window.innerHeight - 24);
+    const w = Math.min(Math.max(minW, g.w || minW), maxW), h = Math.min(Math.max(minH, g.h || minH), maxH);
+    const left = Math.min(Math.max(0, g.left ?? (window.innerWidth - w - 12)), window.innerWidth - Math.min(w, 120));
+    const top = Math.min(Math.max(0, g.top ?? 0), window.innerHeight - 48);
+    return {left, top, w, h};
   };
-  fitChat(); addEventListener("resize", fitChat);
+  const apply = () => {
+    if (opts.docked && opts.docked()) return;                  // the Workshop lays a pinned window out
+    const g = read()[winCtx()];
+    if (!g){ el.style.left = ""; el.style.top = ""; el.style.right = ""; el.classList.remove("moved");
+             const s0 = read().size; if (s0){ el.style.width = Math.min(s0.w, window.innerWidth - 24) + "px"; el.style.height = Math.min(s0.h, window.innerHeight - 24) + "px"; }
+             else { el.style.width = ""; el.style.height = ""; }
+             return; }
+    const c = clamp(g);
+    el.style.left = c.left + "px"; el.style.top = c.top + "px"; el.style.right = "auto";
+    el.style.width = c.w + "px"; el.style.height = c.h + "px"; el.classList.add("moved");
+  };
+  const geo = () => { const r = el.getBoundingClientRect(); return {left: Math.round(r.left), top: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)}; };
+  const save = () => { if (opts.docked && opts.docked()) return; write(winCtx(), geo()); write("size", {w: geo().w, h: geo().h}); };
+  // the drag, by the handle — never from a link, a button or a field on it
   let drag = null;
-  grip.addEventListener("pointerdown", e => {
-    const r = chat.getBoundingClientRect();
-    drag = {right: r.right, top: r.top}; grip.setPointerCapture(e.pointerId); e.preventDefault();
+  handle.addEventListener("pointerdown", e => {
+    if (e.button !== 0 || (opts.docked && opts.docked())) return;
+    if (e.target.closest("a,button,input,select,textarea,.win")) return;
+    const r = el.getBoundingClientRect();
+    drag = {x: e.clientX, y: e.clientY, left: r.left, top: r.top};
+    handle.setPointerCapture(e.pointerId); el.classList.add("dragging"); e.preventDefault();
   });
-  grip.addEventListener("pointermove", e => {
+  handle.addEventListener("pointermove", e => {
     if (!drag) return;
-    const w = Math.max(320, Math.min(window.innerWidth - 24, drag.right - e.clientX));
-    const h = Math.max(240, Math.min(window.innerHeight - 24, e.clientY - drag.top));
-    chat.style.width = w + "px"; if (!wsDocked()) chat.style.height = h + "px";
-    if (wsDocked()) layoutWorkshop();
+    const g = clamp({left: drag.left + (e.clientX - drag.x), top: drag.top + (e.clientY - drag.y), w: el.offsetWidth, h: el.offsetHeight});
+    el.style.left = g.left + "px"; el.style.top = g.top + "px"; el.style.right = "auto"; el.classList.add("moved");
   });
-  const done = () => { if (!drag) return; drag = null;
-    try { localStorage.setItem("orreth.chat.size", JSON.stringify(
-      {w: chat.getBoundingClientRect().width, h: chat.getBoundingClientRect().height})); } catch (e) {} };
-  grip.addEventListener("pointerup", done); grip.addEventListener("pointercancel", done);
-})();
+  const dragDone = () => { if (!drag) return; drag = null; el.classList.remove("dragging"); save(); };
+  handle.addEventListener("pointerup", dragDone); handle.addEventListener("pointercancel", dragDone);
+  handle.addEventListener("dblclick", e => {                    // a double-click on the handle: back to the stock place for this context
+    if (e.target.closest("a,button,input,select,textarea,.win")) return;
+    const v = read(); delete v[winCtx()]; try { localStorage.setItem(key, JSON.stringify(v)); } catch (e2) {} apply();
+  });
+  // the grip: the upper-right corner stays unless the window was moved (then the upper-left does)
+  if (grip){
+    let rs = null;
+    grip.addEventListener("pointerdown", e => {
+      if (opts.docked && opts.docked()) return;
+      const r = el.getBoundingClientRect();
+      rs = {right: r.right, left: r.left, top: r.top, moved: el.classList.contains("moved")}; grip.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    grip.addEventListener("pointermove", e => {
+      if (!rs) return;
+      const w = rs.moved ? Math.max(minW, Math.min(window.innerWidth - rs.left - 12, e.clientX - rs.left))
+                         : Math.max(minW, Math.min(window.innerWidth - 24, rs.right - e.clientX));
+      const h = Math.max(minH, Math.min(window.innerHeight - rs.top - 12, e.clientY - rs.top));
+      el.style.width = w + "px"; el.style.height = h + "px";
+      if (opts.onResize) opts.onResize();
+    });
+    const rsDone = () => { if (!rs) return; rs = null; save(); };
+    grip.addEventListener("pointerup", rsDone); grip.addEventListener("pointercancel", rsDone);
+  }
+  addEventListener("resize", () => requestAnimationFrame(apply));
+  apply();
+  return {apply, save, read};
+}
+const CHAT_WIN = windowize(chat, {key: "chat", handle: chat.querySelector("header"), grip: document.getElementById("grip"),
+                                  minW: 320, minH: 240, docked: () => typeof wsDocked === "function" && wsDocked(),
+                                  onResize: () => { if (typeof wsDocked === "function" && wsDocked() && typeof layoutWorkshop === "function") layoutWorkshop(); }});
+function winApply(){ CHAT_WIN.apply(); }
 
 /* ---- THE PANEL (row 4, panel sp1 — JB's lock 2026-09-28): the main viewport is a MIMIC PANEL of the kernel.
    GEOMETRY IS ARCHITECTURE — the six organs are the kernel's fixed slots; every crew seat the kernel declares is a
