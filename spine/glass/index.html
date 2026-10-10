@@ -2951,7 +2951,7 @@ async function loadWorkshop(){
   WS.minds = md;
   if (WS.open && WS.open.source === "draft"){                   // the open draft, re-read: the agent's hand redraws it
     const d = WS.drafts.find(x => x.draft_id === WS.open.draft.draft_id);
-    if (!d){ sysline(`your ${esc(WS.open.name)} ${esc(WS.open.kind)} draft is no longer under your seat (cut or discarded) — the canvas cleared`); WS.open = null; WS.decl = null; }
+    if (!d){ sysline(`your ${esc(WS.open.name)} ${esc(WS.open.kind)} draft is no longer under your seat (cut or discarded) — the canvas cleared`); WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null; }   // W117: a spent draft leaves nothing unsaved
     else {
       if (d.updated_at !== WS.open.draft.updated_at && !WS.dirty){ WS.decl = JSON.parse(JSON.stringify(d.body)); WS.sel = null; WS.selEdge = null;
         sysline(`your ${esc(d.name)} ${esc(d.kind)} draft changed under your seat (the Workshop agent's hand, or another of your sessions) — the canvas redrew`); }
@@ -2992,14 +2992,14 @@ function drawWorkshopRail(){
 }
 function wsOpenDraft(d){
   if (!d) return;
-  if (WS.dirty && !confirmLeave()) return;
+  if (WS.open && WS.dirty && !confirmLeave()) return;   // W117: no open draft, nothing unsaved
   WS.open = {source: "draft", draft: d, kind: d.kind, name: d.name};
   WS.decl = JSON.parse(JSON.stringify(d.body || {})); WS.dirty = false; WS.sel = null; WS.selEdge = null;
   drawWorkshopRail(); drawWorkshop();
 }
 function wsOpenCraft(s){
   if (!s) return;
-  if (WS.dirty && !confirmLeave()) return;
+  if (WS.open && WS.dirty && !confirmLeave()) return;   // W117: no open draft, nothing unsaved
   WS.open = {source: "shelf", craft: s, kind: s.kind, name: s.craft || s.name};
   WS.decl = JSON.parse(JSON.stringify(s.manifest || {})); WS.dirty = false; WS.sel = null; WS.selEdge = null;
   WS.stands[s.name] = null; wsStands(s);
@@ -3019,7 +3019,7 @@ async function wsStands(s){                    // WHERE IT STANDS (JB's lock 202
   if (WS.open && WS.open.source === "shelf" && WS.open.craft.name === s.name) drawInspector();
 }
 function wsNewDraft(){
-  if (WS.dirty && !confirmLeave()) return;
+  if (WS.open && WS.dirty && !confirmLeave()) return;   // W117: no open draft, nothing unsaved
   WS.open = {source: "new", kind: "graph", name: ""}; WS.decl = null; WS.sel = null; WS.selEdge = null; WS.dirty = false;
   drawWorkshopRail(); drawWorkshop();
 }
