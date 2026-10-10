@@ -101,8 +101,8 @@ def test_the_law_is_pure():
     assert ch.keycheck_payload(me.did, nonce) == desk.challenge_payload(me.did, nonce)
     a = ch.keycheck_answer(me, nonce, "sha256:what0000")
     assert a["public_key"] == me.verify_key_hex and desk.prove(me.did, a["public_key"], nonce, a["sig"])
-    assert ch.keycheck_verdict(me.did, nonce, a, "sha256:what0000", 1.0) == {"ok": True, "words": f"proven — who it says ({me.did[-8:]}) and what it says (sha256:w)"}
-    assert ch.keycheck_verdict(me.did, nonce, a, "sha256:else0000", 1.0)["words"] == "it says it stands on sha256:w but joined as sha256:e — not WHAT it says"
+    assert ch.keycheck_verdict(me.did, nonce, a, "sha256:what0000", 1.0) == {"ok": True, "words": f"proven — who it says ({me.did[-8:]}) and what it says (what0000)"}
+    assert ch.keycheck_verdict(me.did, nonce, a, "sha256:else0000", 1.0)["words"] == "it says it stands on what0000 but joined as else0000 — not WHAT it says"
     other = Identity("kc-other", bytes(range(1, 33)))
     assert ch.keycheck_verdict(me.did, nonce, {**a, "public_key": other.verify_key_hex}, None, 1.0)["ok"] is False
     assert ch.keycheck_verdict(me.did, nonce, {**a, "sig": {**a["sig"], "sig": "00" * 64}}, None, 1.0)["words"].startswith("the signature does not stand")
@@ -218,7 +218,7 @@ def test_the_key_check_asks_every_seated_body_to_prove_who_and_what_it_is(pg, mo
     assert pk == echo.identity.verify_key_hex and what == echo.template_hash and ok is None and verified is None
     # THE KERNEL VERIFIES on its next beat: proven, a fact, the tally
     moved = ch.beat(pg, publish=published.append)
-    assert moved == [f"echo: proven — who it says ({echo.identity.did[-8:]}) and what it says ({echo.template_hash[:8]})"]
+    assert moved == [f"echo: proven — who it says ({echo.identity.did[-8:]}) and what it says ({echo.template_hash.removeprefix('sha256:')[:8]})"]
     [v] = _facts(pg, ch.KEYCHECK_VERDICT, u)
     assert v["payload"]["ok"] is True and v["authority_chain"] == [ch.KERNEL]
     t = ch.keycheck_tally(pg)

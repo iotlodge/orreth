@@ -73,19 +73,23 @@ its id instead: "cut draft_3e7bf5f3b1ab").
 ### Part 1 — the ground, measured (OPERATING 1–6 · CHIPS: the seats and the refusals)
 
 1. **Say "open the monitor".**
-   → The MEASUREMENTS card reads TRUST · RECALL · EFFICIENCY · EXPERIENCE · COST, each `unknown` with its reason
-   ("trust: unknown — no graded yet (never a silent 1.0)"); the WATCHES card lists the kernel's watches green — the
+   → The MEASUREMENTS card reads TRUST · RECALL · EFFICIENCY · EXPERIENCE · COST. On a fresh world each is
+   `unknown` with its reason ("trust: unknown — no graded yet (never a silent 1.0)"); on a lived world each wears
+   its number with the count behind it (JB, 2026-10-10: "trust: 0.9250 — 37 of 40 graded replies passed"), red
+   below 1.0 — those reds are what THE OPERATING STATE intention hands the critic. The WATCHES card lists the kernel's watches green — the
    five measurements, the ground's connections, and the key-check's ("every seated body proved itself on the
    cadence"); the INTENTIONS show "keep this world's operating state at 1.0 …" beside Resiliency.
 2. **Say "show the key checks".**
    → One line: "N key-checks in the last day, 0 failed, none waiting — every seated body is asked every 300 s to
    prove who and what it is" (or "no body has been asked to prove itself yet — every 300 s once one is seated" on a
-   fresh world), then up to twenty rows `<name> · asked hh:mm:ss · proven`. In the Monitor the RAILS card carries the
+   fresh world), then up to twenty rows `<name> · asked hh:mm:ss · proven — who it says (<8 of its DID>) and what it says (<8 of
+   its declaration's hash>)` (W113 cured the doubled "proven" and the hash cut to one character). In the Monitor the RAILS card carries the
    same line as `key-check` (red only on a failure) and the pulse under GROUND reads "N key-checks today, 0 failed".
 3. **Say "summon identity", then "identity, who is seated?", then "dismiss identity".**
    → "identity summoned — it joins this session's crew: address it as “identity, …”; say “dismiss identity” to let it
    go · recorded" and the chip `identity · summoned` beside MITL; its reply says THE SEATS as it holds them — the
-   people seated by the ceremony by role (1 owner), the bodies alive on a lease, the key-checks of the day — from the
+   people seated by the ceremony by role (1 owner — a body's lease is a seat too, but never a person: W113 took
+   "629 body" out of that line), the bodies alive on a lease, the key-checks of the day — from the
    kernel's record, never its own word; then "identity dismissed — it leaves … · recorded, never deleted".
 4. **Say "summon security", then "security, what does the refusals ground hold?", then "dismiss security".**
    → The same summon words for `security`; its reply says THE REFUSALS GROUND: "nothing in the last day — no body was
@@ -98,12 +102,17 @@ its id instead: "cut draft_3e7bf5f3b1ab").
 7. **Say "show the measurements".**
    → Five lines: recall 1.0000 (N of N served asks replayable …), efficiency 1.0000, experience 1.0000 — 1 of 1
    thumbs up, trust unknown, cost by the ask (the echo spends nothing; a librarian ask moves it).
-8. **Wait a minute; read the tape and the chat.**
-   → The tape shows `ask received` for "grader, grade the reply ask_… by echo …"; the grader's journey reads "routed
-   to the event edge — a marker of kind grading asked for a response" and then "wrote my signed verdict on ask_…
-   under my own name — grade B" (or whatever it gave); a `verdict` fact.
-9. **Say "show the measurements" again.**
-   → trust 1.0000 — 1 of 1 graded replies passed (or 0.0000 if the grader gave D or F — honest).
+8. **Wait a minute, then say "show the measurements" again.**
+   → What happened in that minute, unseen: the kernel's grade beat handed the echo's reply to the grader (an ask the
+   KERNEL makes, under a grading marker — not yours, so it never appears in this chat); the grader wrote a signed
+   verdict under its own name. What you see: trust's count moved by ONE for the echo's reply and experience's by
+   one for your thumb (JB, 2026-10-10: 37 of 40 → 38 of 41 graded; 2 of 4 → 3 of 5 thumbs). On a lived world the
+   grade lands within seconds and can be in step 7's numbers already — then steps 7 and 8 read the same, and both
+   are right. On a fresh world: trust 1.0000 — 1 of 1 graded replies passed (or 0.0000 if the grader gave D or F).
+9. **Close the chat (Esc) and read THE TAPE.**
+   → THE TAPE is the strip along the bottom of the Panel — the feed in words, the newest facts first. Among the
+   last minute's facts: `ask received` naming "grader, grade the reply ask_… by echo …" (the kernel's own ask) and
+   a `verdict` after it. Press C (or say nothing and click the chat) to come back.
 
 ### Part 2 — the improvement loop closes in the Workshop (OPERATING 7–10, the mark made deterministic)
 

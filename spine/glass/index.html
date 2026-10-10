@@ -2644,7 +2644,7 @@ async function serviceWords(text){                 // "what services are here?" 
     const r = await fetch("/keychecks").then(x=>x.json()).catch(()=>null);
     if (!r){ sysline("the key-check door did not answer"); return true; }
     sysline(esc(r.words || ""));
-    for (const k of (r.keychecks || []).slice(0, 20)) sysline(`<b>${esc(k.name)}</b> · asked ${esc(String(k.asked_at).slice(11, 19))} · ${k.verified_at ? (k.ok ? "proven" : "FAILED") + (k.words ? " — " + esc(k.words) : "") : (k.answered_at ? "answered, not yet verified" : "waiting for its proof")}`);
+    for (const k of (r.keychecks || []).slice(0, 20)) sysline(`<b>${esc(k.name)}</b> · asked ${esc(String(k.asked_at).slice(11, 19))} · ${k.verified_at ? (k.ok ? esc(k.words || "proven") : "FAILED" + (k.words ? " — " + esc(k.words) : "")) : (k.answered_at ? "answered, not yet verified" : "waiting for its proof")}`);
     return true;
   }
   m = t.match(/^show\s+(?:me\s+)?(?:the\s+)?(experiments|seats)$/);

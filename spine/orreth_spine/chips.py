@@ -66,7 +66,9 @@ CLAIMS = ("who", "what", "where", "left")
 # ---- the law (pure; mirrored in chips.rs) ------------------------------------------------------
 
 def _h8(h: str | None) -> str:
+    """Eight characters of a declaration hash AFTER its `sha256:` prefix (W113: `sha256:0` said nothing)."""
     h = str(h or "")
+    h = h[7:] if h.startswith("sha256:") else h
     return h[:8] if h else "?"
 
 
@@ -413,8 +415,8 @@ def seats_held(conn) -> dict:
     """THE CEREMONY AND THE SEATS as the identity chip holds them: the people seated now (by role),
     the bodies alive, and the key-checks of the day."""
     cur = conn.cursor()
-    cur.execute(f"SELECT role, count(*) FROM spine_seats WHERE left_at IS NULL AND expiry > now() AND {ev.WITHIN} GROUP BY role",
-                ev.within_params(ev.universe()))
+    cur.execute(f"SELECT role, count(*) FROM spine_seats WHERE left_at IS NULL AND expiry > now() AND role <> 'body' AND {ev.WITHIN} GROUP BY role",
+                ev.within_params(ev.universe()))      # W113: a body's lease is a seat with the role `body` — the bodies are counted below, never as people
     people = {r[0]: int(r[1]) for r in cur.fetchall()}
     cur.execute(f"SELECT count(*) FROM spine_leases WHERE until > now() AND {ev.WITHIN}", ev.within_params(ev.universe()))
     bodies = int(cur.fetchone()[0])

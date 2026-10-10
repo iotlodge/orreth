@@ -138,7 +138,7 @@ pub async fn seats_held<C: GenericClient>(c: &C, scope: &str) -> Result<Value, R
     let mut people = serde_json::Map::new();
     for r in c
         .query(
-            "SELECT role, count(*) FROM spine_seats WHERE left_at IS NULL AND expiry > now() AND (scope = $1 OR scope LIKE $1 || '/%') GROUP BY role",
+            "SELECT role, count(*) FROM spine_seats WHERE left_at IS NULL AND expiry > now() AND role <> 'body' AND (scope = $1 OR scope LIKE $1 || '/%') GROUP BY role", // W113: a lease is a seat with the role `body` — never a person
             &[&scope],
         )
         .await?

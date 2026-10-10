@@ -43,8 +43,10 @@ pub fn reviewer_of_function(function: &str) -> Option<&'static str> {
     }
 }
 
+/// Eight characters of a declaration hash AFTER its `sha256:` prefix (W113: `sha256:0` said nothing).
 fn h8(v: &Value) -> String {
     let s = if v.is_null() { String::new() } else { python_str(v) };
+    let s = s.strip_prefix("sha256:").map(str::to_string).unwrap_or(s);
     if s.is_empty() {
         "?".into()
     } else {

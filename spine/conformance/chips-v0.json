@@ -34,7 +34,7 @@
      {
       "claim": "what",
       "kept": true,
-      "said": "stood on the candidate's declaration (sha256:a)"
+      "said": "stood on the candidate's declaration (abcdef01)"
      },
      {
       "claim": "where",
@@ -47,7 +47,7 @@
       "said": "left the room \u2014 its wear closed when it stopped"
      }
     ],
-    "words": "every claim kept: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2); what \u2014 stood on the candidate's declaration (sha256:a); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
+    "words": "every claim kept: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2); what \u2014 stood on the candidate's declaration (abcdef01); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
    }
   },
   {
@@ -80,7 +80,7 @@
      {
       "claim": "what",
       "kept": true,
-      "said": "stood on the candidate's declaration (sha256:a)"
+      "said": "stood on the candidate's declaration (abcdef01)"
      },
      {
       "claim": "where",
@@ -93,7 +93,7 @@
       "said": "left the room \u2014 its wear closed when it stopped"
      }
     ],
-    "words": "every claim kept: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the first life of this self; no standing life to compare; what \u2014 stood on the candidate's declaration (sha256:a); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
+    "words": "every claim kept: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the first life of this self; no standing life to compare; what \u2014 stood on the candidate's declaration (abcdef01); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
    }
   },
   {
@@ -126,7 +126,7 @@
      {
       "claim": "what",
       "kept": true,
-      "said": "stood on the candidate's declaration (sha256:a)"
+      "said": "stood on the candidate's declaration (abcdef01)"
      },
      {
       "claim": "where",
@@ -139,7 +139,7 @@
       "said": "left the room \u2014 its wear closed when it stopped"
      }
     ],
-    "words": "1 of 4 claims broken: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 but the standing life is did:orreth:agent:other000000000000000000000000000 \u2014 another self (rule 1); what \u2014 stood on the candidate's declaration (sha256:a); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
+    "words": "1 of 4 claims broken: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 but the standing life is did:orreth:agent:other000000000000000000000000000 \u2014 another self (rule 1); what \u2014 stood on the candidate's declaration (abcdef01); where \u2014 stood in the experiment room, nowhere else; left \u2014 left the room \u2014 its wear closed when it stopped"
    }
   },
   {
@@ -172,7 +172,7 @@
      {
       "claim": "what",
       "kept": false,
-      "said": "said it was sha256:f but the candidate is sha256:a"
+      "said": "said it was ffff0000 but the candidate is abcdef01"
      },
      {
       "claim": "where",
@@ -185,7 +185,7 @@
       "said": "its wear is still open \u2014 the trial life did not stop whole"
      }
     ],
-    "words": "3 of 4 claims broken: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2); what \u2014 said it was sha256:f but the candidate is sha256:a; where \u2014 stood at u:dev/f:ops \u2014 not the experiment room u:dev/f:ops/r:exp-bob-1; left \u2014 its wear is still open \u2014 the trial life did not stop whole"
+    "words": "3 of 4 claims broken: who \u2014 joined as did:orreth:agent:bob0000000000000000000000000000 \u2014 the same self as the standing life (life 2); what \u2014 said it was ffff0000 but the candidate is abcdef01; where \u2014 stood at u:dev/f:ops \u2014 not the experiment room u:dev/f:ops/r:exp-bob-1; left \u2014 its wear is still open \u2014 the trial life did not stop whole"
    }
   },
   {
@@ -710,7 +710,7 @@
    "expect": {
     "verdict": {
      "ok": true,
-     "words": "proven \u2014 who it says (bf2bcab7) and what it says (sha256:w)"
+     "words": "proven \u2014 who it says (bf2bcab7) and what it says (what0000)"
     }
    }
   },
@@ -735,7 +735,7 @@
    "expect": {
     "verdict": {
      "ok": true,
-     "words": "proven \u2014 who it says (bf2bcab7) and what it says (sha256:w)"
+     "words": "proven \u2014 who it says (bf2bcab7) and what it says (what0000)"
     }
    }
   },
@@ -810,7 +810,7 @@
    "expect": {
     "verdict": {
      "ok": false,
-     "words": "it says it stands on sha256:w but joined as sha256:o \u2014 not WHAT it says"
+     "words": "it says it stands on what0000 but joined as other000 \u2014 not WHAT it says"
     }
    }
   },
