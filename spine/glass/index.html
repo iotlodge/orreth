@@ -3870,20 +3870,20 @@ function windowize(el, opts){
     if (e.target.closest("a,button,input,select,textarea,.win")) return;
     const v = read(); delete v[winCtx()]; try { localStorage.setItem(key, JSON.stringify(v)); } catch (e2) {} apply();
   });
-  // the grip: the upper-right corner stays unless the window was moved (then the upper-left does)
+  // the grip sits at the lower-LEFT corner: the upper-right corner stays, the grip pulls the left edge and the bottom
   if (grip){
     let rs = null;
     grip.addEventListener("pointerdown", e => {
       if (opts.docked && opts.docked()) return;
       const r = el.getBoundingClientRect();
-      rs = {right: r.right, left: r.left, top: r.top, moved: el.classList.contains("moved")}; grip.setPointerCapture(e.pointerId); e.preventDefault();
+      rs = {right: r.right, top: r.top, moved: el.classList.contains("moved")}; grip.setPointerCapture(e.pointerId); e.preventDefault();
     });
     grip.addEventListener("pointermove", e => {
       if (!rs) return;
-      const w = rs.moved ? Math.max(minW, Math.min(window.innerWidth - rs.left - 12, e.clientX - rs.left))
-                         : Math.max(minW, Math.min(window.innerWidth - 24, rs.right - e.clientX));
+      const w = Math.max(minW, Math.min(rs.right - 12, rs.right - e.clientX));
       const h = Math.max(minH, Math.min(window.innerHeight - rs.top - 12, e.clientY - rs.top));
       el.style.width = w + "px"; el.style.height = h + "px";
+      if (rs.moved){ el.style.left = Math.round(rs.right - w) + "px"; el.style.right = "auto"; }   // a moved window keeps its right edge where it was
       if (opts.onResize) opts.onResize();
     });
     const rsDone = () => { if (!rs) return; rs = null; save(); };
