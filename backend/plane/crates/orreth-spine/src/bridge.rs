@@ -1887,7 +1887,7 @@ async fn mark_door(
                 .unwrap_or_default();
         }
         if r#ref.is_empty() {
-            return Err(RoadError::Refused("mark what? name an ask or a session".into()));
+            return Err(RoadError::Refused("nothing to mark yet in this session — a mark lands on the LAST reply here; ask something first, then mark it".into()));
         }
         let parent: Option<String> = g
             .client()

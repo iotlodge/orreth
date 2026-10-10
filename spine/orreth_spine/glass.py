@@ -1217,7 +1217,7 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                     " ORDER BY asked_at DESC LIMIT 1", (str(p["session"]),))
                         row = cur.fetchone(); ref = row[0] if row else ""
                     if not ref:
-                        return self._json(400, {"error": "mark what? name an ask or a session"})
+                        return self._json(400, {"error": "nothing to mark yet in this session — a mark lands on the LAST reply here; ask something first, then mark it"})
                     cur = conn.cursor()
                     cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (ref,))
                     row = cur.fetchone(); parent = row[0] if row else None

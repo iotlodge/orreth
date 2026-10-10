@@ -121,13 +121,15 @@ its id instead: "cut draft_3e7bf5f3b1ab").
     nothing else in between. After a kernel relight the chat opens a FRESH session with no ask in it yet — "mark
     what? name an ask or a session" is the chat telling you to do this step first. Redoing Part 2 is fine: the
     critic's proposal UPDATES the same draft, never a second one.)
-11. **Say "mark this as improvement: the echo should greet before it echoes".**
-    → "marked ask_… as improvement — critic asked to act"; the tape reads `marker set`. (SPEC-OPERATING-01's step 8
+11. **Say "mark this as improvement: the echo should say ‘hello, friend’ before it repeats the words".**
+    → "marked ask_… as improvement — critic asked to act"; the tape reads `marker set`. (Name the words you want:
+    the critic drafts from your note. With nothing to mark yet — a fresh session, no reply in it — the chat says
+    "nothing to mark yet in this session — a mark lands on the LAST reply here; ask something first, then mark it".) (SPEC-OPERATING-01's step 8
     asked the librarian to call its mark tool; a mind may decline, as it did on 2026-10-10 — "I have nothing new to
     mark". Your own mark is the sure door; the librarian's remains the agent's way.)
 12. **Wait for the critic; read the chat.**
     → The critic's ask runs under the improvement marker (its journey: "routed to the event edge"); its reply names
-    the change; then "the critic proposed a draft for you — echo template: proposed by the critic from marker mk_… —
+    the change it chose (W115: it drafts even from a thin mark and says what it chose — it never asks you back); then "the critic proposed a draft for you — echo template: proposed by the critic from marker mk_… —
     for echo: … · say “load my echo draft in the workshop” to read it"; YOUR DRAFTS gains `template echo` — the
     body's own name whatever the critic called it (W114: it said "echo-greet-before-repeat"; a template proposal is
     the body's NEXT VERSION, never a new body).

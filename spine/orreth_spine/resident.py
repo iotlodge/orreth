@@ -912,10 +912,12 @@ class Resident:
                                "with kind 'improvement' and a short note — "
                                "other bodies act on marks.")   # 0006's policy line
                 if "tools:propose" in self.template.get("capabilities", []):   # Phase 8 sp5: the improvement loop's actor
-                    system += (" When your notes carry THE IMPROVEMENT MARKED and you see one concrete change to that "
-                               "body's template, prompt, skill or graph, call the propose tool once with the whole "
-                               "declaration — it lands as a draft under the body's owner, who cuts it; never offer to cut, "
-                               "never change anything yourself.")
+                    system += (" When your notes carry THE IMPROVEMENT MARKED, call the propose tool ONCE with the whole "
+                               "declaration of one concrete change to that body's template, prompt, skill or graph — it lands "
+                               "as a draft under the body's owner, who edits and cuts it. A thin mark is not a reason to wait: "
+                               "choose the concrete words yourself (a greeting, a line, a node), say in `words` what you chose, "
+                               "and let the owner change them in the draft. Never ask the owner back before proposing; never "
+                               "offer to cut; never change anything yourself.")   # W115: the critic asked JB back instead of drafting
                 worn: list[str] = []                   # Phase 8 sp3: the node's refs, said in the journey
                 if node.get("prompt"):                 # Phase 8 sp2: a node's prompt component, from the shelf
                     from . import crafts

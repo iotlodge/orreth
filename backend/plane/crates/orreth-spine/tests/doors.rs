@@ -240,7 +240,7 @@ async fn the_four_doors_answer_on_the_rust_kernel_alone() {
     .await;
     assert_eq!(
         (s, v),
-        (400, json!({"error": "mark what? name an ask or a session"}))
+        (400, json!({"error": "nothing to mark yet in this session — a mark lands on the LAST reply here; ask something first, then mark it"}))
     );
     let (s, v) = knock(port, "POST", "/sessions", Some(&json!({})), &h).await;
     assert_eq!(s, 201, "{v}");
