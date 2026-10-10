@@ -208,7 +208,9 @@ its id instead: "cut draft_3e7bf5f3b1ab").
 30. **Say "rest bob" and click "Yes — do it".**
     → "Done, on your word: bob is at rest — its life stopped at a safe boundary, its self kept, its record whole; say
     “restore bob” for a new life or “decommission bob” for the grave"; the chat "bob is rested — its self kept"; the
-    crew shows bob dormant.
+    crew shows bob dormant (a dotted outline on the Panel's station). Resiliency stays QUIET: a rest on your word is
+    not a dormancy to cure (W120 — before it, the dormant-bodies watch turned red and the planner reported "no
+    lever fits … this one is yours").
 31. **Say "decommission bob", enter your code.**
     → The card asks for your code (L3); "Done, on your code: bob is decommissioned — removed: its lease, its gateway
     key, its bench, its wear links; its DID did:orreth:agent:…, its joins and its record stay"; the chat "bob is

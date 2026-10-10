@@ -262,16 +262,19 @@ def _stable(conn) -> dict:
 
 def snapshot(conn, *, rails: bool = True) -> dict:
     """The Operating State, live, for this world."""
-    from .resident import ensure_schema as _ground   # lazily: no import cycle
-    _ground(conn)
-    ensure_schema(conn)
-    outbox.ensure_schema(conn)
+    from . import ground                             # lazily: no import cycle
+    ground.ensure_all(conn)                          # W120 (found on the way): the snapshot reads EVERY module's ground — make it all, once
     cur = conn.cursor()
     cur.execute("SELECT status, count(*) FROM spine_asks WHERE scope = %s"
                 " GROUP BY status", (ev.universe(),))
     asks = {s: int(n) for s, n in cur.fetchall()}
     bodies = presence.roster(conn)
     alive = [b for b in bodies if b["alive"]]
+    # W120 (JB, 2026-10-10: "Should this result in a resiliency event?" — no): a body at REST or DECOMMISSIONED on a
+    # person's word (the agent ladder, rule 11) is dormant by design, never a dormancy to cure — it leaves the count
+    from . import experiments
+    at_rest = {s["name"] for s in experiments.seats(conn) if s.get("state") in ("rested", "decommissioned")}
+    dormant = [b for b in bodies if not b["alive"] and b["name"] not in at_rest]
     lag = outbox.outbox_lag(conn)
     cur.execute("SELECT template, version, passed, failed, ran_at FROM spine_harness_runs"
                 " WHERE scope = %s ORDER BY ran_at DESC LIMIT 1", (ev.universe(),)) \
@@ -282,7 +285,7 @@ def snapshot(conn, *, rails: bool = True) -> dict:
         "oldest_outbox_age_s": float(lag["oldest_age_s"] or 0.0),
         "asks_received": asks.get("received", 0),
         "bodies_alive": len(alive),
-        "bodies_dormant": len(bodies) - len(alive),
+        "bodies_dormant": len(dormant),
     }
     values.update(_farm(conn))
     doors_read = doors.read()                     # panel sp3: the doors this process served, the slowest first

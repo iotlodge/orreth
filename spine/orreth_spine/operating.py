@@ -202,6 +202,8 @@ def _fact(cur, type_: str, ref: str, payload: dict, by: list[str], marker: dict 
 def measure(conn) -> dict:
     """The five measurements, live: `{name: {value, num, den, words}}`."""
     ensure_schema(conn)
+    from . import markers
+    markers.ensure_schema(conn)          # W120 (found on the way): the efficiency read joins the markers — make what it reads
     u = ev.universe()
     cur = conn.cursor()
     out = {}

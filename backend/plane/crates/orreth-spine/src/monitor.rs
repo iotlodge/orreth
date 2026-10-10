@@ -352,6 +352,32 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
     }
     let bodies = presence::roster(g, scope).await?;
     let alive = bodies.iter().filter(|b| b["alive"] == json!(true)).count();
+    // W120 (JB, 2026-10-10: "Should this result in a resiliency event?" — no): a body at REST or DECOMMISSIONED on
+    // a person's word (the agent ladder, rule 11) is dormant by design, and a body whose process this kernel is
+    // still STARTING (the relight's first minute) is not yet dormant — neither is a dormancy to cure
+    let at_rest: std::collections::HashSet<String> = crate::experiments_live::seats(g.client(), scope, None)
+        .await?
+        .iter()
+        .filter(|s| matches!(s["state"].as_str(), Some("rested") | Some("decommissioned")))
+        .filter_map(|s| s["name"].as_str().map(str::to_string))
+        .collect();
+    let starting: std::collections::HashSet<String> = crate::bodies::handle()
+        .map(|h| {
+            h.view()
+                .into_iter()
+                .filter(|v| v["state"] == json!("starting"))
+                .filter_map(|v| v["name"].as_str().map(str::to_string))
+                .collect()
+        })
+        .unwrap_or_default();
+    let dormant = bodies
+        .iter()
+        .filter(|b| b["alive"] != json!(true))
+        .filter(|b| {
+            let n = b["name"].as_str().unwrap_or_default();
+            !at_rest.contains(n) && !starting.contains(n)
+        })
+        .count();
     let lag = outbox_lag(g).await?;
     let last = last_harness(g, scope).await?;
     // row 4, panel sp3: the doors this process served (their p50 · p95 over the window) and
@@ -367,7 +393,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         "oldest_outbox_age_s": lag.oldest_age_s.unwrap_or(0.0),
         "asks_received": asks.get("received").and_then(Value::as_i64).unwrap_or(0),
         "bodies_alive": alive,
-        "bodies_dormant": bodies.len() - alive,
+        "bodies_dormant": dormant,
         "door_p95_ms": crate::doors::slowest_p95(&doors),
         "pool_busy": pool.as_ref().and_then(|p| p["busy"].as_u64()).unwrap_or(0),
         "pool_waiting": pool.as_ref().and_then(|p| p["waiting"].as_u64()).unwrap_or(0),

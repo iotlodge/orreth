@@ -171,6 +171,14 @@ def test_the_roster_folds_one_row_per_name_and_counts_the_earlier_selves(pg, mon
     assert not roster["gone"]["alive"] and roster["gone"]["earlier_selves"] == 1
     values = monitor.snapshot(pg, rails=False)["values"]
     assert (values["bodies_alive"], values["bodies_dormant"]) == (1, 1)   # names, not selves
+    # W120 (JB's walk 2026-10-10): a body at REST on a person's word is dormant by design — it leaves the count
+    from orreth_spine import experiments
+    experiments.ensure_schema(pg)
+    pg.cursor().execute("INSERT INTO spine_body_seats (name, scope, template, at_path, state, version, by_did)"
+                        " VALUES ('gone', %s, 'gone.template', %s, 'rested', 1, 'did:orreth:person:jb')", (ev.universe(), ev.universe() + "/f:ops"))
+    values = monitor.snapshot(pg, rails=False)["values"]
+    assert (values["bodies_alive"], values["bodies_dormant"]) == (1, 0)   # rested on a word: not a dormancy to cure
+    assert monitor.snapshot(pg, rails=False)["bodies"][0]["name"] in ("gone", "twin")   # the roster still names it
 
 
 def test_a_watch_rests_on_the_word_recorded_never_deleted_and_turns_nothing_after(pg, monkeypatch):
