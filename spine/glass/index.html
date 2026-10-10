@@ -2095,7 +2095,7 @@ function toggleCrew(open){
   if (!now && was) popFocusOf("ws_crew");                        // W53: the pull closed, its focus goes with it
 }
 async function markWords(text){                  // "mark this as improvement: the note"
-  const m = text.match(/^mark (?:this|that|it)(?: as)?\s+([a-z0-9-]+)\s*(?::\s*(.+))?$/i);
+  const m = text.match(/^mark (?:this|that|it)(?: as)?(?: an?)?\s+([a-z0-9-]+)\s*(?::\s*(.+))?$/i);   // W116: "mark this as an improvement: …" too
   if (!m) return false;
   const r = await fetch("/mark", {method:"POST", headers:{"content-type":"application/json"},
     body: JSON.stringify({kind: m[1].toLowerCase(), note: m[2] || "", session: SESSION})})

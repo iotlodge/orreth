@@ -191,6 +191,7 @@ def test_the_grader_hears_live_replies_and_signs_and_the_critic_proposes(pg, mon
     cur.execute("SELECT status, reply FROM spine_asks WHERE ask_id = %s", (cask,))
     st, reply = cur.fetchone()
     assert st == "replied" and "I proposed a greeting" in reply, (st, reply)
+    assert critic.gateway.required == "propose"       # W116: under an improvement marker the proposal is REQUIRED of the critic, not asked
     [d] = crafts.drafts(pg, PERSON)
     assert d["name"] == "echo" and d["kind"] == "template" and d["body"]["persona"] == "a plain-spoken echo that greets first"
     assert d["words"].startswith(f"proposed by the critic from marker {m['id']} — for echo: the echo template: greet first, then echo")

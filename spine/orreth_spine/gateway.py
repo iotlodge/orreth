@@ -240,7 +240,8 @@ class LiteLLMGateway:
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
                      max_rounds: int = 3, on_delta=None, subject: str | None = None,
-                     klass: str | None = None, pin: str | None = None, ask: str | None = None) -> tuple[str, list[str]]:
+                     klass: str | None = None, pin: str | None = None, ask: str | None = None,
+                     require: str | None = None) -> tuple[str, list[str]]:
         """The acting mind through the gateway: the door's DECLARED tools in
         the OpenAI shape; every tool call through the door (journaled,
         interlocked — a ConsequentialHold propagates); every round metered."""
@@ -258,13 +259,17 @@ class LiteLLMGateway:
         messages = [{"role": "system", "content": system}, {"role": "user", "content": prompt}]
         notes: list[str] = []
         for _round in range(max_rounds):
+            body = {"model": stall, "max_tokens": max_tokens, "messages": messages, "tools": tools}
+            if require and _round == 0:            # W116: the kernel's ask REQUIRES this tool first (the critic's propose under an improvement)
+                body["tool_choice"] = {"type": "function", "function": {"name": require}}
             try:
-                text, calls, usage, headers = self._complete(
-                    {"model": stall, "max_tokens": max_tokens, "messages": messages, "tools": tools}, key, on_delta)
+                text, calls, usage, headers = self._complete(body, key, on_delta)
             except (Drained, GatewayRefused) as e:
                 return self._honest(conn, did=did, subject=subject, e=e, stall=stall), notes
             self._land(conn, did=did, decision=d, usage=usage, headers=headers, ask=ask)
             if not calls:
+                if require and _round == 0:
+                    notes.append(f"asked for the {require} tool first — the mind called nothing")   # said, never silent
                 return text, notes
             messages.append({"role": "assistant", "content": text or None, "tool_calls": calls})
             for c in calls:
@@ -328,7 +333,8 @@ class AnthropicGateway:
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
                      max_rounds: int = 3, on_delta=None, subject: str | None = None,
-                     klass: str | None = None, pin: str | None = None, ask: str | None = None) -> tuple[str, list[str]]:
+                     klass: str | None = None, pin: str | None = None, ask: str | None = None,
+                     require: str | None = None) -> tuple[str, list[str]]:
         """The acting mind: the model may use the door's DECLARED tools;
         every tool call goes through the door (journaled, interlocked),
         every model round through the meter. Returns (reply, act_notes).
@@ -339,19 +345,22 @@ class AnthropicGateway:
         messages = [{"role": "user", "content": prompt}]
         notes: list[str] = []
         for _round in range(max_rounds):
+            extra = {"tool_choice": {"type": "tool", "name": require}} if require and _round == 0 else {}   # W116: required first
             if on_delta is not None:
                 with self._client.messages.stream(
                         model=m, max_tokens=max_tokens, system=system,
-                        tools=door.schemas(), messages=messages) as st:
+                        tools=door.schemas(), messages=messages, **extra) as st:
                     for t in st.text_stream:
                         on_delta(t)
                     msg = st.get_final_message()
             else:
                 msg = self._client.messages.create(
                     model=m, max_tokens=max_tokens, system=system,
-                    tools=door.schemas(), messages=messages)
+                    tools=door.schemas(), messages=messages, **extra)
             meter(conn, did, m, msg.usage.input_tokens, msg.usage.output_tokens, ask=ask)
             if msg.stop_reason != "tool_use":
+                if require and _round == 0:
+                    notes.append(f"asked for the {require} tool first — the mind called nothing")
                 return ("".join(b.text for b in msg.content
                                 if b.type == "text"), notes)
             messages.append({"role": "assistant", "content": msg.content})
@@ -405,8 +414,10 @@ class FakeActingGateway:
     def think_acting(self, conn, *, did: str, system: str, prompt: str,
                      door, model: str | None = None, max_tokens: int = 1024,
                      max_rounds: int = 3, on_delta=None, subject: str | None = None,
-                     klass: str | None = None, pin: str | None = None, ask: str | None = None) -> tuple[str, list[str]]:
+                     klass: str | None = None, pin: str | None = None, ask: str | None = None,
+                     require: str | None = None) -> tuple[str, list[str]]:
         ensure_schema(conn)
+        self.required = require                       # W116: the test reads what the body required
         meter(conn, did, model or self.DEFAULT_MODEL, len(prompt.split()), 12, ask=ask)
         notes, last = [], ""
         for step in self.script:

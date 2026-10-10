@@ -368,6 +368,7 @@ class Resident:
         self._line_last = 0.0        # monotonic: when the line last served
         self._lease_at = 0.0         # monotonic: when the lease was last renewed
         self._current_ask = None
+        self._require_tool: str | None = None    # W116: the tool the kernel's ask REQUIRES of this body on its first round (the critic's propose)
         self._current_marker = None  # the ask's marker: WHY this serve (0006)
         self._experiment = None      # Phase 8 sp4: the Experiment this serve reviews, when it does
         self._grading = None         # Phase 8 sp5: the live reply this serve grades, when it does
@@ -598,6 +599,8 @@ class Resident:
                         who = ir[3] if ir and ir[3] else None
                         notes.append(f"THE IMPROVEMENT MARKED ({xm['parent']}): {pm[2] or 'no note'}"
                                      + (f" — on {who}'s reply to {ir[0]!r}: {str(ir[1] or '')[:800]!r}" if ir and who else ""))
+                        if "tools:propose" in self.template.get("capabilities", []):   # W116: under an improvement marker the kernel REQUIRES
+                            self._require_tool = "propose"                              # the proposal — a law, not a request to the mind
                         if who:
                             from . import services as _sv
                             tpl = _sv.get(conn, f"{who}.template")
@@ -971,13 +974,15 @@ class Resident:
                             system=system, prompt=prompt, door=door,
                             model=mind.get("model"), on_delta=deltas,
                             subject=self.name, klass=mind.get("class"),
-                            pin=mind.get("pin"), ask=self._current_ask)   # P6.5 sp3: the Stable decides the mind · sp5: the meter wears the ask
+                            pin=mind.get("pin"), ask=self._current_ask,
+                            require=self._require_tool)   # P6.5 sp3: the Stable decides the mind · sp5: the meter wears the ask · W116: the required tool
                         if not (reply or "").strip():          # W26: asked again, once
                             reply, more = self.gateway.think_acting(
                                 self._serve_conn, did=self.identity.did,
                                 system=system, prompt=prompt, door=door,
                                 model=mind.get("model"), on_delta=deltas,
-                                subject=self.name, klass=mind.get("class"), pin=mind.get("pin"), ask=self._current_ask)
+                                subject=self.name, klass=mind.get("class"), pin=mind.get("pin"), ask=self._current_ask,
+                                require=self._require_tool)
                             acts, retried = acts + more, [W26_STEP]
                             if not (reply or "").strip():
                                 reply = W26_WORDS
@@ -1193,6 +1198,7 @@ class Resident:
             return
         text, person, _status = row
         self._current_ask = ask_id
+        self._require_tool = None
         self._current_chain = list(chain) if chain else [person]
         from . import markers as _mk
         cur.execute("SELECT marker FROM spine_asks WHERE ask_id = %s", (ask_id,))

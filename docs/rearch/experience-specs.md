@@ -129,7 +129,8 @@ its id instead: "cut draft_3e7bf5f3b1ab").
     mark". Your own mark is the sure door; the librarian's remains the agent's way.)
 12. **Wait for the critic; read the chat.**
     → The critic's ask runs under the improvement marker (its journey: "routed to the event edge"); its reply names
-    the change it chose (W115: it drafts even from a thin mark and says what it chose — it never asks you back); then "the critic proposed a draft for you — echo template: proposed by the critic from marker mk_… —
+    the change it chose (W116: under an improvement marker the kernel REQUIRES the propose tool of the critic on its first
+    round — a law on the gateway, not a request to the mind; W115's charge says what to choose); then "the critic proposed a draft for you — echo template: proposed by the critic from marker mk_… —
     for echo: … · say “load my echo draft in the workshop” to read it"; YOUR DRAFTS gains `template echo` — the
     body's own name whatever the critic called it (W114: it said "echo-greet-before-repeat"; a template proposal is
     the body's NEXT VERSION, never a new body).

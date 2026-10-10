@@ -1,6 +1,6 @@
 {
   "format": "orreth-guide/1",
-  "version": "0.11.6",
+  "version": "0.11.7",
   "title": "THE GUIDE · what you can say here, and what happens",
   "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
   "sections": [
@@ -265,6 +265,10 @@
         {
           "say": "(click a row)",
           "does": "Its tree in words; an objective's row puts the chat in focus on it."
+        },
+        {
+          "say": "mark this as improvement: the echo should say 'hello, friend' first · mark this as an improvement: …",
+          "does": "Marks the LAST reply in this session with a kind from the open vocabulary (improvement · any kind declared) and your note. Every body that declared interest in that kind is asked to act — the critic, under an improvement, is REQUIRED to propose a draft under the body's owner (YOUR DRAFTS gains it; \"load my <body> draft in the workshop\"). With no reply in the session yet the chat says so: ask something first, then mark it."
         },
         {
           "say": "stop the kernel's Resiliency intention",
