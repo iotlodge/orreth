@@ -2275,6 +2275,10 @@ async function stopWords(text){                  // W34 · W39 (walk #11): "stop
   const runner = ((bare ? bare[1] : m[1]) || "").toLowerCase();
   const kernels = !!(m && m[3]);
   const want = m ? m[4].toLowerCase().trim().replace(/^["'“‘]+|["'”’]+$/g, "").trim() : "";
+  if (m && verb === "stop" && /^rest/i.test(m[2]) && !runner && !kernels && /^[a-z0-9_-]+$/.test(want)){   // W119: "rest bob" is the agent ladder's word
+    const r = await fetch("/experiments").then(x=>x.json()).catch(()=>null);                               // when bob holds a promoted seat —
+    if (((r && r.seats) || []).some(s => String(s.name || "").toLowerCase() === want)) return false;       // the ladder's parser takes it
+  }
   const ints = await fetch("/intentions").then(x=>x.json()).then(x => x.intentions || []).catch(()=>[]);
   const standing = ints.filter(i => (verb === "stop" ? i.active !== false : i.active === false));   // stop a standing one · restart a rested one
   let hits = standing.filter(i => (!kernels || i.kind === "kernel") && (kernels || !/\bmy\b/i.test(text) || i.kind !== "kernel"));
