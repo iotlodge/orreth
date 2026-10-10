@@ -118,7 +118,9 @@ its id instead: "cut draft_3e7bf5f3b1ab").
 
 10. **Say "echo, hello there".**
     → The echo repeats it. (This reply is the one you mark next — the mark lands on the session's LAST ask, so say
-    nothing else in between.)
+    nothing else in between. After a kernel relight the chat opens a FRESH session with no ask in it yet — "mark
+    what? name an ask or a session" is the chat telling you to do this step first. Redoing Part 2 is fine: the
+    critic's proposal UPDATES the same draft, never a second one.)
 11. **Say "mark this as improvement: the echo should greet before it echoes".**
     → "marked ask_… as improvement — critic asked to act"; the tape reads `marker set`. (SPEC-OPERATING-01's step 8
     asked the librarian to call its mark tool; a mind may decline, as it did on 2026-10-10 — "I have nothing new to
@@ -126,10 +128,13 @@ its id instead: "cut draft_3e7bf5f3b1ab").
 12. **Wait for the critic; read the chat.**
     → The critic's ask runs under the improvement marker (its journey: "routed to the event edge"); its reply names
     the change; then "the critic proposed a draft for you — echo template: proposed by the critic from marker mk_… —
-    for echo: …"; YOUR DRAFTS gains `template echo`.
+    for echo: … · say “load my echo draft in the workshop” to read it"; YOUR DRAFTS gains `template echo` — the
+    body's own name whatever the critic called it (W114: it said "echo-greet-before-repeat"; a template proposal is
+    the body's NEXT VERSION, never a new body).
 13. **Say "load my echo draft in workshop".**
-    → The Workshop opens the proposed draft read-write (W112: "in workshop" and "in the workshop" both heard); the
-    inspector reads THE DRAFT with the critic's words; the declaration shows the proposed change.
+    → The Workshop opens the proposed draft read-write (W112: "in workshop" and "in the workshop" both heard — on a
+    page loaded BEFORE 2026-10-10 the words fell through to the librarian, who answered in prose; reload the page);
+    the inspector reads THE DRAFT with the critic's words; the declaration shows the proposed change.
 14. **Say "discard the echo draft".**
     → "discarded your template draft echo — it was never on the shelf, so nothing is kept"; YOUR DRAFTS drops it AT
     ONCE and the canvas clears (W112 — before, the rail kept it until the Workshop was reopened).

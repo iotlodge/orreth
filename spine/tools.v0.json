@@ -148,7 +148,7 @@
     },
     {
       "name": "propose",
-      "description": "Propose a change to a BODY's craft — a DRAFT saved under that body's OWNER, marked with the improvement it came from (Phase 8 sp5, THE OPERATING STATE: the improvement loop closes in the Workshop). Routine: a draft is unversioned and lives under the owner's seat alone, never on the shelf; raw feedback never reaches a body — a proposal does. Pass `for` (the body's name), the WHOLE declaration as `body` (the full object as it should stand after the change — never a fragment), the draft's `name` and `kind`, and `words` (one line: what changes and why). The owner opens it in the Workshop and cuts it; the Experiment judges it. Never offer to cut; never change anything yourself.",
+      "description": "Propose a change to a BODY's craft — a DRAFT saved under that body's OWNER, marked with the improvement it came from (Phase 8 sp5, THE OPERATING STATE: the improvement loop closes in the Workshop). Routine: a draft is unversioned and lives under the owner's seat alone, never on the shelf; raw feedback never reaches a body — a proposal does. Pass `for` (the body's name), the WHOLE declaration as `body` (the full object as it should stand after the change — never a fragment), the draft's `name` and `kind` (for a template, `name` is the body's own name — the proposal is its next version, never a new body), and `words` (one line: what changes and why). The owner opens it in the Workshop and cuts it; the Experiment judges it. Never offer to cut; never change anything yourself.",
       "input_schema": {
         "type": "object",
         "properties": {

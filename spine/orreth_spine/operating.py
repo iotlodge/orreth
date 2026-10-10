@@ -472,6 +472,11 @@ def propose(conn, *, by: str, agent: str, kind: str, name: str, body: dict, word
         up = markers.get(conn, mk["parent"])
         if up and up["kind"] == "improvement":
             marker = up["id"]
+    if kind == "template" and name != agent:                     # W114: a body's template is its own name — the proposal is its NEXT VERSION,
+        said, name = name, agent                                 # never a stranger's template (the critic said "echo-greet-before-repeat")
+        words = (f"{words} " if words else "") + f"(named for {agent} — the critic called it {said})"
+    if kind == "template" and isinstance(body, dict) and body.get("name") != agent:
+        body = {**body, "name": agent}
     tag = proposal_words(agent, name, kind, marker or "none")
     prior = next((d for d in crafts.drafts(conn, owner) if d["name"] == name and d["kind"] == kind), None)
     d = crafts.save_draft(conn, owner, kind, name, body, words=(f"{tag}" + (f": {words}" if words else "")),

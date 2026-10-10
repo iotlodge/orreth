@@ -198,6 +198,12 @@ def test_the_grader_hears_live_replies_and_signs_and_the_critic_proposes(pg, mon
     assert cur.fetchone()[0] == m["id"]
     [pf] = _facts(pg, op.DRAFT_PROPOSED, u)
     assert pf["payload"]["owner"] == PERSON and pf["payload"]["agent"] == "echo" and pf["authority_chain"] == [critic.identity.did]
+    # W114 (JB's walk 2026-10-10): the critic named a template "echo-greet-before-repeat" — a body's template is ITS OWN name
+    made = op.propose(pg, by=critic.identity.did, agent="echo", kind="template", name="echo-greet-before-repeat",
+                      body={**body, "name": "echo-greet-before-repeat"}, words="greet first", marker=m["id"])
+    assert made["draft"]["name"] == "echo" and made["draft"]["body"]["name"] == "echo"
+    assert made["draft"]["words"].endswith("greet first (named for echo — the critic called it echo-greet-before-repeat)")
+    assert [d["name"] for d in crafts.drafts(pg, PERSON)] == ["echo"]           # the same draft, updated — never a second
     journey = " / ".join(j["payload"]["note"] for j in _facts(pg, resident.JOURNEY, u) if j["payload"]["ref"] == cask)
     assert "routed to the event edge — a marker of kind improvement asked for a response" in journey
 
