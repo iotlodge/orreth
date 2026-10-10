@@ -89,7 +89,7 @@
     font-size:10.5px;letter-spacing:.4em}
   /* ---- the chat pull (out of the ceiling) ---- */
   #chat{position:fixed;top:0;right:6vw;width:min(560px,88vw);
-    height:72vh;transform:translateY(-104%);transition:transform .45s
+    height:72vh;transform:translateY(calc(-104% - var(--win-top,0px)));transition:transform .45s
     cubic-bezier(.22,.9,.3,1),height .45s cubic-bezier(.22,.9,.3,1);
     z-index:10;display:flex;
     flex-direction:column;border:1px solid var(--seam);border-top:none;
@@ -3360,6 +3360,7 @@ function layoutWorkshop(){
     if (WS_DOCK === null) WS_DOCK = {w: chat.style.width || "", h: chat.style.height || "", top: chat.style.top || "", left: chat.style.left || "", right: chat.style.right || ""};
     const col = document.getElementById("ws-chatcol");             // offsets, never a rect: the pull's slide-in transform must not move the chat
     chat.style.top = Math.round(col.offsetTop) + "px"; chat.style.left = Math.round(col.offsetLeft) + "px"; chat.style.right = "auto";
+    chat.style.setProperty("--win-top", Math.round(col.offsetTop) + "px");
     chat.style.width = Math.round(col.offsetWidth) + "px"; chat.style.height = Math.round(col.offsetHeight) + "px";
   } else if (WS_DOCK !== null){
     WS_DOCK = null;
@@ -3840,12 +3841,12 @@ function windowize(el, opts){
   const apply = () => {
     if (opts.docked && opts.docked()) return;                  // the Workshop lays a pinned window out
     const g = read()[winCtx()];
-    if (!g){ el.style.left = ""; el.style.top = ""; el.style.right = ""; el.classList.remove("moved");
+    if (!g){ el.style.left = ""; el.style.top = ""; el.style.right = ""; el.classList.remove("moved"); el.style.setProperty("--win-top", "0px");
              const s0 = read().size; if (s0){ el.style.width = Math.min(s0.w, window.innerWidth - 24) + "px"; el.style.height = Math.min(s0.h, window.innerHeight - 24) + "px"; }
              else { el.style.width = ""; el.style.height = ""; }
              return; }
     const c = clamp(g);
-    el.style.left = c.left + "px"; el.style.top = c.top + "px"; el.style.right = "auto";
+    el.style.left = c.left + "px"; el.style.top = c.top + "px"; el.style.right = "auto"; el.style.setProperty("--win-top", c.top + "px");
     el.style.width = c.w + "px"; el.style.height = c.h + "px"; el.classList.add("moved");
   };
   const geo = () => { const r = el.getBoundingClientRect(); return {left: Math.round(r.left), top: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)}; };
@@ -3863,6 +3864,7 @@ function windowize(el, opts){
     if (!drag) return;
     const g = clamp({left: drag.left + (e.clientX - drag.x), top: drag.top + (e.clientY - drag.y), w: el.offsetWidth, h: el.offsetHeight});
     el.style.left = g.left + "px"; el.style.top = g.top + "px"; el.style.right = "auto"; el.classList.add("moved");
+    el.style.setProperty("--win-top", g.top + "px");            // the close slides the window clear of the screen from wherever it stands
   });
   const dragDone = () => { if (!drag) return; drag = null; el.classList.remove("dragging"); save(); };
   handle.addEventListener("pointerup", dragDone); handle.addEventListener("pointercancel", dragDone);
