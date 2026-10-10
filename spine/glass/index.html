@@ -3640,8 +3640,8 @@ function experimentCard(id, x){                      // Phase 8 sp4: THE EXPERIM
     `<div class="meta">${who("the grader", rv.grader)} · ${who("the critic", rv.critic)} · ${who("the identity chip", rv.identity)} · ${who("the security chip", rv.security)}</div>` +
     `<div class="meta">resiliency: ${x.resiliency ? (x.resiliency.reds ? x.resiliency.reds + " watch(es) turned red while the arms ran" : "no watch turned red while the arms ran") : "running"} · the evidence ${lean}</div>` +
     (x.state === "proposed" ? `<div class="acts"><button class="ws-btn p" data-promote>promote ${esc(x.agent)}</button> <button class="ws-btn" data-decline>decline</button><span class="meta"> · or say “promote ${esc(x.agent)} to floor ops”</span></div>` : ""));
-  const pb = b.querySelector("[data-promote]"); if (pb) pb.onclick = () => send(`promote ${x.agent}`);
-  const db = b.querySelector("[data-decline]"); if (db) db.onclick = () => send(`decline the ${x.agent} experiment`);
+  const pb = b.querySelector("[data-promote]"); if (pb) pb.onclick = () => serviceWords(`promote ${x.agent}`);                  // W118: a button's word goes where a typed word goes —
+  const db = b.querySelector("[data-decline]"); if (db) db.onclick = () => serviceWords(`decline the ${x.agent} experiment`);   // through the glass's own parser, never straight to a body
   return b;
 }
 function clearDisplay(){          // clear ≠ erase: the words stay in the Record
