@@ -1,6 +1,6 @@
 {
   "format": "orreth-guide/1",
-  "version": "0.11.5",
+  "version": "0.11.6",
   "title": "THE GUIDE · what you can say here, and what happens",
   "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
   "sections": [
@@ -487,7 +487,7 @@
           "does": "Opens or closes the Workshop pull (one pull at a time; Esc closes it). Opening pushes a focus: the chat speaks to the Workshop agent until you close it."
         },
         {
-          "say": "load the librarian template in the workshop · load mind.v0 in the workshop · load my bob draft in the workshop",
+          "say": "load the librarian template in the workshop · load mind.v0 in the workshop · load my bob draft in the workshop · load my bob draft in workshop",
           "does": "Opens the Workshop with that craft or draft loaded. A craft from the shelf is read-only — its address, pin, version, health, who wears it and WHERE each wearer stands; “draft from this” copies it into a new draft of yours (cut it and it lands as the next version, a sibling). A template draws the graph it wears."
         },
         {

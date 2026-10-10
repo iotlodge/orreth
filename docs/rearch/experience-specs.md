@@ -52,7 +52,191 @@ is the reason the rearchitecture exists.
 | **SPEC-WORKSHOP-01** | 0010 lock 6 · lock 8 · 0005 Phase 8 sp3 THE WORKSHOP v0 (built 2026-10-06) · covenant rules 11 · 13 · 0004 AG-9 | **A numbered walk — one thing to do, one thing to see, per step (JB's ask 2026-10-07: the long flows were hard to follow).** Sit as the owner on :4600 with the crew lit (`scripts/dev.sh kernel`). **1.** Say "open the workshop". **2.** Click `mind.v0` under *graphs* on the left. **3.** Say "load the librarian template in the workshop". **4.** Click "+ new draft", leave the kind on graph, name it `bob.v0`, click "start the draft". **5.** Click the `think` block; type "the first thought" in *words*; click "apply to the draft". **6.** Click "add a node after". **7.** With the new block selected, set *kind* to echo and *id* to `greet`; click "apply to the draft". **8.** Click the arrow from think to greet; set *when* to ask and the pattern to `^hello`; click "apply to the draft". **9.** Click the `think` block again; click "add a way out". **10.** Click SAVE under the declaration. **11.** In the chat say "workshop, add an echo node called tail after greet" and wait for the reply. **12.** Say "cut the bob.v0 draft" and click "Yes — do it". **13.** Click `bob.v0` under *graphs*. **14.** Hover the MIND chip in the Workshop's header and read its card. **15.** Say "close the workshop", then "my drafts" | **1.** The Workshop fills the screen with the chat docked on the right: YOUR DRAFTS says none yet; THE SHELF lists the crafts by kind (templates · skills · policies · graphs · bindings · golden sets); the canvas carries its invitation; the inspector asks for a click. **2.** One block `think · entry` ringed cyan reading "THINK · the metered mind"; the inspector reads THE CRAFT read-only — `address craft:mind.v0.graph (no self …)`, pin, `healthy · since …`, worn by N bodies — and WHERE IT STANDS names every wearer and the level it stands on (`u:dev` or its floor); the declaration box is greyed JSON. **3.** The canvas draws `think` under a banner "the librarian template wears graph mind.v0 — drawn from the shelf, read-only here (click mind.v0 under graphs on the left to draft from it)". **4.** The chat says "started your graph draft bob.v0 (draft_…) — under your seat alone"; the rail lists `graph bob.v0` under YOUR DRAFTS; the canvas shows one `think · entry` block; the inspector reads THE DRAFT. **5.** The inspector's words field holds the text; the declaration header reads UNSAVED. **6.** A second block `node-1` appears to the right with a plain arrow think → node-1; the inspector moves to node-1. **7.** The block reads `greet · ECHO · the words back`. **8.** The arrow turns violet and reads "when the ask says /^hello/"; the legend's default line reads `think` alone (every way out of think is conditioned). **9.** A second, plain arrow think → greet reads "otherwise" and bows apart from the violet one; the legend reads "branches at think". **10.** The chat says "saved your graph draft bob.v0 — under your seat alone, not on the shelf; say “cut the bob.v0 draft” …"; UNSAVED is gone. **11.** The workshop agent replies naming the change (a `tail` echo node after greet) and that the cut is yours; the chat then says "your bob.v0 graph draft changed under your seat … the canvas redrew"; the canvas shows think → greet → tail. **12.** The kernel holds it: "Cutting the bob.v0 graph — version 1 onto the shelf is consequential … Cancel is the default"; after Yes the chat says "Done, on your word: the bob.v0.graph is on the shelf as version 1 (registered) — pin …; the draft is spent", the card folds to one line, the tape reads `service registered bob.v0.graph`, YOUR DRAFTS is empty again and `bob.v0 v1` stands under *graphs*. **13.** THE CRAFT reads read-only: `healthy · … the declaration reads whole — 3 node(s): think → greet → tail · branches at think`, worn by no body now; WHERE IT STANDS says "worn by no body now — where a NEXT life stands is chosen on the promotion (spoonful 4), not here". **14.** The chip lists the stalls (`haiku · claude-haiku-4-5-20251001 · Claude the model`) and its card says assigning holds at the interlock (L2) and that Claude the developer is Phase 9, not this chip. **15.** The Workshop slides away and the chat returns to its own size; "my drafts" says none | **Fable's own walk 2026-10-07 on a private kernel (:4610, its own universe `u:fable`, its own schema, the seat `fable` governing): steps 1–11 and 13–15 PASS as written; step 12's hold, Yes and landing PASS, but the "Done, on your word" line and the fold were NOT seen live — found to be the test rig's fault (two kernels pumping one outbox table: JB's :4600 kernel published the test kernel's reply onto its own topics), not the glass's — re-walked on a private schema (`spine_fable`, one kernel per ground): step 12 PASS whole, the card folding to "held at the interlock · you said yes · proof L2 · recorded" and "Done, on your word: the bob2.graph is on the shelf as version 1" arriving live. JB's first walk 2026-10-06/07 (screenshots): the Workshop opened, mind.v0 and the echo template drew, a draft was started and edited node by node, the agent added `tail` on his words, the cut held in plain words — PASS as far as walked; W102 found first (the Workshop covered the chat) and cured; **W103** "policys" in the rail · **W104** the craft card's "(no self …)" note fell into the label column · **W105** the template's banner said "load it in the Workshop" while standing in it · **W106** the journey read "read the session's results by echo, e kernel, crew" (the kernel's name truncated as if a DID) — all four CURED 2026-10-07 | OWED — JB's walk by the numbered steps; W102–W106 cured |
 | **SPEC-EXPERIMENT-01** | 0010 §5 · lock 4 · 0005 Phase 8 sp4 THE EXPERIMENT AND THE CUT (built 2026-10-07) · covenant rules 2 · 11 · 13 | **A numbered walk — one thing to do, one thing to see, per step.** Sit as the owner on :4600 with the crew lit (`scripts/dev.sh kernel`); the Workshop's `bob.v0` graph from SPEC-WORKSHOP-01 stands on the shelf (else: step 0 — say "open the workshop", start a graph draft `bob.v0` with one echo node, "cut the bob.v0 draft", Yes). **1.** Say "draft a golden called bob: {\"template\": \"bob\", \"cases\": [{\"ask\": \"hello bob\", \"expect\": [\"hello\"]}, {\"ask\": \"say moon\", \"expect\": [\"moon\"]}]}" then "cut the bob draft" and click "Yes — do it". **2.** Say "open the workshop", click "+ new draft", set the kind to template, name it `bob`, click "start the draft"; in the declaration box set `"graph": "bob.v0"` (the kind reads `agent` already), click SAVE. **3.** Say "cut the bob draft". **4.** Click "Yes — do it". **5.** Say "what levels are here?". **6.** Wait up to a minute; read the chat. **7.** Say "show the experiments". **8.** Click PROMOTE on THE EXPERIMENT card (or say "promote bob to floor ops"). **9.** Click "Yes — do it". **10.** Say "show the seats", then "open the crew". **11.** Say "bob, hello from the owner". **12.** Say "rest bob" and click "Yes — do it". **13.** Say "decommission bob", enter your code. **14.** Say "show the seats". **15.** Say "restore bob" and click "Yes — do it" | **1.** The kernel holds the cut at L2; after Yes "Done, on your word: the bob.golden is on the shelf as version 1". **2.** YOUR DRAFTS lists `template bob`; the inspector reads THE DRAFT; the chat says "saved your template draft bob". **3.** The chat says "an agent's cut goes through the Experiment: opening one on bob (u:dev/f:ops/r:exp-bob-1, 2 golden cases) is consequential — the kernel holds it at the interlock (L2)" and the card asks in plain words: "Opening an experiment on the bob agent — room exp-bob-1 on floor ops of universe dev opens as an experiment room; one arm — the candidate alone; no version of it stands on the shelf yet; the evidence is its golden set (2 cases); the grader and the critic review under their own names; the verdict is a proposal and the promotion is yours". **4.** "Done, on your word: room exp-bob-1 on floor ops of universe dev is open as an experiment room and the experiment exp_… on bob is running"; the tape reads `level opened`, `experiment opened`. **5.** The listing names `room exp-bob-1 on floor ops` as an experiment room. **6.** The chat says "THE EXPERIMENT on bob is running in u:dev/f:ops/r:exp-bob-1 — one arm, the candidate"; then "a reviewer wrote its signed verdict" twice; then THE EXPERIMENT card: `candidate: 2 passed, 0 failed · current: none — the first version`, `the grader (signed): candidate A → candidate · the critic (signed): risk low — …`, `security — an honest empty slot … · identity — …`, `resiliency: no watch turned red while the arms ran · the evidence leans to promote`, with PROMOTE and DECLINE. **7.** The same card again, state `proposed`. **8.** The chat says "promoting bob to version 1 — its next life on u:dev/f:ops — is consequential: the kernel holds it at the interlock (L2)"; the card asks "Promoting bob to version 1 — its next life stands on floor ops of universe dev". **9.** "Done, on your word: bob.template is version 1 on the shelf (pin …) — bob's next life stands on floor ops of universe dev; the room's record is the replay (exp_…); the draft is spent"; the tape reads `service registered bob.template`, `experiment settled`; within a few seconds `body joined bob`. **10.** "bob · active · stands on u:dev/f:ops · bob.template v1"; the crew shows bob alive on floor ops, life 2 (the trial was life 1 — the same self), wearing `bob.template v1`. **11.** bob replies "hello from the owner" (its echo graph) and the journey says bob took it on u:dev/f:ops. **12.** "Done, on your word: bob is at rest — its life stopped at a safe boundary, its self kept, its record whole; say “restore bob” for a new life or “decommission bob” for the grave"; the chat says "bob is rested — its self kept"; the crew shows bob dormant. **13.** The card asks for your code (L3); "Done, on your code: bob is decommissioned — removed: its lease, its gateway key, its bench, its wear links; its DID did:orreth:agent:…, its joins and its record stay"; the chat says "bob is decommissioned — its live objects removed; its DID, its joins and its record stay". **14.** "bob · decommissioned · stands on u:dev/f:ops · bob.template v1". **15.** "Done, on your word: bob returns — a new life from the shelf's standing version, on floor ops of universe dev; never a revival"; within a few seconds `body joined bob`, life 3, and the crew shows bob alive again | — | OWED — JB's walk by the numbered steps |
 | **SPEC-OPERATING-01** | 0010 §7 · 0005 Phase 8 sp5 THE OPERATING STATE (built 2026-10-08) · covenant rules 2 · 11 · 13 | **A numbered walk — one thing to do, one thing to see, per step.** Sit as the owner on :4600 with the crew lit (`scripts/dev.sh kernel`) and a live mind in the Stable (haiku). **1.** Say "open the monitor". **2.** Say "echo, the moon is round". **3.** Click 👍 under the echo's reply. **4.** Say "show the measurements". **5.** Wait a minute; read the chat and the tape. **6.** Say "show the measurements" again. **7.** Say "summon critic", then "dismiss critic". **8.** Say "librarian, remember this under improvement: echo should greet before it echoes" — then "librarian, mark an improvement on the echo's last reply: it should greet first" (or any ask that makes the librarian call its mark tool with kind improvement). **9.** Wait for the critic; read the chat. **10.** Say "load my echo draft in the workshop". **11.** Say "register the source bob-src from https://github.com/<you>/<a-repo-with-a-python-module> at <commit> entry <module>:<callable>", then in the Workshop start a graph draft `imp.v0` with one node of kind import naming `bob-src`, SAVE, "cut the imp.v0 draft", Yes. **12.** Say "what levels are here?" | **1.** The MEASUREMENTS card reads TRUST · RECALL · EFFICIENCY · EXPERIENCE · COST, each `unknown` with words like "trust: unknown — no graded yet (never a silent 1.0)"; the WATCHES card lists the five kernel watches, green, "red when trust < 1.0 · now unknown (nothing to measure yet) → green"; the INTENTIONS show "keep this world's operating state at 1.0 …" beside Resiliency. **2.** The echo replies with every word; the reply bubble carries 👍 👎. **3.** The thumb's line reads "thumb up — thank you — recorded; it feeds the Experience measurement and the grader's evidence, never a body directly". **4.** The chat says five lines: recall 1.0000 (N of N served asks replayable …), efficiency 1.0000, experience 1.0000 — 1 of 1 thumbs up, trust unknown, cost by the ask (the echo spends nothing; a librarian ask moves it). **5.** The tape shows `ask received` for "grader, grade the reply ask_… by echo …", the grader's journey reads "routed to the event edge — a marker of kind grading asked for a response" and then "wrote my signed verdict on ask_… under my own name — grade B" (or whatever the grader gave), and a `verdict` fact. **6.** trust reads 1.0000 — 1 of 1 graded replies passed (or 0.0000 if the grader gave D or F — honest). **7.** "critic summoned — it joins this session's crew …" and the chip `critic ·summoned` beside MITL; then "critic dismissed — …". **8.** The librarian's journey shows the mark tool called with kind improvement; the tape reads `marker set`. **9.** The critic's reply names the change; the chat says "the critic proposed a draft for you — echo template: proposed by the critic from marker mk_… — for echo: the echo template: …"; YOUR DRAFTS gains `template echo`. **10.** The Workshop opens the proposed draft read-write with the critic's words in the inspector; the declaration shows the proposed change. **11.** The source stands on the shelf ("the source bob-src stands on the shelf — … entry …"); after the cut, "imp, hello" through a template wearing imp.v0 answers with the repo's words and its journey reads "ran the imported graph bob-src at … — entry …" (a prod universe would read "CANNOT ACT: … runs only in a dev universe at v0"). **12.** No new level — the Operating State opens no room; its reds go to the critic as objectives under the intention | — | OWED — JB's walk by the numbered steps |
+| **SPEC-AGENT-01** | SPEC-OPERATING-01 + SPEC-EXPERIMENT-01 + SPEC-CHIPS-01 (sp6, never written as its own row) as ONE thread — JB's ask 2026-10-10 | **THE ONE WALK below** — 39 numbered steps: the ground measured (the monitor · the key checks · the two chips summoned) → the improvement loop closed in the Workshop (your own mark, the critic's proposed draft, W112's discard) → bob made and judged at the gate by all four reviewers → promoted, key-checked, rested, decommissioned, restored → a repo'd graph run inside a hull through the gate a second time | Every arrow in THE ONE WALK, as written | — | OWED — JB's walk by the numbered steps; found on the way 2026-10-10: W112 (the discard left the rail standing · "in workshop" unheard), cured |
 | **SPEC-PATH-01** | 0010 lock 2 · 0005 Phase 8 sp1 THE PATH (built 2026-10-05) · covenant rule 7 · rule 13 | Sit as the owner on :4600 with the crew lit (`scripts/dev.sh kernel`); read the GROUND organ's tag and the levels line under it; say "what levels are here?"; open the CREW pull and read the echo's card; say "echo, say the word HERON once"; say "open floor two" and click Yes at the interlock, then "open room bob on floor ops as an experiment room" and click Yes; say "open floor three as prod" and Yes, then "open room loose on floor three as dev"; say "open room x" (no floor); read the tape as each level opens; relight the kernel with `SPINE_MODE=prod` and read the tag, then relight with it unset | The tag reads `u:dev · dev · cell local · epoch N`; the levels line reads `floor ops · dev · 1 body` (the echo stands on the floor the crew manifest declared) and its hover says who opened it and what rolls up. "what levels are here?" lists every level in words ("floor ops of universe dev — dev · 1 seated here, 1 within") and tells how to open one. The echo's card wears `u:dev/f:ops`; the ask to it is served from the universe exactly as before, its reply on the feed. Each "open …" holds at the interlock as consequential with the level in words; the Yes answers "Done, on your word: floor two of universe dev is open (dev)", the tape reads "level opened floor two · dev · opened on a person's word", the levels line grows; the experiment room says so in the reply and the line; the room asking dev under the prod floor is REFUSED in the chat in words ("mode only tightens down the path …") with nothing held; "open room x" answers that a room opens ON a floor. Relit as prod the tag reads `u:dev · prod` and a relight unset refuses to light with words in the log (a prod universe never loosens) — JB restores dev by dropping the `spine_levels` row's mode or accepts prod | walked 2026-10-05 evening (JB): all bars — the six chat bars, the prod relight, the refused relight | PASS w/ two wounds, both CURED the same evening — W97 the echo's reply read "(no words came back)" (the glass's 600 ms shared read handed the reply notice a stale view); W98 under the prod universe the floors still read dev (the tightening at light touched the universe's row alone; now every level within tightens with it, each a fact) |
+
+## THE ONE WALK — SPEC-AGENT-01 (JB's ask, 2026-10-10: "merge these 3 specs into a single start to finish walkthrough")
+
+SPEC-OPERATING-01, SPEC-EXPERIMENT-01 and the owed SPEC-CHIPS-01 (sp6, never written as its own row) as ONE
+thread: a world measured, an improvement proposed, the agent **bob** made, judged at the gate by all four reviewers
+(the grader, the critic, the identity chip, the security chip), promoted, asked to prove itself on the cadence,
+rested, buried and restored — then a repo'd graph run inside a hull. One thing to do, one thing to see, per step.
+Every chat word below is a word the glass hears today (the guide 0.11.6).
+
+**Sit down.** The Rust kernel lit with its crew (`scripts/dev.sh kernel`); seated as the owner on :4600; a live mind
+in the Stable (haiku). The timings that matter: the grade beat and the reviewers answer within a minute; the
+key-check cadence is 300 s at stock (`SPINE_KEYCHECK_S`). **Before step 1** say "my drafts": if `template bob` or
+`golden bob` stands there from an earlier try, say "discard the bob draft" until none does — the golden set and the
+template share the name `bob`, and "cut the bob draft" takes the FIRST draft so named (a draft can always be named by
+its id instead: "cut draft_3e7bf5f3b1ab").
+
+### Part 1 — the ground, measured (OPERATING 1–6 · CHIPS: the seats and the refusals)
+
+1. **Say "open the monitor".**
+   → The MEASUREMENTS card reads TRUST · RECALL · EFFICIENCY · EXPERIENCE · COST, each `unknown` with its reason
+   ("trust: unknown — no graded yet (never a silent 1.0)"); the WATCHES card lists the kernel's watches green — the
+   five measurements, the ground's connections, and the key-check's ("every seated body proved itself on the
+   cadence"); the INTENTIONS show "keep this world's operating state at 1.0 …" beside Resiliency.
+2. **Say "show the key checks".**
+   → One line: "N key-checks in the last day, 0 failed, none waiting — every seated body is asked every 300 s to
+   prove who and what it is" (or "no body has been asked to prove itself yet — every 300 s once one is seated" on a
+   fresh world), then up to twenty rows `<name> · asked hh:mm:ss · proven`. In the Monitor the RAILS card carries the
+   same line as `key-check` (red only on a failure) and the pulse under GROUND reads "N key-checks today, 0 failed".
+3. **Say "summon identity", then "identity, who is seated?", then "dismiss identity".**
+   → "identity summoned — it joins this session's crew: address it as “identity, …”; say “dismiss identity” to let it
+   go · recorded" and the chip `identity · summoned` beside MITL; its reply says THE SEATS as it holds them — the
+   people seated by the ceremony by role (1 owner), the bodies alive on a lease, the key-checks of the day — from the
+   kernel's record, never its own word; then "identity dismissed — it leaves … · recorded, never deleted".
+4. **Say "summon security", then "security, what does the refusals ground hold?", then "dismiss security".**
+   → The same summon words for `security`; its reply says THE REFUSALS GROUND: "nothing in the last day — no body was
+   turned away at the join or the desk" (or each refusal named: who, which door, when, why); then dismissed.
+5. **Say "echo, the moon is round".**
+   → The echo replies with every word; the reply bubble carries 👍 👎.
+6. **Click 👍 under the echo's reply.**
+   → "thumb up — thank you — recorded; it feeds the Experience measurement and the grader's evidence, never a body
+   directly".
+7. **Say "show the measurements".**
+   → Five lines: recall 1.0000 (N of N served asks replayable …), efficiency 1.0000, experience 1.0000 — 1 of 1
+   thumbs up, trust unknown, cost by the ask (the echo spends nothing; a librarian ask moves it).
+8. **Wait a minute; read the tape and the chat.**
+   → The tape shows `ask received` for "grader, grade the reply ask_… by echo …"; the grader's journey reads "routed
+   to the event edge — a marker of kind grading asked for a response" and then "wrote my signed verdict on ask_…
+   under my own name — grade B" (or whatever it gave); a `verdict` fact.
+9. **Say "show the measurements" again.**
+   → trust 1.0000 — 1 of 1 graded replies passed (or 0.0000 if the grader gave D or F — honest).
+
+### Part 2 — the improvement loop closes in the Workshop (OPERATING 7–10, the mark made deterministic)
+
+10. **Say "echo, hello there".**
+    → The echo repeats it. (This reply is the one you mark next — the mark lands on the session's LAST ask, so say
+    nothing else in between.)
+11. **Say "mark this as improvement: the echo should greet before it echoes".**
+    → "marked ask_… as improvement — critic asked to act"; the tape reads `marker set`. (SPEC-OPERATING-01's step 8
+    asked the librarian to call its mark tool; a mind may decline, as it did on 2026-10-10 — "I have nothing new to
+    mark". Your own mark is the sure door; the librarian's remains the agent's way.)
+12. **Wait for the critic; read the chat.**
+    → The critic's ask runs under the improvement marker (its journey: "routed to the event edge"); its reply names
+    the change; then "the critic proposed a draft for you — echo template: proposed by the critic from marker mk_… —
+    for echo: …"; YOUR DRAFTS gains `template echo`.
+13. **Say "load my echo draft in workshop".**
+    → The Workshop opens the proposed draft read-write (W112: "in workshop" and "in the workshop" both heard); the
+    inspector reads THE DRAFT with the critic's words; the declaration shows the proposed change.
+14. **Say "discard the echo draft".**
+    → "discarded your template draft echo — it was never on the shelf, so nothing is kept"; YOUR DRAFTS drops it AT
+    ONCE and the canvas clears (W112 — before, the rail kept it until the Workshop was reopened).
+
+### Part 3 — bob is made and judged at the gate (EXPERIMENT 0–9 · CHIPS: the four reviewers)
+
+15. **In the Workshop click "+ new draft", leave the kind on graph, name it `bob.v0`, click "start the draft".**
+    → "started your graph draft bob.v0 (draft_…) — under your seat alone"; one `think · entry` block.
+16. **Click the `think` block; set its kind to echo and its id to `say`; click "apply to the draft"; click SAVE.**
+    → The one block reads `say · ECHO · the words back` and is the entry; "saved your graph draft bob.v0 — under your
+    seat alone, not on the shelf; say “cut the bob.v0 draft” …". (An echo at the entry makes the golden set below
+    pass by the echo's own law — no mind to guess.)
+17. **Say "cut the bob.v0 draft" and click "Yes — do it".**
+    → Held at the interlock in plain words; after Yes "Done, on your word: the bob.v0.graph is on the shelf as version
+    1 (registered)" — or "version 2 (versioned)" when a bob.v0 already stood there from SPEC-WORKSHOP-01; the tape
+    `service registered bob.v0.graph`; `bob.v0` under *graphs*.
+18. **Say "draft a golden called bob: {\"template\": \"bob\", \"cases\": [{\"ask\": \"hello bob\", \"expect\": [\"hello\"]}, {\"ask\": \"say moon\", \"expect\": [\"moon\"]}]}" then "cut the bob draft" and click "Yes — do it".**
+    → The kernel holds the cut at L2; after Yes "Done, on your word: the bob.golden is on the shelf as version 1";
+    `bob` under *golden sets*.
+19. **Click "+ new draft", set the kind to template, name it `bob`, click "start the draft"; in the declaration box set `"graph": "bob.v0"` (the kind reads `agent` already); click "apply the JSON to the canvas", then SAVE.**
+    → YOUR DRAFTS lists `template bob`; the inspector reads THE DRAFT; the chat says "saved your template draft bob".
+20. **Say "cut the bob draft".**
+    → "an agent's cut goes through the Experiment: opening one on bob (u:dev/f:ops/r:exp-bob-1, 2 golden cases) is
+    consequential — the kernel holds it at the interlock (L2)"; the card: "Opening an experiment on the bob agent —
+    room exp-bob-1 on floor ops of universe dev opens as an experiment room; one arm — the candidate alone; no
+    version of it stands on the shelf yet; the evidence is its golden set (2 cases); the grader and the critic review
+    under their own names; the verdict is a proposal and the promotion is yours".
+21. **Click "Yes — do it".**
+    → "Done, on your word: room exp-bob-1 on floor ops of universe dev is open as an experiment room and the
+    experiment exp_… on bob is running"; the tape `level opened`, `experiment opened`.
+22. **Say "what levels are here?".**
+    → The listing names `room exp-bob-1 on floor ops` as an experiment room.
+23. **Wait up to a minute; read the chat.**
+    → "THE EXPERIMENT on bob is running in u:dev/f:ops/r:exp-bob-1 — one arm, the candidate"; then "a reviewer wrote
+    its signed verdict on an experiment — the proposal follows when every reviewer is done" FOUR times (the grader,
+    the critic, the identity chip, the security chip — each under its own DID); then THE EXPERIMENT card:
+    `candidate: 2 passed, 0 failed · current: none — the first version` · `the grader (signed): candidate A →
+    candidate · the critic (signed): risk low — …` · **`the identity chip (signed): claims kept — …`** (the trial life
+    joined as bob's own self, stood on the candidate's declaration, in exp-bob-1, and left whole) · **`the security
+    chip (signed): clear — …`** (a first version: everything is new; nothing on the refusals ground) · `resiliency: no
+    watch turned red while the arms ran · the evidence leans to promote`, with PROMOTE and DECLINE. A chip not
+    seated or silent ten minutes reads `the identity chip: MISSING — …` by name, never guessed; a broken claim or a
+    concern would HOLD the leaning.
+24. **Say "show the experiments".**
+    → The same card again, state `proposed`.
+25. **Click PROMOTE on the card (or say "promote bob to floor ops").**
+    → "promoting bob to version 1 — its next life on u:dev/f:ops — is consequential: the kernel holds it at the
+    interlock (L2)"; the card asks "Promoting bob to version 1 — its next life stands on floor ops of universe dev".
+26. **Click "Yes — do it".**
+    → "Done, on your word: bob.template is version 1 on the shelf (pin …) — bob's next life stands on floor ops of
+    universe dev; the room's record is the replay (exp_…); the draft is spent"; the tape `service registered
+    bob.template`, `experiment settled`; within a few seconds `body joined bob`.
+
+### Part 4 — bob lives, proves itself, rests, dies, returns (EXPERIMENT 10–15 · CHIPS: the key-check)
+
+27. **Say "show the seats", then "open the crew".**
+    → "bob · active · stands on u:dev/f:ops · bob.template v1"; the crew shows bob alive on floor ops, life 2 (the
+    trial was life 1 — the same self), wearing `bob.template v1`.
+28. **Say "bob, hello from the owner".**
+    → bob replies "hello from the owner" (its echo graph); the journey says bob took it on u:dev/f:ops.
+29. **Five minutes after bob joined (the cadence) — or any time later — say "show the key checks".**
+    → A row `bob · asked hh:mm:ss · proven`: the kernel repeated the join desk's challenge over the rail, bob signed
+    the kernel's own nonce on its bench and never marked itself ok, the kernel verified the key derives bob's DID
+    and the hash is the one it joined as; the tally's `failed` stays 0 and the key-check watch stays green.
+30. **Say "rest bob" and click "Yes — do it".**
+    → "Done, on your word: bob is at rest — its life stopped at a safe boundary, its self kept, its record whole; say
+    “restore bob” for a new life or “decommission bob” for the grave"; the chat "bob is rested — its self kept"; the
+    crew shows bob dormant.
+31. **Say "decommission bob", enter your code.**
+    → The card asks for your code (L3); "Done, on your code: bob is decommissioned — removed: its lease, its gateway
+    key, its bench, its wear links; its DID did:orreth:agent:…, its joins and its record stay"; the chat "bob is
+    decommissioned — its live objects removed; its DID, its joins and its record stay".
+32. **Say "show the seats".**
+    → "bob · decommissioned · stands on u:dev/f:ops · bob.template v1".
+33. **Say "restore bob" and click "Yes — do it".**
+    → "Done, on your word: bob returns — a new life from the shelf's standing version, on floor ops of universe dev;
+    never a revival"; within a few seconds `body joined bob`, life 3, and the crew shows bob alive again.
+
+### Part 5 — a repo'd graph inside a hull (OPERATING 11–12; the gate a second time)
+
+The import needs a git repository holding a Python module with a callable (or a compiled LangGraph with `invoke`).
+No GitHub needed — a local repository is a repository. **In a shell:**
+
+```
+mkdir -p ~/orreth-walk/bobrepo && cd ~/orreth-walk/bobrepo && git init -q
+printf 'def answer(text):\n    return "the repo says: " + text.upper()\n' > bobgraph.py
+git add . && git commit -q -m one && git rev-parse HEAD
+```
+
+The last line prints the commit; the repo's path is `/Users/jb/orreth-walk/bobrepo`.
+
+34. **Say "register the source bob-src from /Users/jb/orreth-walk/bobrepo at <that commit> entry bobgraph:answer".**
+    → "the source bob-src stands on the shelf — /Users/jb/orreth-walk/bobrepo at <commit's first 12>, entry
+    bobgraph:answer; a graph node of kind import naming it runs the repo's entry inside the hull (a dev universe
+    only)"; `bob-src` among the sources.
+35. **In the Workshop click "+ new draft", kind graph, name `imp.v0`, "start the draft"; in the declaration box replace the nodes and the entry so it reads `"entry": "run", "nodes": [{"id": "run", "kind": "import", "source": "bob-src"}], "edges": []`; click "apply the JSON to the canvas", then SAVE.**
+    → The canvas draws one block `run · entry` of kind import (the inspector's kind list holds think and echo — an
+    import node is written in the JSON); "saved your graph draft imp.v0". A node of kind import without a `source`
+    refuses at the cut: "an import node names its `source` — the repo'd source on the shelf (repo · commit · entry)".
+36. **Say "cut the imp.v0 draft", Yes.**
+    → "Done, on your word: the imp.v0.graph is on the shelf as version 1".
+37. **Say "draft a golden called imp: {\"template\": \"imp\", \"cases\": [{\"ask\": \"hello\", \"expect\": [\"HELLO\"]}]}" then "cut the imp draft", Yes; then "+ new draft", kind template, name `imp`, "start the draft", set `"graph": "imp.v0"`, apply, SAVE; then "cut the imp draft", Yes.**
+    → The gate a second time: room exp-imp-1 opens; the trial life fetches the repo at its commit under
+    `~/.orreth/imports/bob-src/<commit>/` and answers the golden case "the repo says: HELLO" — `candidate: 1 passed,
+    0 failed`; the four reviewers sign (the security chip reads the candidate's diff — a first version, everything
+    new — against the refusals ground); the card leans to promote.
+38. **Click PROMOTE, Yes; then say "imp, hello".**
+    → `body joined imp`; imp replies "the repo says: HELLO" and its journey reads "ran the imported graph bob-src at
+    <commit's first 12> — entry bobgraph:answer". (A prod universe would read "CANNOT ACT: the imported graph bob-src
+    runs only in a dev universe at v0".)
+39. **Say "what levels are here?".**
+    → The two experiment rooms (exp-bob-1 · exp-imp-1) and nothing more — the Operating State opens no room; its
+    reds go to the critic as objectives under the intention.
+
+**The bar is every arrow above, as written.** Anything else is a wound: say what you saw, in which step.
+
 
 ## Walk records
 

@@ -2314,7 +2314,7 @@ function workspaceWords(text){
   if (/^((open|show)( me)?( the)? (monitor|monitoring)|monitor|monitoring)$/.test(t)) { toggleMonitor(true); return true; }
   if (/^((open|show)( me)?( the)? workshop|workshop|the workshop)$/.test(t)) { toggleWorkshop(true); return true; }        // Phase 8 sp3
   if (/^close the workshop$/.test(t)) { toggleWorkshop(false); return true; }
-  const lw = t.match(/^(?:load|open)\s+(?:the\s+|my\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+(template|prompt|skill|policy|graph|binding|golden|draft))?\s+in\s+the\s+workshop$/);
+  const lw = t.match(/^(?:load|open)\s+(?:the\s+|my\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+(template|prompt|skill|policy|graph|binding|golden|draft))?\s+in\s+(?:the\s+)?workshop$/);   // W112: "in workshop" too
   if (lw){ el("msg mine", esc(text)); workshopLoad(lw[1], lw[2] || null); return true; }   // "load the librarian template in the workshop" · "load my bob draft in the workshop"
   return false;
 }
@@ -2778,6 +2778,10 @@ async function serviceWords(text){                 // "what services are here?" 
     if (m[1] === "discard"){
       const r = await fetch("/drafts/discard", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({draft_id: d.draft_id, person: PERSON})}).then(x=>x.json()).catch(()=>null);
       sysline(r && r.discarded ? `discarded your ${esc(d.kind)} draft ${esc(d.name)} — it was never on the shelf, so nothing is kept` : (r && r.error ? esc(r.error) : "the draft shelf did not answer"));
+      if (r && r.discarded && workshopPull && workshopPull.classList.contains("open")){   // W112: a discard publishes no fact, so the open Workshop is told here — the rail and the canvas let the draft go at once
+        if (WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id){ WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null; }
+        loadWorkshop();
+      }
       return true;
     }
     const r = await fetch("/drafts/cut", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({draft_id: d.draft_id, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
