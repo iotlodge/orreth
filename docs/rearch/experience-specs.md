@@ -234,7 +234,7 @@ git add . && git commit -q -m one && git rev-parse HEAD
 
 The last line prints the commit; the repo's path is `/Users/jb/orreth-walk/bobrepo`.
 
-34. **Say "register the source bob-src from /Users/jb/orreth-walk/bobrepo at <that commit> entry bobgraph:answer".**
+34. **Say "register the source bob-src from /Users/jb/orreth-walk/bobrepo at <that commit> entry bobgraph:answer" — the one sentence, nothing after it (the line below is the kernel's ANSWER, not yours to type).**
     → "the source bob-src stands on the shelf — /Users/jb/orreth-walk/bobrepo at <commit's first 12>, entry
     bobgraph:answer; a graph node of kind import naming it runs the repo's entry inside the hull (a dev universe
     only)"; `bob-src` among the sources.

@@ -2623,7 +2623,7 @@ async function serviceWords(text){                 // "what services are here?" 
     return true;
   }
   // ---- Phase 8 sp5, THE OPERATING STATE: a repo'd source onto the shelf (import runs it inside the hull) ----
-  m = text.trim().replace(/[.!?]+$/, "").match(/^register\s+the\s+source\s+([a-z0-9][a-z0-9._-]*)\s+from\s+(\S+)\s+at\s+([0-9a-fA-F]{7,64})\s+entry\s+(\S+)$/i);
+  m = text.trim().replace(/[.!?]+$/, "").match(/^register\s+the\s+source\s+([a-z0-9][a-z0-9._-]*)\s+from\s+(\S+?),?\s+at\s+([0-9a-fA-F]{7,64}),?\s+entry\s+(\S+)$/i);   // W121: a comma between the parts is fine
   if (m){
     el("msg mine", esc(text));
     const r = await fetch("/services", {method: "POST", headers: {"content-type": "application/json"},
