@@ -2623,7 +2623,7 @@ async function serviceWords(text){                 // "what services are here?" 
     return true;
   }
   // ---- Phase 8 sp5, THE OPERATING STATE: a repo'd source onto the shelf (import runs it inside the hull) ----
-  m = text.trim().replace(/[.!?]+$/, "").match(/^register\s+the\s+source\s+([a-z0-9][a-z0-9._-]*)\s+from\s+(\S+?),?\s+at\s+([0-9a-fA-F]{7,64}),?\s+entry\s+(\S+)$/i);   // W121: a comma between the parts is fine
+  m = text.trim().replace(/[.!?]+$/, "").match(/^register\s+the\s+source\s+([a-z0-9][a-z0-9._-]*)\s+from\s+(\S+?),?\s+at\s+([0-9a-fA-F]{7,64}),?\s+entry\s+([^\s;]+)(?:\s*;.*)?$/i);   // W121: a comma between the parts is fine · W122: words after a “;” are not the sentence
   if (m){
     el("msg mine", esc(text));
     const r = await fetch("/services", {method: "POST", headers: {"content-type": "application/json"},
@@ -2634,7 +2634,7 @@ async function serviceWords(text){                 // "what services are here?" 
   }
   if (/^register\s+(?:the\s+)?source\b/i.test(t)){   // W122 (JB's Part 5, 2026-10-11): the half-formed words are taught here, never handed to a body (W99's law)
     el("msg mine", esc(text));
-    sysline("a source is registered in ONE sentence with four parts — say it as: register the source <name> from <the repo's path or url> at <its commit, 7–64 hex> entry <module:callable> — and nothing after the entry");
+    sysline("a source is registered in ONE sentence with four parts — say it as: register the source NAME from THE-REPO-PATH-OR-URL at ITS-COMMIT entry MODULE:CALLABLE — for example: register the source bob-src from /Users/jb/orreth-walk/bobrepo at 25649bb1dd16 entry bobgraph:answer");
     return true;
   }
   // ---- Phase 8 sp4, THE EXPERIMENT AND THE CUT: the experiments, the seats, the promotion, the ladder ----
