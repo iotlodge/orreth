@@ -157,7 +157,11 @@ its id instead: "cut draft_3e7bf5f3b1ab").
     → Held at the interlock in plain words; after Yes "Done, on your word: the bob.v0.graph is on the shelf as version
     1 (registered)" — or "version 2 (versioned)" when a bob.v0 already stood there from SPEC-WORKSHOP-01; the tape
     `service registered bob.v0.graph`; `bob.v0` under *graphs*.
-18. **Say "draft a golden called bob: {\"template\": \"bob\", \"cases\": [{\"ask\": \"hello bob\", \"expect\": [\"hello\"]}, {\"ask\": \"say moon\", \"expect\": [\"moon\"]}]}" then "cut the bob draft" and click "Yes — do it".**
+18. **Say the golden set — ONE line, typed alone, plain quotes:**
+    ```
+    draft a golden called bob: {"template": "bob", "cases": [{"ask": "hello bob", "expect": ["hello"]}, {"ask": "say moon", "expect": ["moon"]}]}
+    ```
+    **then, as its own line, `cut the bob draft`, and click "Yes — do it".**
     → The kernel holds the cut at L2; after Yes "Done, on your word: the bob.golden is on the shelf as version 1";
     `bob` under *golden sets*.
 19. **Click "+ new draft", set the kind to template, name it `bob`, click "start the draft"; in the declaration box set `"graph": "bob.v0"` (the kind reads `agent` already); click "apply the JSON to the canvas", then SAVE.**
@@ -234,7 +238,10 @@ git add . && git commit -q -m one && git rev-parse HEAD
 
 The last line prints the commit; the repo's path is `/Users/jb/orreth-walk/bobrepo`.
 
-34. **Say "register the source bob-src from /Users/jb/orreth-walk/bobrepo at <that commit> entry bobgraph:answer" — the one sentence, nothing after it (the line below is the kernel's ANSWER, not yours to type).**
+34. **Say the registration — ONE line, typed alone (put the commit the shell printed in place of the hex):**
+    ```
+    register the source bob-src from /Users/jb/orreth-walk/bobrepo at 25649bb1dd16 entry bobgraph:answer
+    ```
     → "the source bob-src stands on the shelf — /Users/jb/orreth-walk/bobrepo at <commit's first 12>, entry
     bobgraph:answer; a graph node of kind import naming it runs the repo's entry inside the hull (a dev universe
     only)"; `bob-src` among the sources.
@@ -244,7 +251,13 @@ The last line prints the commit; the repo's path is `/Users/jb/orreth-walk/bobre
     refuses at the cut: "an import node names its `source` — the repo'd source on the shelf (repo · commit · entry)".
 36. **Say "cut the imp.v0 draft", Yes.**
     → "Done, on your word: the imp.v0.graph is on the shelf as version 1".
-37. **Say "draft a golden called imp: {\"template\": \"imp\", \"cases\": [{\"ask\": \"hello\", \"expect\": [\"HELLO\"]}]}" then "cut the imp draft", Yes; then "+ new draft", kind template, name `imp`, "start the draft", set `"graph": "imp.v0"`, apply, SAVE; then "cut the imp draft", Yes.**
+37. **The gate a second time, in five sentences, each typed alone. First the golden set:**
+    ```
+    draft a golden called imp: {"template": "imp", "cases": [{"ask": "hello", "expect": ["HELLO"]}]}
+    ```
+    **then `cut the imp draft` and Yes. Then in the Workshop: "+ new draft", kind template, name `imp`, "start the
+    draft"; in the declaration box change the graph line to `"graph": "imp.v0"`, click "apply the JSON to the
+    canvas", SAVE. Then `cut the imp draft` and Yes.**
     → The gate a second time: room exp-imp-1 opens; the trial life fetches the repo at its commit under
     `~/.orreth/imports/bob-src/<commit>/` and answers the golden case "the repo says: HELLO" — `candidate: 1 passed,
     0 failed`; the four reviewers sign (the security chip reads the candidate's diff — a first version, everything
