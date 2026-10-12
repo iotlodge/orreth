@@ -115,7 +115,7 @@ def test_a_nodes_refs_are_executed_by_the_hull(pg, monkeypatch, tmp_path):
             seen.update(system=system, pin=pin, model=model)
             return "a reply"
 
-        def think_acting(self, conn, *, did, system, prompt, door, model=None, on_delta=None, subject=None, klass=None, pin=None, ask=None):
+        def think_acting(self, conn, *, did, system, prompt, door, model=None, on_delta=None, subject=None, klass=None, pin=None, ask=None, require=None):   # W116: the hull may REQUIRE a tool first
             seen.update(system=system, pin=pin, model=model, tools=[t["name"] for t in door.schemas()])
             return "a reply", ["called nothing"]
 
