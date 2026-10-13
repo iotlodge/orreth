@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE WORKSHOP sp3, THE WORKSHOP v0 · 2026-10-06
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE WIZARD held to the kernel's laws and to W118's (JB's lock 2026-10-12) · 2026-10-12
 """THE WORKSHOP v0 on the reference (canon 0010 lock 6 · lock 8 · 0005 Phase 8 sp3): the graph declaration
 BRANCHES (a way out wears `when`: the hull's edge · the ask's words · the last reply; one default at most;
 forward only) and the hull picks the way out as the run goes, saying each pick in the journey; a node's refs
@@ -7,6 +8,7 @@ mind pins the stall; the Workshop's agent is the workspace firmware wearing the 
 the crew manifest, its one tool `draft` routine (L1) and writing under the human whose ask it serves (AG-9:
 no human, nothing saved); the `workshop` skill and binding stand on the shelf at light."""
 import json
+import re
 import secrets
 from pathlib import Path
 
@@ -179,3 +181,47 @@ def test_the_workshop_agent_is_seated_and_its_draft_tool_writes_under_the_asks_p
     out = r._graph.invoke({"text": f"show it\n[draft {mine[0]['draft_id']}]", "reply": "", "steps": [], "notes": [], "hold": None, "read": [], "edge": ""})
     r._serve_conn = None
     assert any("is not this human's — nothing read" in n for n in out["notes"]) and not any("THE OPEN DRAFT" in n for n in out["notes"])
+
+
+# ---- THE WIZARD (JB's lock 2026-10-12, after THE ONE WALK): glass-only, held here to the kernel's laws and to W118's ----
+GLASS = SPINE / "glass" / "index.html"
+
+
+def test_the_wizards_drafts_are_ordinary_drafts_the_kernel_cuts():
+    """What the wizard writes (wizGraphDecl · wizGoldenDecl · wizTemplateDecl in the glass) is the SAME shape a hand
+    writes — one entry node of the chosen kind, a golden set for the template, a template wearing <name>.v0 — and
+    each validates on the reference law for law; an import node without its source refuses in the words the glass
+    teaches, so the wizard refuses it first."""
+    for shape, nid, extra in (("echo", "say", {}), ("think", "think", {"prompt": "greet", "mind": "haiku"}), ("import", "run", {"source": "bob-src"})):
+        g = {"format": G, "name": "bob.v0", "version": "0.1.0", "words": "", "entry": nid, "nodes": [{"id": nid, "kind": shape, **extra}], "edges": []}
+        assert crafts.validate("graph", g) == {"ok": True, "reason": None}, shape
+    bare = {"format": G, "name": "imp.v0", "version": "0.1.0", "words": "", "entry": "run", "nodes": [{"id": "run", "kind": "import"}], "edges": []}
+    assert "names its `source`" in crafts.validate("graph", bare)["reason"]
+    gold = {"format": "orreth-golden/1", "template": "bob", "cases": [{"ask": "hello bob", "expect": ["hello"]}, {"ask": "say moon", "expect": ["moon"]}]}
+    assert crafts.validate("golden", gold) == {"ok": True, "reason": None}
+    tpl = {"format": "orreth-resident-template/1", "name": "bob", "version": "0.1.0", "nature": "answers hello", "kind": "agent",
+           "graph": "bob.v0", "mind": {"model": "claude-haiku-4-5-20251001"}, "capabilities": ["ask"]}
+    assert crafts.validate("template", tpl) == {"ok": True, "reason": None}
+    # the inspector offers every kind the hull runs, and only those
+    html = GLASS.read_text("utf-8")
+    assert 'const NODE_KINDS = ["think", "echo", "import"]' in html, "the glass's node kinds drifted from the kernel's"
+    assert tuple(crafts.NODE_KINDS) == ("think", "echo", "import")
+
+
+def test_the_wizard_stands_on_the_first_screen_and_goes_through_the_chats_own_doors():
+    """JB's lock: "+ new agent" beside "+ new draft"; the wizard fills the canvas, the inspector and the declaration;
+    its cut, its promotion and a source's registration go through ONE door each with the typed word (W118: a button's
+    word goes where a typed word goes); the chat still hears "new agent"; the kernel's facts drive its last steps."""
+    html = GLASS.read_text("utf-8")
+    assert "data-new-agent" in html and 'data-new title' in html
+    assert html.index("data-new-agent") < html.index('data-new title'), "+ new agent stands beside (before) + new draft"
+    for door in ("async function cutDraft(", "async function promoteAgent(", "async function registerSource("):
+        assert html.count(door) == 1, door
+    assert html.count("fetch(\"/drafts/cut\"") == 1 and html.count("fetch(\"/experiments/promote\"") == 1, "one door for the cut and the promotion"
+    assert html.count('kind: "source", manifest: {repo') == 1, "one door for a source"
+    for hook in ("wizOutcome(id, v)", "wizExperiment(n, x)", "wizJoined(n.ref)", "wizVerdict()"):
+        assert hook in html, hook
+    assert 'WS.open.source === "wizard"' in html and "function wizInspector(" in html and "function wizDecl(" in html
+    assert "wsNewAgent" in html and re.search(r"new\\s\+agent", html), "the chat hears “new agent”"
+    for words in ("held at the interlock: click Yes — do it in the chat", "where the next life stands", "JOINED · a life begins"):
+        assert words in html, words

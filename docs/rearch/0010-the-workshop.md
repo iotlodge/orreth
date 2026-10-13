@@ -238,6 +238,10 @@ ability to do the right thing) · **Recall** (the ability to replay) ·
   edits a draft's declaration on the human's words. **Its writes to the
   draft shelf are routine (L1)** — drafts are unversioned, under the human's
   seat, never in inventory. **The cut stays the human's.**
+- **The wizard (JB's lock 2026-10-12, spoonful 7 below).** The Workshop's
+  first screen is "+ new agent": one flow from a name to the body joined,
+  no JSON, what it makes ordinary drafts a hand can still edit. The chat's
+  words remain the record and the walker's way.
 - **The mind chip.** One chip in the Workshop assigns the workshop body's
   mind from the Stable's standing stalls through the existing assign door; a
   frontier Claude stall among the choices is **Claude the model**, metered
@@ -437,6 +441,50 @@ Each spoonful is a thing a human proves in the glass before the next opens
 proposal → re-cut → rested → decommissioned, with the record kept. Then the
 same walk done again **by the Workshop agent on JB's words**.
 
+7. **THE WIZARD** (a seventh spoonful, named by THE ONE WALK — JB's verdict
+   at its end, 2026-10-11: "a very difficult process … not a good experience
+   … we're going to have to create a wizard"; **LOCKED by JB 2026-10-12,
+   three answers; BUILT 2026-10-12, glass-only; walk OWED, SPEC-WIZARD-01**).
+   The Workshop's FIRST SCREEN: "+ new agent" beside "+ new draft" (and the
+   chat's "new agent" · "make an agent" · "open the wizard"). ONE FLOW from a
+   name to the body joined, no JSON, every step a sentence: NAME (a short
+   lowercase name and a line of what it is for; an agent already seated gets
+   its NEXT version, said) → GRAPH (one entry node of the chosen kind — echo,
+   the sure start whose golden cases pass by the echo's own law; think, a
+   prompt and a stall optional; import, a source picked from the shelf or
+   REGISTERED INLINE — name · repository · commit · entry — through the same
+   door as "register the source …") → GOLDEN CASES as a form (the ask · the
+   words the reply must contain; the first row filled per shape) → SAVE
+   (three ORDINARY DRAFTS under the person's seat — the graph `<name>.v0`,
+   the golden set `<name>`, the template `<name>` wearing it — a draft of the
+   same name and kind updated, never doubled; routine, L1) → CUT (the three
+   in order, each through the chat's own cut door and held at the interlock
+   where the Yes stays a deliberate click, never Enter; the next cut filed on
+   the last one's Yes; a cancel leaves the wizard where it stood; the third,
+   the agent's own, OPENS THE EXPERIMENT) → THE CARD inline in the wizard as
+   the kernel's facts arrive (opened · each reviewer's signed verdict counted
+   · proposed, with the arms, the four reviewers and the leaning) → PROMOTE
+   with WHERE THE NEXT LIFE STANDS as its one field (the experiment room's
+   floor by stock; the universe or any floor or room) through the chat's own
+   promotion door, held at L2 → "<name> JOINED" on the body's join fact. The
+   wizard fills the canvas (the graph drawn as it is shaped), the inspector
+   (the steps) and the declaration (the step's own truth, read-only until it
+   is a draft) as it goes; it can be left and resumed from "+ new agent"; a
+   redraw the feed asks for never takes a field out from under a typing hand.
+   The inspector grows `import` as a node kind with a source picker, and the
+   canvas names an import node rightly (it had read "not a kind the hull
+   runs" since sp5). Three doors made ONE for a typed word and a button
+   (W118's law): `cutDraft` · `promoteAgent` · `registerSource`. The kernel
+   is untouched: `/drafts` · `/drafts/cut` · `/experiments` ·
+   `/experiments/promote` · `/services` already served every step. Proofs:
+   `test_workshop.py` (the wizard's declarations validate on the reference law
+   for law; the first screen; the one door each; the kernel's facts as hooks)
+   · `test_guide.py` (the new words). Named, not in this spoonful: more than
+   one node from the wizard (a hand's work on the canvas after; the drafts are
+   ordinary); a Yes inside the wizard pane (the interlock stays the chat's,
+   pinned above the composer — one place a hold is ever answered); the
+   wizard walked by the Workshop agent on JB's words (the proof is Bob).
+
 **The Orreth-skill law (JB's phase objective).** Every spoonful ships the
 Orreth skill for what Fable built — the ontology slice and the skill
 component on the shelf — so that the measure at the walk is how well Orreth
@@ -473,6 +521,16 @@ evolves.
   with THE OPERATING STATE (spoonful 5), which reads them for Trust.
 
 ## Open, carried (not locked)
+
+- **THE STUDIO (canon 0011, drafted 2026-10-13 on JB's word after THE WIZARD
+  WALK's W124–W136 and the LangGraph Studio review).** The Workshop grown into
+  one place that tells one story: the bench · the rails reorganized · the true
+  graph (LangGraph code the agent's graph, its compiled shape drawn and lit) ·
+  one word to work · the agent makes it all · the docs in the kernel. It
+  amends §6 and §8 here; spoonful 7's "named, not in this spoonful" rows land
+  there. LOCKED by JB the same day (one Yes for the chain · the hold's second
+  face on the bench · Opus by stock · "Studio" at spoonful 11); builds on his
+  word per spoonful.
 
 - ~~Whether Floor and Room appear as **standing selectors** in the Workshop
   or as **fields on the deploy step** of a lifecycle (JB named both; decide

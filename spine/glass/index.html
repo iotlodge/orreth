@@ -12,6 +12,7 @@
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE DAYLIGHT GLASS (light mode — JB's ask, the old glass's paper · ink · bronze carried to the panel; every colour a token; remembered in this browser, the system's preference otherwise) · the feed widened to thirty-three topics lights the presence and scheduler tracks, the shelf's tool lamps, the desk and the meter · the lever-pulled and lease facts · the fact door read once per notice · one shared /ask read between the chat and the panel · 2026-09-28 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #17/#18 cures (glass): W61 a cancelled hold wears no proof word · W62 a retired service is at rest · W63 the YOU tag wears the seat's name · W64 a person's hold whose code is right reaches every other seated glass for a declared master's click · W65/W66 the stop grammar takes "stopping" · "start" and ignores state words · W67 the master reads the master's words · W68 a hold the clock ended says so · W69 a seat that only reads and writes is shown a hold and no button · 2026-09-27 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — THE SPECTATOR (the refresh season's step 3, JB 2026-09-30: "on the demo site, as before, we need the github star feature, docs link"): demo.orreth.ai is a PHOTOGRAPH of a kernel that really ran — with `window.ORRETH_DEMO` injected by scripts/snapshot_glass.py, every read comes from a captured fixture, every write is refused with one face, the captured minutes of the feed replay on a loop, the clock reads the photograph's moment, the seat form never opens, and THE TOUR opens itself for a first visit; the sill carries the book (📖 docs.orreth.ai) and the source (★ GitHub) on every kernel · 2026-09-30 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — THE WIZARD (JB's lock 2026-10-12 after THE ONE WALK: "a very difficult process … not a good experience … we're going to have to create a wizard"): the Workshop's FIRST SCREEN — "+ new agent" beside "+ new draft" — one flow, no JSON, from a name to the body joined: NAME → GRAPH (echo · think · import, a source picked from the shelf or registered inline) → GOLDEN CASES as a form → SAVE (three ordinary drafts under your seat) → CUT (three cuts held at the interlock in the chat; the agent's opens the Experiment) → THE CARD inline → PROMOTE with where the next life stands → "<name> joined"; the canvas, the inspector and the declaration filled as it goes; `import` a node kind in the inspector with a source picker; the cut, the promotion and a source's registration each ONE door for a typed word and a button · 2026-10-12 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -100,6 +101,7 @@
   /* THE WINDOW (JB, 2026-10-09): the chat is a window — dragged by its header, sized by its grip, its place and size remembered
      per context (the Panel · the wall · the Workshop), pinned into the Workshop's grid by its own ⌖ — one frame other windows reuse */
   #chat.moved{border-radius:14px;border-top:1px solid var(--seam)} #chat.dragging{transition:none;user-select:none}
+  #chat.placing{transition:none}   /* W128 (JB, 2026-10-12): a window PLACED by the page (load · resize · a context change) jumps, never slides — a closed chat's bottom showed while its remembered top slid it off */
   #chat header{cursor:move} #chat header a,#chat header .win{cursor:pointer}
   #chat header .win{color:var(--amber-dim)} #chat header .win:hover{color:var(--amber)}
   /* the band open → the chat YIELDS: the two never overlap, so every
@@ -151,6 +153,7 @@
     letter-spacing:.3em;border-bottom:1px solid var(--seam);
     display:flex;justify-content:space-between}
   #chat header span.hint{color:var(--dim);letter-spacing:.05em}
+  #chat-pulse.away{color:var(--amber)}   /* W129: the feed away reads amber in the chat's header */
   #log{flex:1;overflow-y:auto;padding:14px 16px;display:flex;
     flex-direction:column;gap:10px}
   .msg{max-width:88%;padding:8px 12px;border-radius:10px;
@@ -494,6 +497,15 @@
   #ws-canvas .edge.when path:not(.hit){stroke:var(--violet)} #ws-canvas .edge.on path:not(.hit){stroke:var(--amber);stroke-width:2}
   #ws-canvas .edge text{fill:var(--dim);font-size:10px;font-family:inherit;pointer-events:none} #ws-canvas .edge.when text{fill:var(--violet)} #ws-canvas .edge.on text{fill:var(--amber)}
   #ws-canvas .a-dim{fill:var(--dim)} #ws-canvas .a-when{fill:var(--violet)} #ws-canvas .a-on{fill:var(--amber)}
+  /* THE WIZARD (JB's lock 2026-10-12): the steps strip, a golden case's row, the card inline, the first screen's door */
+  .wz-steps{display:flex;flex-wrap:wrap;gap:4px 6px;margin:8px 0 6px;font-size:10px;letter-spacing:.14em;color:var(--dim)}
+  .wz-steps span{padding:2px 7px;border-radius:9px;border:1px solid var(--seam);white-space:nowrap} .wz-steps span.on{color:var(--amber);border-color:var(--amber-dim)} .wz-steps span.done{color:var(--cyan);border-color:transparent;background:var(--well)}
+  .wz-case{border-top:1px dotted var(--seam);padding:4px 0 8px;position:relative} .wz-case .rm{position:absolute;right:0;top:6px;font-size:10.5px;color:var(--dim);cursor:pointer} .wz-case .rm:hover{color:var(--red)}
+  .wz-note{margin:10px 0 2px;padding:7px 10px;border-radius:7px;background:var(--well);color:var(--ink);font-size:11.5px;line-height:1.5;border-left:2px solid var(--amber)}
+  .wz-note.red{border-left-color:var(--red)} .wz-note.ok{border-left-color:var(--cyan)}
+  .wz-chain{margin:8px 0;font-size:11.5px;line-height:1.7} .wz-chain .done{color:var(--cyan)} .wz-chain .on{color:var(--amber)} .wz-chain .todo{color:var(--dim)}
+  .wz-card .msg{max-width:none;margin:8px 0;padding:8px 10px;background:var(--well);border:1px solid var(--seam);border-radius:8px;font-size:11.5px}
+  .ws-empty .ws-btn{margin-top:14px;display:inline-block}
   body.wall #workshop-tab{display:none}
   #band header{padding:9px 16px;color:var(--amber);font-size:11px;
     letter-spacing:.3em;border-bottom:1px solid var(--seam)}
@@ -818,7 +830,7 @@
   <header><span id="chat-head">THE ONE CHAT · u:dev</span>
     <span class="hint"><a id="ses-list">sessions</a> · <a id="ses-new">new session</a>
       <span id="chat-pin-wrap" hidden>· <a id="chat-pin" class="win" title="pin this window into the Workshop as its own column (the panes make room) — pinned, unpin lets it float again">⌖ pin</a> </span>· <a onclick="toggleChat(false)" title="close the chat, keep the pulls">▾ close</a>
-      · [Esc] returns to the bridge</span></header>
+      · [Esc] returns to the bridge · <span id="chat-pulse" title="the kernel's feed, as this page hears it — a pointer per event; away while the browser or the kernel sleeps">…</span></span></header>
   <div id="focus"><span>FOCUS</span><span id="focus-what"></span>
     <span class="hint">[Esc] returns the bridge, scope restored</span></div>
   <div id="includes"><span>INCLUDES</span>
@@ -1202,10 +1214,13 @@ document.getElementById("space").addEventListener("scroll", () => { if (tourOpen
 const NAMES = {};                 // did -> name
 let SELECTED = new Set();
 let ROSTER = [];
+var CHIPS_REST = false;                       // W136: the trial lives at rest, shown on a click
 function drawChips(){
   const box = document.getElementById("chips"); box.innerHTML = "";
+  let rest = 0;
   for (const res of ROSTER){
     if (res.kind === "firmware" && !(res.name === "mitl" && MITL_ON)) continue;   // the includes live on
+    if (!CHIPS_REST && !res.alive && /\/r:exp-/.test(res.scope || "")){ rest += 1; continue; }   // W136 (JB, 2026-10-13: "things retired still show up in chat"): an experiment's trial life at rest answers nothing — folded
     const b = document.createElement("button");                                  // the top edge; MITL joins
     b.className = "chip" + (SELECTED.has(res.name) ? " on" : "") + (res.refused ? " refused" : "");   // the rail when summoned
     const head = res.name === "mitl" ? "mitl · the Master Mind In the Loop" : res.name + (res.refused ? "" : " · life " + res.lives);
@@ -1219,11 +1234,18 @@ function drawChips(){
                                b.classList.toggle("on"); }; }
     box.appendChild(b);
   }
+  if (rest || CHIPS_REST){
+    const b = document.createElement("button"); b.className = "chip";
+    b.innerHTML = CHIPS_REST ? `hide the trial lives at rest<span class="nat">experiments' bodies that stopped when their trial ended</span>` : `${rest} trial li${rest === 1 ? "fe" : "ves"} at rest<span class="nat">experiments' bodies that stopped when their trial ended — not answering; click to show</span>`;
+    b.title = "a trial life is a body of the agent's own self in an experiment room; it stops when the reviewers are done";
+    b.onclick = () => { CHIPS_REST = !CHIPS_REST; drawChips(); };
+    box.appendChild(b);
+  }
 }
 async function loadRoster(){                      // W18: the rail reads the SAME door as the cards (rule 7)
   const r = await fetch("/crew").then(x=>x.json()).catch(()=>null);
   if (!r || !r.crew) return;                      // unseated: the door answers "not seated", no roster
-  ROSTER = r.crew.map(c => ({name: c.name, did: c.did, lives: c.lives, kind: c.kind, nature: c.nature || "",
+  ROSTER = r.crew.map(c => ({name: c.name, did: c.did, lives: c.lives, kind: c.kind, nature: c.nature || "", alive: !!c.alive, scope: c.scope || "",   // W136: alive and where, for the fold
                              refused: !!c.refused, why: c.refused ? ((c.placement || {}).reasons || []).join("; ") : ""}));
   for (const res of ROSTER){
     NAMES[res.did] = res.name;
@@ -1650,6 +1672,7 @@ async function send(given, label, toOverride, parent){
 /* every notice is a pointer — the glass fetches truth through the door */
 async function onNotice(n){
   panelNotice(n).catch(()=>{});                   // row 4: THE PANEL lights first — the chat's own reading follows
+  if (n.kind === "orreth.body.joined.v1" && typeof wizJoined === "function") wizJoined(n.ref);   // THE WIZARD's last step: "<name> joined"
   if (n.kind === "orreth.session.opened.v1"){      // W51 (walk #13): a roll on ANY door — this door's sessions list follows
     if (SESSIONS_SHOWN) listSessions();            // the list was shown here: it follows
     return;
@@ -1675,11 +1698,12 @@ async function onNotice(n){
   if (n.kind === "orreth.include.summoned.v1" || n.kind === "orreth.include.dismissed.v1"){ loadIncludes(); return; }
   if (n.kind === "orreth.feedback.given.v1"){ return; }   // the thumb's own line was said at the click
   if (n.kind.startsWith("orreth.experiment.") || n.kind === "orreth.verdict.v1"){   // Phase 8 sp4: THE EXPERIMENT's facts — the ref is the experiment (a verdict's is its own id)
-    if (n.kind === "orreth.verdict.v1"){ sysline("a reviewer wrote its signed verdict on an experiment — the proposal follows when every reviewer is done"); return; }
+    if (n.kind === "orreth.verdict.v1"){ sysline("a reviewer wrote its signed verdict on an experiment — the proposal follows when every reviewer is done"); if (typeof wizVerdict === "function") wizVerdict(); return; }
     const r = await fetch("/experiments?id=" + encodeURIComponent(n.ref)).then(x=>x.json()).catch(()=>null);
     const x = r && r.experiment; if (!x) return;
+    if (typeof wizExperiment === "function") wizExperiment(n, x);   // THE WIZARD follows its own agent's experiment — the card lands inline
     if (n.kind.endsWith("opened.v1")) sysline(`THE EXPERIMENT on <b>${esc(x.agent)}</b> is running in ${esc(x.room)} — ${esc(x.current_version ? "two arms: version " + x.current_version + " and the candidate" : "one arm, the candidate")}; the proposal will reach you here`);
-    else if (n.kind.endsWith("proposed.v1")) experimentCard(x.experiment_id, x);
+    else if (n.kind.endsWith("proposed.v1")) cardOnce(x);   // W133: once — the wizard's own watch may have landed it first
     else sysline(x.state === "promoted" ? `the experiment on <b>${esc(x.agent)}</b> is promoted — the next life stands on ${esc(x.at_path)}` : `the experiment on <b>${esc(x.agent)}</b> is ${esc(x.state)}`);
     return;
   }
@@ -1798,6 +1822,7 @@ function renderOutcome(id, v, line){
     PENDING[id]._row = row; PENDING[id]._stopping = line._stopping; PENDING[id]._verb = line._verb;   // the verb rides along: "standing again", not "at rest", after a restart
     return;
   }
+  if (typeof wizOutcome === "function") wizOutcome(id, v);   // THE WIZARD: a hold it filed settled — yes, cancelled or refused — and its next step follows
   if (line._row){                                                                            // the hold settled:
     const held = line._row.closest(".msg");                                                  // W35: back into the log, in order
     if (held && held.parentElement && held.parentElement.id === "pin") log.appendChild(held);
@@ -1985,6 +2010,20 @@ async function decide(id, approve, row, code, by, level){    // `by` is the SEAT
   if (PENDING[id]) PENDING[id].textContent = approve
     ? (code ? "your code is on its way…" : level === "L3-master" ? "the master's word is on its way…" : "your yes is on its way…")
     : "cancelling — nothing will run…";
+  settleWatch(id);                            // W129: the outcome is read through the door too — the feed may be away
+}
+async function settleWatch(id){               // W129 (JB, 2026-10-13: "your yes is on its way…" stood for good after a laptop's sleep — the kernel had answered in 22 s,
+  for (let i = 0; i < 45 && PENDING[id]; i++){   // the feed had fallen and nothing re-read the door): every 2 s for 90 s, the ask's own door; the feed's notice, if it comes first, renders once
+    await new Promise(r => setTimeout(r, 2000));
+    if (!PENDING[id]) return;
+    const v = await askRead(id, true); if (!v) continue;
+    if (v.status !== "awaiting-confirm"){ renderOutcome(id, v, PENDING[id]); refreshPulls(); return; }
+  }
+  if (PENDING[id] && /on its way/.test(PENDING[id].textContent)) PENDING[id].textContent += " — no word yet after 90 s; the ask stands open: say “what is waiting?” or reload, nothing is lost";
+}
+function rereadPending(){                     // W129 (ii): the feed is back after a gap — what settled meanwhile is read through the door
+  for (const id of Object.keys(PENDING)){ const line = PENDING[id]; if (!line || !line._row) continue;
+    askRead(id, true).then(v => { if (v && v.status !== "awaiting-confirm" && PENDING[id] === line) renderOutcome(id, v, line); }); }
 }
 
 function offerSummarize(fan){
@@ -2318,6 +2357,8 @@ function workspaceWords(text){
   if (/^((open|show)( me)?( the)? (monitor|monitoring)|monitor|monitoring)$/.test(t)) { toggleMonitor(true); return true; }
   if (/^((open|show)( me)?( the)? workshop|workshop|the workshop)$/.test(t)) { toggleWorkshop(true); return true; }        // Phase 8 sp3
   if (/^close the workshop$/.test(t)) { toggleWorkshop(false); return true; }
+  if (/^(?:close\s+(?:the\s+)?(?:draft|craft)|clear\s+(?:the\s+)?(?:workshop|canvas|draft)|(?:the\s+)?first\s+screen)$/.test(t)) { toggleWorkshop(true); wsCloseOpen(); return true; }   // W127 (JB, 2026-10-12): back to the first screen, the draft kept under your seat
+  if (/^(?:(?:make|create|build)\s+(?:an?\s+)?(?:new\s+)?agent|new\s+agent|(?:open\s+)?the\s+wizard|wizard)$/.test(t)) { toggleWorkshop(true); wsNewAgent(); return true; }   // THE WIZARD (JB's lock 2026-10-12): "new agent" · "make an agent" · "open the wizard"
   const lw = t.match(/^(?:load|open)\s+(?:the\s+|my\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+(template|prompt|skill|policy|graph|binding|golden|draft))?\s+in\s+(?:the\s+)?workshop$/);   // W112: "in workshop" too
   if (lw){ el("msg mine", esc(text)); workshopLoad(lw[1], lw[2] || null); return true; }   // "load the librarian template in the workshop" · "load my bob draft in the workshop"
   return false;
@@ -2476,6 +2517,18 @@ function plainService(name, kind){               // W100 (walk SPEC-SHELF-01): "
   if (kind && CRAFT_KINDS.includes(kind) && name.endsWith("." + kind)) return `${name.slice(0, -kind.length - 1)} ${kind}`;
   return `${name} ${kind || "service"}`;
 }
+async function registerMcp(name, locator, secrets){   // W132: an MCP server through the shelf's one door (/services/mcp, both kernels) — the kernel connects, lists its tools onto the shelf under it; secrets by env NAME only
+  toggleChat(true);
+  const j = el("journey", `registering the <b>${esc(name)}</b> MCP server at ${esc(locator)} — the kernel connects and lists its tools onto the shelf under it…`);
+  const r = await fetch("/services/mcp", {method:"POST", headers:{"content-type":"application/json"},
+    body: JSON.stringify({name, locator, secrets_with: secrets || [], person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+  if (r && r.service){
+    const t = r.tools || {}, listed = [].concat(t.new || [], t.versioned || [], t.present || []);
+    j.innerHTML = `the <b>${esc(name)}</b> MCP server stands on the shelf (${esc((r.info && r.info.name) || "unnamed")} ${esc((r.info && r.info.version) || "?")}) — ${listed.length} tool${listed.length === 1 ? "" : "s"} under it${listed.length ? ": " + listed.map(esc).join(", ") : ""}${t.refused && t.refused.length ? "; refused: " + t.refused.map(esc).join("; ") : ""} · a template names a tool to let a body use it (“toolkeeper, check the services” probes it)`;
+    refreshPulls(); return;
+  }
+  j.innerHTML = r && r.error ? `the shelf's door refused: ${esc(r.error)}` : "the shelf's door did not answer";
+}
 async function retireService(name, kind){          // consequential (L2): the kernel holds it — the interlock arrives in the chat
   toggleChat(true);
   const r = await fetch("/services/retire", {method:"POST", headers:{"content-type":"application/json"},
@@ -2552,8 +2605,18 @@ function drawYou(p){                            // the YOU tag under the sun: wh
 async function loadYou(){ const p = await fetch("/profile?person=" + encodeURIComponent(PERSON)).then(x=>x.json()).catch(()=>null); drawYou(p); }
 async function serviceWords(text){                 // "what services are here?" · "what tools are here?" · "retire the weather tool" · "check the services"
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
+  // W132 (JB, 2026-10-13): "toolkeeper, add the MCP server <name> at <URL or command>" — the owner's word through the shelf's own door; the keeper's mind
+  // interviewed instead of calling its tool and invented its own "say yes" (three asks, no server). The locator keeps the typed case; the name is lowercased.
+  let m = text.trim().replace(/[.!?]+$/, "").match(/^toolkeeper,?\s+(?:add|register)\s+(?:the\s+)?mcp\s+server\s+(?:named\s+)?(?:([a-z0-9][a-z0-9_-]*)\s+)?at\s+(?:url\s+)?(\S+)(?:\s+as\s+([a-z0-9][a-z0-9_-]*))?(?:\s+with\s+no\s+secrets?)?(?:\s+(?:with\s+)?secrets?\s+([A-Za-z0-9_,\s]+))?$/i);
+  if (m){
+    const name = String(m[1] || m[3] || "").toLowerCase(), locator = m[2];
+    el("msg mine", esc(text));
+    if (!name){ sysline("name it: “toolkeeper, add the MCP server <name> at <URL or command>” — a short lowercase name the shelf lists it by (langchain-docs, say)"); return true; }
+    await registerMcp(name, locator, String(m[4] || "").split(/[,\s]+/).filter(Boolean).map(x => x.toUpperCase()));
+    return true;
+  }
   // P6.5 sp3: the Stable's own words — the mind cards in words, a body's fuel, a refill, an assignment (held at the interlock)
-  let m = t.match(/^(?:what|which)\s+(?:minds?|llms?|models?)\s+(?:are|is)\s+(?:here|in the stable|registered|standing|available)$|^show\s+(?:me\s+)?(?:the\s+)?(?:minds|llms|models|stable)$|^(?:what'?s|what is)\s+in the stable$/);
+  m = t.match(/^(?:what|which)\s+(?:minds?|llms?|models?)\s+(?:are|is)\s+(?:here|in the stable|registered|standing|available)$|^show\s+(?:me\s+)?(?:the\s+)?(?:minds|llms|models|stable)$|^(?:what'?s|what is)\s+in the stable$/);
   if (m){
     el("msg mine", esc(text));
     const r = await fetch("/minds").then(x=>x.json()).catch(()=>null);
@@ -2626,10 +2689,7 @@ async function serviceWords(text){                 // "what services are here?" 
   m = text.trim().replace(/[.!?]+$/, "").match(/^register\s+the\s+source\s+([a-z0-9][a-z0-9._-]*)\s+from\s+(\S+?),?\s+at\s+([0-9a-fA-F]{7,64}),?\s+entry\s+([^\s;]+)(?:\s*;.*)?$/i);   // W121: a comma between the parts is fine · W122: words after a “;” are not the sentence
   if (m){
     el("msg mine", esc(text));
-    const r = await fetch("/services", {method: "POST", headers: {"content-type": "application/json"},
-      body: JSON.stringify({name: m[1].toLowerCase(), kind: "source", manifest: {repo: m[2], commit: m[3], entry: m[4]}, person: PERSON})}).then(x=>x.json()).catch(()=>null);
-    if (r && !r.error) sysline(`the source <b>${esc(m[1])}</b> stands on the shelf — ${esc(m[2])} at ${esc(m[3].slice(0, 12))}, entry ${esc(m[4])}; a graph node of kind import naming it runs the repo's entry inside the hull (a dev universe only)`);
-    else sysline(r && r.error ? esc(r.error) : "the shelf door did not answer");
+    await registerSource(m[1], m[2], m[3], m[4]);
     return true;
   }
   if (/^register\s+(?:the\s+)?source\b/i.test(t)){   // W122 (JB's Part 5, 2026-10-11): the half-formed words are taught here, never handed to a body (W99's law)
@@ -2672,20 +2732,10 @@ async function serviceWords(text){                 // "what services are here?" 
   }
   m = t.match(/^promote\s+([a-z0-9_-]+)(?:\s+to\s+(?:the\s+)?(?:(universe)|floor\s+([a-z0-9_-]+)|room\s+([a-z0-9_-]+)\s+on\s+(?:the\s+)?floor\s+([a-z0-9_-]+)))?$/);
   if (m){
-    el("msg mine", esc(text)); toggleChat(true);
-    const r0 = await fetch("/experiments?agent=" + encodeURIComponent(m[1]) + "&state=proposed").then(x=>x.json()).catch(()=>null);
-    const x = r0 && (r0.experiments || [])[0];
-    if (!x){ sysline(`no proposed experiment on ${esc(m[1])} — say “show the experiments”`); return true; }
+    el("msg mine", esc(text));
     const u = (WORLD && WORLD.scope) || "u:dev";
     const at = m[2] ? u : m[3] ? `f:${m[3]}` : m[4] ? `f:${m[5]}/r:${m[4]}` : undefined;
-    const r = await fetch("/experiments/promote", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({experiment_id: x.experiment_id, at, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
-    if (r && r.held){
-      PENDING[r.held] = el("journey", `promoting ${esc(m[1])} to version ${r.version} — its next life on ${esc(r.at)} — is consequential: the kernel holds it at the interlock (${esc(r.level)})…`);
-      const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
-      if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
-      return true;
-    }
-    sysline(r && r.error ? esc(r.error) : "the experiments door did not answer");
+    await promoteAgent(m[1], at);
     return true;
   }
   m = t.match(/^decline\s+(?:the\s+)?([a-z0-9_-]+)(?:'s)?\s+experiment$/);
@@ -2791,18 +2841,14 @@ async function serviceWords(text){                 // "what services are here?" 
         if (WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id){ WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null; }
         loadWorkshop();
       }
+      if (r && r.discarded && WZ && WZ.step !== "joined" && WZ.name && (d.name === WZ.name || d.name === WZ.name + ".v0")){   // W130: the wizard's own draft discarded — the wizard lets the agent go with it
+        WZ = wizFresh(); wizKeep(); if (WS.open && WS.open.source === "wizard"){ WS.open = null; WS.decl = null; }
+        sysline(`the wizard let <b>${esc(d.name)}</b> go with its draft — “+ new agent” starts at NAME`);
+        if (workshopPull && workshopPull.classList.contains("open")) drawWorkshop();
+      }
       return true;
     }
-    const r = await fetch("/drafts/cut", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({draft_id: d.draft_id, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
-    if (r && r.held){
-      PENDING[r.held] = el("journey", r.gate === "experiment"      // Phase 8 sp4: an agent's cut OPENS the Experiment
-        ? `an agent's cut goes through the Experiment: opening one on ${esc(d.name)} (${esc(r.room || "an experiment room")}, ${r.cases} golden case${r.cases === 1 ? "" : "s"}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`
-        : `cutting the ${esc(d.name)} ${esc(d.kind)} onto the shelf (${esc(r.verb)} → version ${r.version}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`);
-      const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
-      if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
-      return true;
-    }
-    sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer");
+    await cutDraft(d);
     return true;
   }
   m = t.match(/^re-?home\s+(?:this\s+)?(?:universe|world)\s+(?:to\s+)?(?:cell\s+)?([a-z0-9_-]+)$/);   // P7 sp7: re-home the universe — consequential, held at L2
@@ -2930,8 +2976,12 @@ function refreshPulls(){                 // P17: a change anywhere reflects in
    so the agent reads YOUR draft on YOUR ask alone (AG-9). Floor and room are not chosen here (JB's lock 2026-10-06):
    the Workshop shows WHERE a craft's wearers stand; where a next life stands is a field on sp4's promotion. ---- */
 var workshopPull = document.getElementById("workshop");   // `var`: a pull toggled at load (before this line runs) finds it undefined, never a dead zone
-const WS = {drafts: [], shelf: [], tools: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}};
-const NODE_KINDS = ["think", "echo"], WHEN_KINDS = ["otherwise", "edge", "ask", "reply"], HULL_EDGES = ["chat", "work", "event"];
+const WS = {drafts: [], shelf: [], tools: [], sources: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}, retired: false, xp: null};   // W136 retired folded · W135 the open draft's experiment
+const NODE_KINDS = ["think", "echo", "import"], WHEN_KINDS = ["otherwise", "edge", "ask", "reply"], HULL_EDGES = ["chat", "work", "event"];   // THE WIZARD (2026-10-12): import a kind the inspector offers — both kernels run it (sp5); before, the canvas called it "not a kind the hull runs"
+const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words back", import: "IMPORT · a repository's code"};
+var WZ = null;   // THE WIZARD's state — one agent in flight, kept while the human looks at other drafts and resumed from "+ new agent"
+function workshopFocus(){ return {kind: "workspace", id: "ws_workshop", name: "workshop", window: null,
+               label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"}; }
 function toggleWorkshop(open){
   if (!workshopPull){ workshopPull = document.getElementById("workshop"); if (!workshopPull) return; }
   const was = workshopPull.classList.contains("open");
@@ -2940,8 +2990,7 @@ function toggleWorkshop(open){
   workshopPull.classList.toggle("open", now);
   if (now && !was){
     loadWorkshop();
-    pushFocus({kind: "workspace", id: "ws_workshop", name: "workshop", window: null,
-               label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"});
+    pushFocus(workshopFocus());
   }
   if (!now && was) popFocusOf("ws_workshop");                    // W53: the pull closed, its focus goes with it
   layoutWorkshop();                                              // a pinned chat docks beside it; a floating one keeps its place
@@ -2949,6 +2998,7 @@ function toggleWorkshop(open){
 }
 let workshopTimer = null;
 async function loadWorkshop(){
+  wizRestore();                                 // W134: the wizard where the last page left it
   const [dr, sv, md] = await Promise.all([
     fetch("/drafts").then(x=>x.json()).catch(()=>null),
     fetch("/services").then(x=>x.json()).catch(()=>null),
@@ -2957,6 +3007,7 @@ async function loadWorkshop(){
   const all = (sv && sv.services) || [];
   WS.shelf = all.filter(s => CRAFT_KINDS.includes(s.kind));
   WS.tools = all.filter(s => s.kind === "tool" && s.state !== "retired").map(s => s.name);
+  WS.sources = all.filter(s => s.kind === "source" && s.state !== "retired");   // THE WIZARD: the repositories an import node may name
   WS.minds = md;
   if (WS.open && WS.open.source === "draft"){                   // the open draft, re-read: the agent's hand redraws it
     const d = WS.drafts.find(x => x.draft_id === WS.open.draft.draft_id);
@@ -2985,26 +3036,53 @@ function drawWorkshopRail(){
   else if (!mine.length) h += `<div class="meta">no draft matches “${esc(f)}”</div>`;
   for (const d of mine)
     h += `<div class="ws-row ${WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id ? "on" : ""}" data-draft="${esc(d.draft_id)}" title="${esc(d.draft_id)} · saved ${hhmm(d.updated_at)}"><span class="kind">${esc(plainKind(d.kind))}</span>${esc(d.name)}<span class="meta">${hhmm(d.updated_at)}</span></div>`;
+  const wzOn = WS.open && WS.open.source === "wizard", wzMid = WZ && WZ.step !== "name" && WZ.step !== "joined";   // THE WIZARD (JB's lock 2026-10-12): the first screen's door, beside "+ new draft"
+  h += `<div class="ws-row new ${wzOn ? "on" : ""}" data-new-agent title="THE WIZARD — a new agent in one flow: name it, shape its graph, write its golden cases, SAVE, CUT through the interlock, read the Experiment's card, PROMOTE — until the body joins. What it makes are ordinary drafts you can still edit by hand."><span class="kind">+</span>${wzMid ? `new agent · <i>resume ${esc(WZ.name)} at ${esc(wizStepWords(WZ.step))}</i>` : "new agent · the wizard"}</div>`;
+  if (wzMid) h += `<div class="ws-row new" data-new-agent-fresh title="W130: the wizard above keeps ${esc(WZ.name)}'s place until you start another — this lets it go (its drafts stay yours on the left) and begins at NAME"><span class="kind">+</span>new agent · <i>start another, let ${esc(WZ.name)} go</i></div>`;
   h += `<div class="ws-row new" data-new title="a new draft of yours — pick its kind and name in the inspector"><span class="kind">+</span>new draft</div>`;
   h += `<div class="ws-h">THE SHELF · the crafts a body is made of</div>`;
+  let folded = 0;                                // W136 (JB, 2026-10-13: "a bunch of retired elements cluttering up menu"): a retired craft is at rest — folded unless shown, or searched for by name
   for (const k of CRAFT_KINDS){
-    const rows = WS.shelf.filter(s => s.kind === k && hit(`${s.craft || s.name} ${s.kind} ${((s.manifest || {}).words || "")}`));
+    const every = WS.shelf.filter(s => s.kind === k && hit(`${s.craft || s.name} ${s.kind} ${((s.manifest || {}).words || "")}`));
+    const rows = WS.retired || f ? every : every.filter(s => s.state !== "retired");
+    folded += every.length - rows.length;
     if (!rows.length) continue;
     h += `<div class="ws-h sub">${esc(pluralKind(k))}</div>`;
     for (const s of rows)
       h += `<div class="ws-row ${WS.open && WS.open.source === "shelf" && WS.open.craft.name === s.name ? "on" : ""} ${s.state === "retired" ? "retired" : ""}" data-craft="${esc(s.name)}" title="${esc(s.did)} · v${s.version} · ${esc(s.state)}">${esc(s.craft || s.name)}<span class="meta">v${s.version}${s.worn_by ? ` · worn by ${s.worn_by}` : ""}${s.state === "retired" ? " · retired" : ""}</span></div>`;
   }
+  if (folded || WS.retired) h += `<div class="ws-row new" data-retired title="retired crafts stay on the shelf as versions — at rest, worn by no body; restore one from its card">${WS.retired ? "hide the retired crafts" : `${folded} retired craft${folded === 1 ? "" : "s"} at rest · show`}</div>`;   // W136
   box.innerHTML = h;
+  const rt = box.querySelector("[data-retired]"); if (rt) rt.onclick = () => { WS.retired = !WS.retired; drawWorkshopRail(); };
   box.querySelectorAll("[data-draft]").forEach(r => r.onclick = () => wsOpenDraft(WS.drafts.find(d => d.draft_id === r.dataset.draft)));
   box.querySelectorAll("[data-craft]").forEach(r => r.onclick = () => wsOpenCraft(WS.shelf.find(s => s.name === r.dataset.craft)));
   const nw = box.querySelector("[data-new]"); if (nw) nw.onclick = wsNewDraft;
+  const na = box.querySelector("[data-new-agent]"); if (na) na.onclick = wsNewAgent;
+  const nf = box.querySelector("[data-new-agent-fresh]"); if (nf) nf.onclick = wizStartOver;   // W130
+}
+function wsCloseOpen(){                        // W127: the first screen again — the draft stays under your seat, the craft on the shelf; nothing is discarded
+  if (!WS.open){ sysline("the Workshop's first screen — nothing is open; + new agent (the wizard) or + new draft on the left"); return; }
+  if (WS.dirty && !confirmLeave()) return;             // W117's guard
+  const was = WS.open;
+  WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null;
+  drawWorkshopRail(); drawWorkshop();
+  sysline(was.source === "draft" ? `closed your ${esc(plainKind(was.kind))} draft <b>${esc(was.name)}</b> — it stays under your seat on the left; the first screen again` :
+          was.source === "wizard" ? `the wizard is set aside — <b>+ new agent</b> on the left resumes it where it stood` : `the first screen again — nothing open`);
 }
 function wsOpenDraft(d){
   if (!d) return;
+  if (WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id){ wsCloseOpen(); return; }   // W127: the lit row clicked again closes it
   if (WS.open && WS.dirty && !confirmLeave()) return;   // W117: no open draft, nothing unsaved
   WS.open = {source: "draft", draft: d, kind: d.kind, name: d.name};
   WS.decl = JSON.parse(JSON.stringify(d.body || {})); WS.dirty = false; WS.sel = null; WS.selEdge = null;
   drawWorkshopRail(); drawWorkshop();
+  if (d.kind === "template") wsReadExperiment(d.name);   // W135: an agent's draft shows its experiment, if one stands
+}
+async function wsReadExperiment(name){           // W135 (JB, 2026-10-13: "when I click the template jonathan I don't see the steps"): the experiment on this agent, read through the door
+  const r = await fetch("/experiments?agent=" + encodeURIComponent(name)).then(x=>x.json()).catch(()=>null);
+  const x = r && (r.experiments || []).find(e => ["running", "proposed"].includes(e.state)) || null;
+  WS.xp = {name, x};
+  if (WS.open && WS.open.source === "draft" && WS.open.name === name) drawInspector();
 }
 function wsOpenCraft(s){
   if (!s) return;
@@ -3085,14 +3163,18 @@ function whenWords(e){
 }
 function refsOf(n){
   const r = [];
+  if (n.source) r.push("source " + n.source);   // an import node's repository
   if (n.prompt) r.push("prompt " + n.prompt); if (n.skill) r.push("skill " + n.skill);
   if (Array.isArray(n.tools)) r.push("tools " + (n.tools.join(", ") || "none")); if (n.mind) r.push("mind " + n.mind);
   return r.join(" · ");
 }
 function drawCanvas(){
   const box = document.getElementById("ws-canvas"); box.innerHTML = "";
-  if (!WS.open){ box.innerHTML = `<div class="ws-empty">THE WORKSHOP · pick a draft of yours or a craft from the shelf on the left — a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the workshop” any time, or “load the librarian template in the workshop”</div>`; return; }
+  if (!WS.open){   // THE FIRST SCREEN (JB's lock 2026-10-12): the wizard's door first, the hand's way beside it
+    box.innerHTML = `<div class="ws-empty">THE WORKSHOP · to make an agent, click <b>+ new agent</b> on the left — THE WIZARD takes you from a name to the body joined in one flow, no JSON, and what it makes are ordinary drafts you can still edit by hand · or pick a draft of yours or a craft from the shelf on the left: a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the workshop” any time, or “load the librarian template in the workshop”<br><button class="ws-btn p" data-wizard>+ new agent — the wizard</button></div>`;
+    const b = box.querySelector("[data-wizard]"); if (b) b.onclick = wsNewAgent; return; }
   if (WS.open.source === "new"){ box.innerHTML = `<div class="ws-empty">a new draft — name it in the inspector; a graph starts as one think node (the metered mind), a template as an agent wearing mind.v0</div>`; return; }
+  if (WS.open.source === "wizard" && !WS.decl){ box.innerHTML = `<div class="ws-empty">THE WIZARD · name the agent in the inspector on the right — its graph draws itself here as you shape it, and the declaration below shows the same truth</div>`; return; }
   const gf = graphOf();
   if (!gf){                                     // a prompt · skill · policy · binding · golden: the declaration is the view
     const m = WS.decl || {}; let card = "";
@@ -3142,7 +3224,7 @@ function drawCanvas(){
     gN.setAttribute("transform", `translate(${p.x},${p.y})`);
     const r = document.createElementNS(NS, "rect"); r.setAttribute("width", p.w); r.setAttribute("height", p.h); r.setAttribute("rx", 10); gN.appendChild(r);
     const t1 = document.createElementNS(NS, "text"); t1.setAttribute("x", 12); t1.setAttribute("y", 24); t1.textContent = id + (id === String(g.entry) ? "  · entry" : ""); gN.appendChild(t1);
-    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k"); t2.textContent = (n.kind === "think" ? "THINK · the metered mind" : n.kind === "echo" ? "ECHO · the words back" : `${String(n.kind || "?").toUpperCase()} · not a kind the hull runs`) + (p.off ? " · unreached" : ""); gN.appendChild(t2);
+    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k"); t2.textContent = (KIND_WORDS[n.kind] || `${String(n.kind || "?").toUpperCase()} · not a kind the hull runs`) + (p.off ? " · unreached" : ""); gN.appendChild(t2);
     const t3 = document.createElementNS(NS, "text"); t3.setAttribute("x", 12); t3.setAttribute("y", 59); t3.setAttribute("class", "r"); const rf = refsOf(n); t3.textContent = rf.length > 34 ? rf.slice(0, 33) + "…" : rf; gN.appendChild(t3);
     const title = document.createElementNS(NS, "title"); title.textContent = `${id} · ${n.kind}${rf ? " · " + rf : ""}${n.words ? " — " + n.words : ""}` + (editable ? " · click to inspect and edit" : " · click to inspect"); gN.appendChild(title);
     gN.onclick = (ev) => { ev.stopPropagation(); WS.sel = id; WS.selEdge = null; drawWorkshop(); };
@@ -3163,7 +3245,8 @@ function defaultLine(g){
 function opt(list, cur, none){ return (none ? `<option value="">${esc(none)}</option>` : "") + list.map(v => `<option value="${esc(v)}" ${String(v) === String(cur ?? "") ? "selected" : ""}>${esc(v)}</option>`).join(""); }
 function drawInspector(){
   const box = document.getElementById("ws-insp-in"); if (!box) return;
-  if (!WS.open){ box.innerHTML = `<div class="ws-h">THE INSPECTOR</div><div class="meta">click a node or an arrow on the canvas, or a row on the left</div>`; return; }
+  if (!WS.open){ box.innerHTML = `<div class="ws-h">THE INSPECTOR</div><div class="meta">click <b>+ new agent</b> on the left for the wizard · or a node or an arrow on the canvas, or a row on the left</div>`; return; }
+  if (WS.open.source === "wizard"){ wizInspector(box); return; }   // THE WIZARD lives in the inspector; the canvas and the declaration follow it
   if (WS.open.source === "new"){
     box.innerHTML = `<div class="ws-h">A NEW DRAFT · yours alone until the cut</div><label>kind</label><select id="ws-new-kind">${opt(CRAFT_KINDS, "graph")}</select><label>name · lowercase letters, digits, - _ .</label><input id="ws-new-name" placeholder="bob.v0"><div class="acts"><button class="ws-btn p" id="ws-new-go">start the draft</button></div><div class="meta">saved under your seat at once (routine, L1); the Workshop agent can edit it on your words; “cut the &lt;name&gt; draft” puts it on the shelf (held at the interlock)</div>`;
     box.querySelector("#ws-new-go").onclick = async () => {
@@ -3199,7 +3282,8 @@ function drawInspector(){
       h += `<div class="ws-h">THE NODE · ${esc(WS.sel)}${String(g.entry) === WS.sel ? " · the entry" : ""}</div>`;
       if (editable){
         h += `<label>id</label><input id="ws-n-id" value="${esc(WS.sel)}">` +
-             `<label>kind · think = the metered mind · echo = the words back</label><select id="ws-n-kind">${opt(NODE_KINDS, n.kind)}</select>` +
+             `<label>kind · think = the metered mind · echo = the words back · import = a repository's code (a dev universe only)</label><select id="ws-n-kind">${opt(NODE_KINDS, n.kind)}</select>` +
+             `<div id="ws-n-src-wrap" ${n.kind === "import" ? "" : "hidden"}><label>source · the repository on the shelf this node runs (repo · commit · entry) — register one with “+ new agent” or “register the source …”</label><select id="ws-n-source">${opt(WS.sources.map(s => s.name), n.source, WS.sources.length ? "— pick one —" : "— no source on the shelf yet —")}</select></div>` +
              `<label>prompt · a prompt on the shelf joins the system words</label><select id="ws-n-prompt">${opt(prompts, n.prompt, "— none —")}</select>` +
              `<label>skill · a skill on the shelf, the words a body follows</label><select id="ws-n-skill">${opt(skills, n.skill, "— none —")}</select>` +
              `<label>tools · narrows the door to these (never past what the template declares)</label><div class="ws-checks">${WS.tools.map(t => `<label class="chk"><input type="checkbox" data-tool="${esc(t)}" ${Array.isArray(n.tools) && n.tools.includes(t) ? "checked" : ""}>${esc(t)}</label>`).join("") || `<span class="meta">no tools on the shelf</span>`}<label class="chk"><input type="checkbox" id="ws-n-tools-any" ${Array.isArray(n.tools) ? "" : "checked"}>the template's own (no narrowing)</label></div>` +
@@ -3223,6 +3307,10 @@ function drawInspector(){
     } else h += `<div class="ws-kv"><span>taken</span><b>${esc(whenWords(e))}</b></div>`;
   } else if (!ro){
     const d = WS.open.draft;
+    const wzMine = WZ && WZ.name && WZ.step !== "name" && WZ.step !== "joined" && (d.name === WZ.name || d.name === WZ.name + ".v0");   // W135: the wizard's own draft says so, with the way back
+    if (wzMine) h += `<div class="wz-note">this draft is <b>the wizard's</b> — <b>${esc(WZ.name)}</b> stands at <b>${esc(wizStepWords(WZ.step))}</b>; the steps are in the wizard, not here <div class="acts"><button class="ws-btn p" id="ws-wz-resume">resume the wizard at ${esc(wizStepWords(WZ.step))}</button></div></div>`;
+    const xp = d.kind === "template" && WS.xp && WS.xp.name === d.name ? WS.xp.x : null;
+    if (xp) h += `<div class="ws-h sub">THE EXPERIMENT · ${esc(d.name)} · ${esc(xp.state)}</div>` + (xp.state === "running" ? `<div class="meta">running in ${esc(xp.room)} — the four reviewers are judging it; the card lands here when they are done</div>` : `<div class="meta">the proposal stands — promote or decline here, or in the wizard</div>`) + `<div class="wz-card" id="ws-xp-card"></div>`;
     h += `<div class="ws-h">THE DRAFT · yours alone until the cut</div><div class="ws-kv"><span>what</span><b>${esc(plainKind(d.kind))} ${esc(d.name)}</b></div><div class="ws-kv"><span>id</span><b>${esc(d.draft_id)}</b></div><div class="ws-kv"><span>saved</span><b>${hhmm(d.updated_at)}${WS.dirty ? " · <i>unsaved changes here</i>" : ""}</b></div>` +
          (d.words ? `<div class="ws-text">${esc(d.words)}</div>` : "") +
          `<div class="meta">${editable ? "click a node or an arrow to edit it; add a node after the selected one; the declaration box below is the same truth as JSON." : "edit the declaration in the box below — the same truth as the canvas."} The cut checks it whole (the kernel's law, both kernels); a half-made draft saves fine.</div>` +
@@ -3230,6 +3318,8 @@ function drawInspector(){
     if (editable && g && !(g.nodes || []).length) h += `<div class="acts"><button class="ws-btn" id="ws-n-first">add the first node</button></div>`;
   }
   box.innerHTML = h;
+  if (box.querySelector("#ws-wz-resume")) box.querySelector("#ws-wz-resume").onclick = wsNewAgent;   // W135
+  if (box.querySelector("#ws-xp-card") && WS.xp && WS.xp.x && WS.xp.x.state === "proposed") experimentCard(WS.xp.x.experiment_id, WS.xp.x, box.querySelector("#ws-xp-card"), false);
   // the wires
   const q = (id) => box.querySelector("#" + id);
   if (ro){
@@ -3251,10 +3341,12 @@ function drawInspector(){
     if (nid && nid !== old){ if (gg.nodes.some(x => String(x.id) === nid)){ sysline(`a node named ${esc(nid)} is already in the graph — ids are unique`); return; }
       n.id = nid; for (const e of gg.edges || []){ if (String(e.from) === old) e.from = nid; if (String(e.to) === old) e.to = nid; } if (String(gg.entry) === old) gg.entry = nid; WS.sel = nid; }
     n.kind = q("ws-n-kind").value;
-    const pr = q("ws-n-prompt").value, sk = q("ws-n-skill").value, md = q("ws-n-mind").value, wd = q("ws-n-words").value.trim();
+    const pr = q("ws-n-prompt").value, sk = q("ws-n-skill").value, md = q("ws-n-mind").value, wd = q("ws-n-words").value.trim(), src = q("ws-n-source").value;
     if (pr) n.prompt = pr; else delete n.prompt; if (sk) n.skill = sk; else delete n.skill; if (md) n.mind = md; else delete n.mind; if (wd) n.words = wd; else delete n.words;
+    if (n.kind === "import"){ if (src) n.source = src; else { delete n.source; sysline("an import node names its source — the repository on the shelf it runs; pick one, or register one first"); } } else delete n.source;
     if (q("ws-n-tools-any").checked) delete n.tools; else n.tools = [...box.querySelectorAll("[data-tool]:checked")].map(c => c.dataset.tool);
   });
+  if (q("ws-n-kind")) q("ws-n-kind").onchange = () => { const w = q("ws-n-src-wrap"); if (w) w.hidden = q("ws-n-kind").value !== "import"; };   // the source picker shows for an import node
   if (q("ws-n-after")) q("ws-n-after").onclick = () => mutate(gg => {
     let i = 1, nid; do { nid = `node-${i++}`; } while (gg.nodes.some(x => String(x.id) === nid));
     gg.nodes.push({id: nid, kind: "think"}); gg.edges = gg.edges || [];
@@ -3286,10 +3378,15 @@ function drawInspector(){
 function drawDecl(){
   const ta = document.getElementById("ws-json"), acts = document.getElementById("ws-acts"), head = document.getElementById("ws-decl-h");
   if (!ta) return;
+  if (WS.open && WS.open.source === "wizard"){   // THE WIZARD fills the declaration as it goes — the step's own truth, read-only here; after SAVE each is an ordinary draft on the left
+    const d = wizDecl(); ta.value = d ? JSON.stringify(d, null, 2) : ""; ta.readOnly = true; ta.classList.add("ro");
+    head.textContent = d ? `THE WIZARD fills it · ${wizDeclWords()} · read-only here — after SAVE each is an ordinary draft on the left, yours to edit by hand` : "THE WIZARD fills it as you go — name the agent first";
+    acts.innerHTML = ""; return;
+  }
   const ro = !WS.open || WS.open.source !== "draft";
   ta.value = WS.decl ? JSON.stringify(WS.decl, null, 2) : ""; ta.readOnly = ro; ta.classList.toggle("ro", ro);
   head.textContent = !WS.open ? "the same truth as the canvas" : ro ? `${WS.open.source === "shelf" ? "as it stands on the shelf (read-only)" : "name the draft first"}` : `${plainKind(WS.open.kind)} ${WS.open.name} · edit here or on the canvas${WS.dirty ? " · UNSAVED" : ""}`;
-  acts.innerHTML = ro ? "" : `<button class="ws-btn" id="ws-apply">apply the JSON to the canvas</button><button class="ws-btn p" id="ws-save">SAVE · routine, under your seat</button><button class="ws-btn hold" id="ws-cut">CUT onto the shelf → the interlock</button><button class="ws-btn" id="ws-undo">discard changes</button><button class="ws-btn" id="ws-discard">discard the draft</button><button class="ws-btn" id="ws-ask">ask the agent</button>`;
+  acts.innerHTML = ro ? "" : `<button class="ws-btn" id="ws-apply">apply the JSON to the canvas</button><button class="ws-btn p" id="ws-save">SAVE · routine, under your seat</button><button class="ws-btn hold" id="ws-cut">CUT onto the shelf → the interlock</button><button class="ws-btn" id="ws-undo">discard changes</button><button class="ws-btn" id="ws-discard">discard the draft</button><button class="ws-btn" id="ws-close">close the draft</button><button class="ws-btn" id="ws-ask">ask the agent</button>`;
   if (ro) return;
   const q = (id) => document.getElementById(id);
   q("ws-apply").onclick = () => {
@@ -3311,6 +3408,7 @@ function drawDecl(){
   };
   q("ws-undo").onclick = () => { WS.decl = JSON.parse(JSON.stringify(WS.open.draft.body || {})); WS.dirty = false; WS.sel = null; WS.selEdge = null; drawWorkshop(); };
   q("ws-discard").onclick = () => serviceWords(`discard the ${WS.open.draft.name} draft`);
+  q("ws-close").onclick = wsCloseOpen;                   // W127
   q("ws-ask").onclick = () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = "workshop, "; i.focus(); };
 }
 function drawWorkshop(){ drawCanvas(); drawInspector(); drawDecl(); drawWorkshopRail(); }
@@ -3341,6 +3439,377 @@ function workshopWire(text, to){        // the open draft rides the ask BY ID so
   if (!workshopPull.classList.contains("open") || !WS.open || WS.open.source !== "draft" || !to.includes("workshop")) return text;
   if (/\[draft draft_[0-9a-f]+\]/.test(text)) return text;
   return `${text}\n[draft ${WS.open.draft.draft_id}]`;
+}
+
+/* ---- THE WIZARD (JB's lock 2026-10-12, at the end of THE ONE WALK: "a very difficult process … not a good experience …
+   we're going to have to create a wizard"). The Workshop's FIRST SCREEN — "+ new agent" beside "+ new draft". ONE FLOW,
+   no JSON, every step a sentence: NAME → GRAPH (echo · think · import; a source picked from the shelf or registered
+   inline) → GOLDEN CASES as a form (the ask · what the reply must contain) → SAVE (three ORDINARY DRAFTS under your seat:
+   the graph <name>.v0, the golden set <name>, the template <name> — a hand can still open and edit each on the left) →
+   CUT (three cuts in order, each held at the interlock in the chat — the Yes stays a deliberate click, never Enter; the
+   agent's cut OPENS THE EXPERIMENT) → THE CARD inline with the four reviewers' signed words → PROMOTE with WHERE THE NEXT
+   LIFE STANDS → "<name> joined". Glass-only: the kernel's doors already serve every step (/drafts · /drafts/cut ·
+   /experiments · /experiments/promote · /services); the chat's words remain the record and the walker's way, and the
+   wizard goes through the SAME doors a typed word reaches (cutDraft · promoteAgent · registerSource — W118's law). ---- */
+const WZ_STEPS = [["name", "NAME"], ["graph", "GRAPH"], ["golden", "GOLDEN CASES"], ["save", "SAVE"], ["cut", "CUT"], ["card", "THE CARD"], ["promote", "PROMOTE"], ["joined", "JOINED"]];
+function wizStepWords(s){ return (WZ_STEPS.find(x => x[0] === s) || [s, s])[1]; }
+function wizFresh(){ return {step: "name", name: "", words: "", shape: "echo", prompt: "", mind: "", source: "", regOpen: false, reg: {name: "", repo: "", commit: "", entry: ""},
+                             cases: [], graph: null, golden: null, template: null, drafts: {}, chain: [], cut: [], held: null, heldKind: null, gate: null,
+                             experiment: null, verdicts: 0, at: "", promo: null, promoted: null, note: "", noteHue: "", seat: null, standing: []}; }
+function wizStartOver(){ WZ = wizFresh(); wizKeep(); wsNewAgent(); }   // W130 (JB, 2026-10-13: "it goes right back to the previous incorrect one"): a second door that lets the mid-flight agent go
+function wsNewAgent(){                          // the door: a finished wizard starts fresh; one mid-flight resumes where it stood
+  if (WS.open && WS.open.source === "draft" && WS.dirty && !confirmLeave()) return;   // W117's guard: a draft open AND unsaved
+  if (!WZ || WZ.step === "joined") WZ = wizFresh();
+  WS.open = {source: "wizard", kind: "graph", name: WZ.name}; WS.sel = null; WS.selEdge = null; WS.dirty = false;
+  WS.decl = WZ.step === "name" ? null : wizGraphDecl();
+  drawWorkshopRail(); drawWorkshop();
+}
+function wizLeave(){ WS.open = null; WS.decl = null; WS.sel = null; WS.selEdge = null; drawWorkshopRail(); drawWorkshop(); }   // the wizard's state stays for "+ new agent" to resume
+function wizDraw(){ wizKeep(); if (WZ && ["cut", "card", "promote"].includes(WZ.step)) wizWatch(); if (WS.open && WS.open.source === "wizard"){ WS.open.name = WZ.name; WS.decl = WZ.step === "name" ? null : wizGraphDecl(); WZ.force = true; try { drawWorkshop(); } finally { WZ.force = false; } } else drawWorkshopRail(); }
+/* ---- W133 · W134 (JB, 2026-10-13: "sticks at the experiment and doesn't seem to move beyond the test … when I reloaded the wizard was no
+   longer on the agent I was working on"). W133 THE CARD READS THE GROUND: the card waited on the feed's notice alone; the feed had fallen
+   (W129's wound again) and jonathan's experiment stood PROPOSED on the ground, leaning promote, four verdicts signed, while the card said
+   "running". From the agent's cut to the body joined the wizard now reads the experiments door every 3 s and the crew door for the join
+   (the feed's notice, if it comes first, lands once — `cardOnce`). W134 THE WIZARD'S PLACE SURVIVES A RELOAD: kept in this browser under
+   the seat's person on every redraw; a hold from before the reload is let go (CUT again — what stands with the same bytes is skipped). ---- */
+var wizTimer = null, ANNOUNCED = new Set();
+function cardOnce(x){ if (!x || ANNOUNCED.has(x.experiment_id)) return; ANNOUNCED.add(x.experiment_id); experimentCard(x.experiment_id, x); }
+function wizKey(){ return "orreth.wz." + (PERSON || "seat"); }
+function wizKeep(){ try { if (WZ && WZ.name && WZ.step !== "joined"){ const v = Object.assign({}, WZ); delete v.force; localStorage.setItem(wizKey(), JSON.stringify(v)); } else localStorage.removeItem(wizKey()); } catch (e) {} }
+function wizRestore(){                           // W134: the Workshop's load finds the wizard where the last page left it
+  if (WZ) return;
+  let v = null; try { v = JSON.parse(localStorage.getItem(wizKey()) || "null"); } catch (e) {}
+  if (!v || !v.name || v.step === "joined") return;
+  WZ = Object.assign(wizFresh(), v, {held: null, heldKind: null, force: false});
+  if (WZ.step === "cut") WZ.note = "the page was reloaded — a Yes from before it is on the chat's record; CUT goes on from here, and what already stands on the shelf is skipped";
+  if (["cut", "card", "promote"].includes(WZ.step)) wizWatch();
+}
+function wizWatch(){ if (wizTimer) return; wizTimer = setInterval(wizTick, 3000); wizTick(); }
+async function wizTick(){
+  if (!WZ || !WZ.name || !["cut", "card", "promote"].includes(WZ.step)){ clearInterval(wizTimer); wizTimer = null; return; }
+  if (WZ.step === "cut" && !WZ.cut.includes("template") && WZ.heldKind !== "template") return;   // before the agent's own cut there is no experiment to read
+  if (WZ.experiment && WZ.experiment.state === "promoted"){                                     // the join, through the crew door
+    const cr = await fetch("/crew").then(x=>x.json()).catch(()=>null);
+    const c = cr && (cr.crew || []).find(b => b.name === WZ.name && b.alive && !/\/r:exp-/.test(b.scope || ""));
+    if (c) wizJoined(WZ.name);
+    return;
+  }
+  const r = WZ.experiment ? await fetch("/experiments?id=" + encodeURIComponent(WZ.experiment.experiment_id)).then(x=>x.json()).catch(()=>null)
+                          : await fetch("/experiments?agent=" + encodeURIComponent(WZ.name)).then(x=>x.json()).catch(()=>null);
+  const x = r && (r.experiment || (r.experiments || [])[0]); if (!x || x.agent !== WZ.name) return;
+  const was = WZ.experiment;
+  if (!was && !["running", "proposed"].includes(x.state)) return;                                  // an older, settled experiment on the same name is not this cut's
+  if (!was && WZ.cutAt && x.opened_at && Date.parse(x.opened_at) < WZ.cutAt - 120000) return;
+  if (r.verdicts && WZ.step === "card" && x.state === "running" && r.verdicts.length !== WZ.verdicts){ WZ.verdicts = r.verdicts.length; wizDraw(); }
+  if (!was || was.experiment_id !== x.experiment_id || was.state !== x.state){
+    if (x.state === "proposed") cardOnce(x);                                                       // the chat's card too — what the feed owed
+    wizExperiment(null, x);
+  }
+}
+function wizNameOk(){ return /^[a-z0-9][a-z0-9_-]{0,63}$/.test(WZ.name); }
+function wizGraphDecl(){                        // the graph as the wizard shapes it — one entry node of the chosen kind; a hand adds more on the canvas after
+  const id = WZ.shape === "echo" ? "say" : WZ.shape === "think" ? "think" : "run";
+  const n = {id, kind: WZ.shape};
+  if (WZ.shape === "think"){ if (WZ.prompt) n.prompt = WZ.prompt; if (WZ.mind) n.mind = WZ.mind; }
+  if (WZ.shape === "import" && WZ.source) n.source = WZ.source;
+  return {format: "orreth-graph/1", name: `${WZ.name}.v0`, version: "0.1.0", words: WZ.words || "", entry: id, nodes: [n], edges: []};
+}
+function wizExpect(s){ return String(s || "").split(/\s*[,·;]\s*/).map(x => x.trim()).filter(Boolean); }
+function wizGoldenDecl(){ return {format: "orreth-golden/1", template: WZ.name, cases: WZ.cases.map(c => ({ask: String(c.ask || "").trim(), expect: wizExpect(c.expect)}))}; }
+function wizTemplateDecl(){ const t = skeleton("template", WZ.name); t.graph = `${WZ.name}.v0`; t.nature = WZ.words || ""; return t; }
+function wizDefaultCases(){                     // a first case per shape — the human edits it; an echo's pass by the echo's own law
+  if (WZ.shape === "echo") return [{ask: `hello ${WZ.name}`, expect: "hello"}, {ask: "say moon", expect: "moon"}];
+  if (WZ.shape === "think") return [{ask: `hello ${WZ.name}`, expect: "hello"}];
+  return [{ask: "hello", expect: ""}];
+}
+function wizDecl(){                             // the declaration box: the step's own truth
+  if (!WZ || WZ.step === "name") return null;
+  if (WZ.step === "graph") return wizGraphDecl();
+  if (WZ.step === "golden") return wizGoldenDecl();
+  if (WZ.step === "save" || WZ.step === "cut") return {[`${WZ.name}.v0 graph`]: WZ.graph || wizGraphDecl(), [`${WZ.name} golden set`]: WZ.golden || wizGoldenDecl(), [`${WZ.name} template`]: WZ.template || wizTemplateDecl()};
+  return WZ.template || wizTemplateDecl();
+}
+function wizDeclWords(){ return {graph: `graph ${WZ.name}.v0`, golden: `golden set ${WZ.name}`, save: "the three drafts", cut: "the three drafts"}[WZ.step] || `template ${WZ.name}`; }
+function wizNote(words, hue){ WZ.note = words; WZ.noteHue = hue || ""; }
+function wizInspector(box){
+  const a = document.activeElement;             // a redraw the feed asks for (refreshPulls) never takes the field out from under a typing hand — the wizard's own redraws (wizDraw) always land
+  if (!WZ.force && a && box.contains(a) && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;
+  const stepAt = WZ_STEPS.findIndex(x => x[0] === WZ.step);
+  const strip = `<div class="wz-steps">${WZ_STEPS.map(([id, label], i) => `<span class="${i < stepAt ? "done" : i === stepAt ? "on" : ""}">${i + 1} ${esc(label)}</span>`).join("")}</div>`;
+  const note = WZ.note ? `<div class="wz-note ${esc(WZ.noteHue)}">${WZ.note}</div>` : "";
+  const q = (id) => box.querySelector("#" + id);
+  const bind = (id, fn) => { const e = q(id); if (e) e.oninput = () => fn(e.value); };
+  const leave = `<button class="ws-btn" id="wz-leave" title="the wizard keeps its place — “+ new agent” on the left resumes it">leave the wizard</button>`;
+  let h = `<div class="ws-h">THE WIZARD · a new agent, from its name to the body joined</div>` + strip + note;
+  if (WZ.step === "name"){
+    h += `<label>its name · lowercase letters, digits, - _</label><input id="wz-name" value="${esc(WZ.name)}" placeholder="bob" autocomplete="off">` +
+         `<label>what it is for · a line for a reader (optional)</label><input id="wz-words" value="${esc(WZ.words)}" placeholder="answers hello with hello">` +
+         `<div class="acts"><button class="ws-btn p" id="wz-next">next — its graph</button>${leave}</div>` +
+         `<div class="meta">What the wizard makes are ORDINARY DRAFTS under your seat — the graph <b>name.v0</b>, the golden set <b>name</b>, the template <b>name</b> — each yours to open and edit by hand on the left, before or after the cut. Nothing reaches the shelf until the CUT, and every cut waits for your Yes at the interlock.</div>`;
+    box.innerHTML = h;
+    bind("wz-name", v => { WZ.name = v.trim().toLowerCase(); });
+    bind("wz-words", v => { WZ.words = v.trim(); });
+    q("wz-next").onclick = async () => {
+      if (!wizNameOk()){ wizNote("an agent's name is a short lowercase name: letters, digits, dashes, underscores — bob, not Bob or bob.v0", "red"); wizDraw(); return; }
+      const r = await fetch("/seats").then(x=>x.json()).catch(()=>null);
+      const s = r && (r.seats || []).find(x => x.name === WZ.name);
+      WZ.seat = s || null;
+      wizNote(s ? `<b>${esc(WZ.name)}</b> already holds a seat here (${esc(s.template || WZ.name + ".template")}${s.version ? " v" + s.version : ""}) — this wizard makes its NEXT version: the Experiment will run two arms, the standing version and the candidate` : "", s ? "" : "");
+      WZ.step = "graph"; wizDraw();
+    };
+    q("wz-leave").onclick = wizLeave;
+    return;
+  }
+  if (WZ.step === "graph"){
+    const prompts = WS.shelf.filter(s => s.kind === "prompt" && s.state !== "retired").map(s => s.craft || s.name);
+    const stalls = ((WS.minds && WS.minds.minds) || []).filter(m => m.state !== "retired").map(m => m.name);
+    const shapes = [["echo", "echo — the words back (the sure start: its golden cases pass by the echo's own law)"], ["think", "think — a mind answers (metered through the Stable)"], ["import", "import — a repository's code answers (a dev universe only)"]];
+    h += `<div class="ws-h sub">THE GRAPH · how ${esc(WZ.name)} answers — one entry node; more nodes are a hand's work on the canvas after</div>` +
+         `<label>the entry node's kind</label><select id="wz-shape">${shapes.map(([v, w]) => `<option value="${v}" ${v === WZ.shape ? "selected" : ""}>${esc(w)}</option>`).join("")}</select>`;
+    if (WZ.shape === "think")
+      h += `<label>prompt · a prompt on the shelf joins the system words (optional)</label><select id="wz-prompt">${opt(prompts, WZ.prompt, "— none —")}</select>` +
+           `<label>mind · pins a stall of the Stable (optional — else the template's own)</label><select id="wz-mind">${opt(stalls, WZ.mind, "— the template's own —")}</select>`;
+    if (WZ.shape === "import"){
+      const names = WS.sources.map(s => s.name);
+      h += `<label>the source · a repository on the shelf (its path or URL · the commit · the entry module:callable)</label><select id="wz-source">${opt(names, WZ.source, names.length ? "— pick one —" : "— no source on the shelf yet —")}<option value="+">+ register a source now…</option></select>`;
+      const src = WS.sources.find(s => s.name === WZ.source); const m = src && src.manifest || null;
+      if (m) h += `<div class="meta">${esc(String(m.repo || "?"))} at ${esc(String(m.commit || "?").slice(0, 12))} · entry ${esc(String(m.entry || "?"))}</div>`;
+      if (WZ.regOpen || !names.length)
+        h += `<div class="ws-h sub">REGISTER A SOURCE · a local repository is a repository — no GitHub needed</div>` +
+             `<label>its name on the shelf</label><input id="wz-r-name" value="${esc(WZ.reg.name)}" placeholder="bob-src" autocomplete="off">` +
+             `<label>the repository · a path on this machine, or a URL</label><input id="wz-r-repo" value="${esc(WZ.reg.repo)}" placeholder="/Users/you/orreth-walk/bobrepo" autocomplete="off">` +
+             `<label>the commit · the hash git rev-parse HEAD prints (its first 12 characters will do)</label><input id="wz-r-commit" value="${esc(WZ.reg.commit)}" placeholder="25649bb1dd16" autocomplete="off">` +
+             `<label>the entry · module:callable — a Python callable taking the ask's words, or a compiled LangGraph with invoke</label><input id="wz-r-entry" value="${esc(WZ.reg.entry)}" placeholder="bobgraph:answer" autocomplete="off">` +
+             `<div class="acts"><button class="ws-btn" id="wz-r-go">register the source → the shelf</button></div>`;
+    }
+    h += `<div class="acts"><button class="ws-btn p" id="wz-next">next — its golden cases</button><button class="ws-btn" id="wz-back">back</button>${leave}</div>` +
+         `<div class="meta">The canvas draws the graph as you shape it; the declaration below is the same truth. After SAVE it is the ordinary draft <b>${esc(WZ.name)}.v0</b> under YOUR DRAFTS — open it there to add nodes and ways out by hand.</div>`;
+    box.innerHTML = h;
+    q("wz-shape").onchange = () => { WZ.shape = q("wz-shape").value; wizDraw(); };
+    if (q("wz-prompt")) q("wz-prompt").onchange = () => { WZ.prompt = q("wz-prompt").value; wizDraw(); };
+    if (q("wz-mind")) q("wz-mind").onchange = () => { WZ.mind = q("wz-mind").value; wizDraw(); };
+    if (q("wz-source")) q("wz-source").onchange = () => { const v = q("wz-source").value; if (v === "+"){ WZ.regOpen = true; } else { WZ.source = v; WZ.regOpen = false; } wizDraw(); };
+    bind("wz-r-name", v => { WZ.reg.name = v.trim().toLowerCase(); }); bind("wz-r-repo", v => { WZ.reg.repo = v.trim(); }); bind("wz-r-commit", v => { WZ.reg.commit = v.trim(); }); bind("wz-r-entry", v => { WZ.reg.entry = v.trim(); });
+    if (q("wz-r-go")) q("wz-r-go").onclick = async () => {
+      const g = WZ.reg;
+      if (!/^[a-z0-9][a-z0-9._-]*$/.test(g.name)){ wizNote("a source's name is a short lowercase name — bob-src", "red"); wizDraw(); return; }
+      if (!g.repo){ wizNote("the repository is a path on this machine or a URL — /Users/you/orreth-walk/bobrepo", "red"); wizDraw(); return; }
+      if (!/^[0-9a-fA-F]{7,64}$/.test(g.commit)){ wizNote("the commit is the hash git rev-parse HEAD prints — 7 to 64 hex characters", "red"); wizDraw(); return; }
+      if (!/^[^\s;:]+:[^\s;:]+$/.test(g.entry)){ wizNote("the entry is module:callable — bobgraph:answer", "red"); wizDraw(); return; }
+      const r = await registerSource(g.name, g.repo, g.commit, g.entry);
+      if (!r || r.error){ wizNote(r && r.error ? esc(r.error) : "the shelf's door did not answer", "red"); wizDraw(); return; }
+      await loadWorkshop();                      // the shelf re-read: the new source stands in the picker
+      WZ.source = g.name; WZ.regOpen = false; wizNote(`the source <b>${esc(g.name)}</b> stands on the shelf — the entry node runs it`, "ok"); wizDraw();
+    };
+    q("wz-next").onclick = () => {
+      if (WZ.shape === "import" && !WZ.source){ wizNote("an import node names its source — pick a repository on the shelf, or register one here first", "red"); wizDraw(); return; }
+      WZ.graph = wizGraphDecl();
+      if (!WZ.cases.length) WZ.cases = wizDefaultCases();
+      wizNote(""); WZ.step = "golden"; wizDraw();
+    };
+    q("wz-back").onclick = () => { WZ.step = "name"; wizDraw(); };
+    q("wz-leave").onclick = wizLeave;
+    return;
+  }
+  if (WZ.step === "golden"){
+    const hint = WZ.shape === "echo" ? "an echo repeats the ask, so expect a word of the ask itself"
+               : WZ.shape === "import" ? "what the repository's entry returns for that ask — THE ONE WALK's repository answers “the repo says: HELLO” to “hello” (your ask in capitals), so an ask of hello expects HELLO; the expected words must appear IN the reply"
+               : "a mind's reply varies — expect a word any fair answer holds";
+    h += `<div class="ws-h sub">THE GOLDEN CASES · the evidence the Experiment judges ${esc(WZ.name)} by — required of every agent</div>` +
+         `<div class="meta">${esc(hint)} · the words are matched exactly as they appear in the reply · several words: separate them with commas</div>` +
+         WZ.cases.map((c, i) => `<div class="wz-case"><span class="rm" data-rm="${i}" title="remove this case">× remove</span><label>${i + 1} · the ask</label><input data-ask="${i}" value="${esc(c.ask || "")}" placeholder="hello ${esc(WZ.name)}" autocomplete="off"><label>the reply must contain</label><input data-expect="${i}" value="${esc(c.expect || "")}" placeholder="hello" autocomplete="off"></div>`).join("") +
+         `<div class="acts"><button class="ws-btn" id="wz-more">+ another case</button></div>` +
+         `<div class="acts"><button class="ws-btn p" id="wz-next">next — save the drafts</button><button class="ws-btn" id="wz-back">back</button>${leave}</div>`;
+    box.innerHTML = h;
+    box.querySelectorAll("[data-ask]").forEach(e => e.oninput = () => { WZ.cases[Number(e.dataset.ask)].ask = e.value; });
+    box.querySelectorAll("[data-expect]").forEach(e => e.oninput = () => { WZ.cases[Number(e.dataset.expect)].expect = e.value; });
+    box.querySelectorAll("[data-rm]").forEach(e => e.onclick = () => { WZ.cases.splice(Number(e.dataset.rm), 1); wizDraw(); });
+    q("wz-more").onclick = () => { WZ.cases.push({ask: "", expect: ""}); wizDraw(); };
+    q("wz-next").onclick = () => {
+      if (!WZ.cases.length){ wizNote("a golden set holds at least one case — the Experiment refuses an agent without evidence", "red"); wizDraw(); return; }
+      const bad = WZ.cases.findIndex(c => !String(c.ask || "").trim() || !wizExpect(c.expect).length);
+      if (bad >= 0){ wizNote(`case ${bad + 1} wants both an ask and at least one word the reply must contain`, "red"); wizDraw(); return; }
+      WZ.golden = wizGoldenDecl(); WZ.template = wizTemplateDecl(); wizNote(""); WZ.step = "save"; wizDraw();
+    };
+    q("wz-back").onclick = () => { WZ.step = "graph"; wizDraw(); };
+    q("wz-leave").onclick = wizLeave;
+    return;
+  }
+  if (WZ.step === "save"){
+    const n = (WZ.golden || wizGoldenDecl()).cases.length;
+    h += `<div class="ws-h sub">SAVE · three ordinary drafts under your seat</div>` +
+         `<div class="ws-kv"><span>graph</span><b>${esc(WZ.name)}.v0 · one entry node of kind ${esc(WZ.shape)}${WZ.shape === "import" ? " running " + esc(WZ.source) : ""}</b></div>` +
+         `<div class="ws-kv"><span>golden set</span><b>${esc(WZ.name)} · ${n} case${n === 1 ? "" : "s"}</b></div>` +
+         `<div class="ws-kv"><span>template</span><b>${esc(WZ.name)} · an agent wearing graph ${esc(WZ.name)}.v0</b></div>` +
+         `<div class="acts"><button class="ws-btn p" id="wz-save">SAVE the three drafts · routine, under your seat</button><button class="ws-btn" id="wz-back">back</button>${leave}</div>` +
+         `<div class="meta">Routine (L1) — no interlock. Each lands on the left under YOUR DRAFTS, yours to open and edit by hand; a draft of the same name and kind already under your seat is updated, never doubled. Nothing is on the shelf yet.</div>`;
+    box.innerHTML = h;
+    q("wz-save").onclick = async () => {
+      const plan = [["graph", `${WZ.name}.v0`, WZ.graph || wizGraphDecl()], ["golden", WZ.name, WZ.golden || wizGoldenDecl()], ["template", WZ.name, WZ.template || wizTemplateDecl()]];
+      const mine = await fetch("/drafts").then(x=>x.json()).catch(()=>null);
+      for (const [kind, name, body] of plan){
+        const prior = mine && (mine.drafts || []).find(d => d.name === name && d.kind === kind);
+        const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind, name, body, person: PERSON, words: `made by the wizard for ${WZ.name}`, draft_id: prior ? prior.draft_id : undefined})}).then(x=>x.json()).catch(()=>null);
+        if (!r || !r.draft){ wizNote(`the ${esc(plainKind(kind))} draft did not save — ${r && r.error ? esc(r.error) : "the draft shelf did not answer"}`, "red"); wizDraw(); return; }
+        WZ.drafts[kind] = r.draft;
+      }
+      sysline(`the wizard saved three drafts under your seat for <b>${esc(WZ.name)}</b> — graph ${esc(WZ.name)}.v0 · golden set ${esc(WZ.name)} · template ${esc(WZ.name)} — not on the shelf; CUT in the wizard (or say “cut the ${esc(WZ.name)}.v0 draft” …) puts them there, each held at the interlock`);
+      wizNote("saved — the three stand under YOUR DRAFTS on the left", "ok"); WZ.step = "cut"; WZ.cut = []; WZ.chain = []; WZ.standing = [];
+      await loadWorkshop(); wizDraw();
+    };
+    q("wz-back").onclick = () => { WZ.step = "golden"; wizDraw(); };
+    q("wz-leave").onclick = wizLeave;
+    return;
+  }
+  if (WZ.step === "cut"){
+    const order = [["graph", `the graph ${WZ.name}.v0`], ["golden", `the golden set ${WZ.name}`], ["template", `the agent ${WZ.name} itself — its cut OPENS THE EXPERIMENT`]];
+    const next = order.find(([k]) => !WZ.cut.includes(k));
+    h += `<div class="ws-h sub">CUT · onto the shelf, through the interlock</div>` +
+         `<div class="meta">Three cuts, in order, each held at the interlock in the chat — your Yes is a click there, never Enter. The third is the agent's own: a trial life of ${esc(WZ.name)} in an experiment room, judged on its golden cases by the grader, the critic, the identity chip and the security chip, each under its own name.</div>` +
+         `<div class="wz-chain">${order.map(([k, w]) => `<div class="${WZ.cut.includes(k) ? "done" : WZ.heldKind === k ? "on" : "todo"}">${WZ.cut.includes(k) ? "✓" : WZ.heldKind === k ? "▸" : "·"} ${esc(w)}${WZ.heldKind === k ? " — <b>held at the interlock: click Yes — do it in the chat</b>" : (WZ.standing || []).includes(k) ? " — already on the shelf with these exact bytes, it stands" : ""}</div>`).join("")}</div>` +
+         `<div class="acts">${WZ.held ? "" : next ? `<button class="ws-btn hold" id="wz-cut">CUT — ${esc(WZ.cut.length ? "go on with " + next[1].split(" — ")[0] : "start with the graph")} → the interlock</button>` : ""}${WZ.held ? "" : `<button class="ws-btn" id="wz-back">back${WZ.cut.length ? " — change something" : ""}</button>`}${leave}</div>`;
+    box.innerHTML = h;
+    if (q("wz-cut")) q("wz-cut").onclick = wizCut;
+    if (q("wz-back")) q("wz-back").onclick = () => { WZ.step = "save"; wizDraw(); };
+    q("wz-leave").onclick = wizLeave;
+    return;
+  }
+  if (WZ.step === "card"){
+    const x = WZ.experiment;
+    h += `<div class="ws-h sub">THE EXPERIMENT · ${esc(WZ.name)}${x ? " · " + esc(x.state) : ""}</div>`;
+    if (!x) h += `<div class="meta">opening — the room, the trial life, the four reviewers; the card lands here when the kernel's facts arrive</div>`;
+    else if (x.state === "running") h += `<div class="meta">running in ${esc(x.room)} — ${x.current_version ? "two arms: version " + esc(String(x.current_version)) + " and the candidate" : "one arm, the candidate"} · the grader, the critic, the identity chip and the security chip are judging it on its golden cases; their signed verdicts arrive within a minute${WZ.verdicts ? ` (${WZ.verdicts} signed so far)` : ""}</div>`;
+    else if (x.state === "proposed"){
+      const u = (WORLD && WORLD.scope) || "u:dev";
+      const floors = ((LEVELS && LEVELS.levels) || []).filter(l => l.level !== "universe" && !l.experiment).map(l => [l.path.split("/").slice(1).join("/"), `${l.level} ${l.name}${l.level === "room" ? " on floor " + String(l.parent || "").split("/").pop().replace(/^f:/, "") : ""}`]);
+      if (!WZ.at){ const f = String(x.room || "").match(/\/(f:[a-z0-9_-]+)\//); WZ.at = f ? f[1] : u; }   // the experiment room's own floor by stock
+      const cand = (x.arms || {}).candidate, fails = cand && Array.isArray(cand.details) ? cand.details.filter(c => !c.ok) : [];   // W131 (JB, 2026-10-13): the arms' result in plain words, the way back when a golden case failed
+      if (cand && cand.passed !== null && cand.passed !== undefined)
+        h += `<div class="meta"><b>the candidate: ${cand.passed} passed, ${cand.failed} failed</b>${fails.length ? " — " + fails.map(c => `asked “${esc(c.ask)}”, expected ${esc((c.expect || []).join(", "))}, the reply was “${esc(c.reply || "")}”`).join("; ") + ". A candidate that fails its own evidence is not for the shelf: fix the case (the reply must CONTAIN the expected words) or the graph, then SAVE and CUT again — what stands unchanged is skipped, the golden set lands as its next version, the agent's cut opens a new experiment." : ""}</div>`;
+      h += `<div class="wz-card" id="wz-card"></div>` +
+           `<label>where the next life stands · the promotion's one field</label><select id="wz-at">${[[u, "the universe itself"], ...floors].map(([v, w]) => `<option value="${esc(v)}" ${v === WZ.at ? "selected" : ""}>${esc(w)}</option>`).join("")}</select>` +
+           `<div class="acts">${fails.length ? `<button class="ws-btn p" id="wz-fix">fix the golden cases — declines this experiment, back to GOLDEN CASES</button>` : ""}<button class="ws-btn ${fails.length ? "" : "p"}" id="wz-promote">PROMOTE ${esc(WZ.name)} → the interlock</button><button class="ws-btn" id="wz-decline">decline</button></div>` +
+           `<div class="meta">the verdict is a proposal; the promotion is yours — held at the interlock in the chat (L2). Promoted, ${esc(WZ.name)}'s next life is seated from the shelf where you say and joins within seconds.</div>`;
+    } else h += `<div class="meta">the experiment is ${esc(x.state)}${x.state === "declined" ? " — the drafts are spent; “+ new agent” after leaving starts over" : ""}</div>`;
+    h += `<div class="acts">${leave}</div>`;
+    box.innerHTML = h;
+    if (x && x.state === "proposed"){ experimentCard(x.experiment_id, x, q("wz-card"), true); }
+    if (q("wz-at")) q("wz-at").onchange = () => { WZ.at = q("wz-at").value; };
+    if (q("wz-promote")) q("wz-promote").onclick = () => wizPromote(false);
+    if (q("wz-decline")) q("wz-decline").onclick = () => wizPromote(true);
+    if (q("wz-fix")) q("wz-fix").onclick = () => {   // W131: decline through the chat's own word, then the wizard stands at GOLDEN CASES with the drafts to save again
+      wizPromote(true);
+      WZ.experiment = null; WZ.verdicts = 0; WZ.cut = []; WZ.chain = []; WZ.drafts = {}; WZ.standing = []; WZ.step = "golden";
+      wizNote("the experiment is declined — change the case (the reply must contain the expected words) or go back to the graph, then next → SAVE → CUT: what stands unchanged is skipped, the golden set lands as its next version, the agent's cut opens a new experiment");
+      wizDraw();
+    };
+    q("wz-leave").onclick = wizLeave;
+    return;
+  }
+  if (WZ.step === "promote"){
+    const p = WZ.promo || {};
+    h += `<div class="ws-h sub">PROMOTE · ${esc(WZ.name)}</div>` +
+         (WZ.held ? `<div class="meta">promoting ${esc(WZ.name)} to version ${esc(String(p.version || "?"))} — its next life on ${esc(String(p.at || WZ.at || "?"))} — <b>held at the interlock: click Yes — do it in the chat</b></div>`
+                  : WZ.promoted ? `<div class="meta">${esc(WZ.promoted)}</div><div class="meta">${esc(WZ.name)}'s next life is being seated from the shelf — the join lands here within a few seconds</div>`
+                  : `<div class="meta">the experiment on ${esc(WZ.name)} is promoted — waiting for the body to join</div>`) +
+         `<div class="acts">${leave}</div>`;
+    box.innerHTML = h; q("wz-leave").onclick = wizLeave; return;
+  }
+  // joined
+  h += `<div class="ws-h sub">${esc(WZ.name)} JOINED · a life begins</div>` +
+       `<div class="meta">${esc(WZ.name)} stands on ${esc(String((WZ.promo && WZ.promo.at) || WZ.at || "this universe"))}, wearing ${esc(WZ.name)}.template${WZ.promo && WZ.promo.version ? " v" + esc(String(WZ.promo.version)) : ""} — say “${esc(WZ.name)}, hello” in the chat; “show the seats” names it; the crew shows it alive.</div>` +
+       `<div class="acts"><button class="ws-btn p" id="wz-hello">say hello to ${esc(WZ.name)}</button><button class="ws-btn" id="wz-again">make another agent</button><button class="ws-btn" id="wz-close">close the wizard</button></div>`;
+  box.innerHTML = h;
+  q("wz-hello").onclick = () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = `${WZ.name}, hello`; i.focus(); };
+  q("wz-again").onclick = () => { WZ = wizFresh(); wsNewAgent(); };
+  q("wz-close").onclick = () => { WZ = null; wizLeave(); };
+}
+function wizCut(){ WZ.chain = ["graph", "golden", "template"].filter(k => !WZ.cut.includes(k)); wizNote(""); wizCutNext(); }
+async function wizCutNext(){                    // the chain: one cut at a time, each through the chat's own door, the next after the Yes
+  const k = WZ.chain[0]; if (!k){ WZ.step = "card"; wizDraw(); return; }
+  const d = WZ.drafts[k];
+  if (!d){ wizNote(`the ${esc(plainKind(k))} draft is not under your seat any more — SAVE again`, "red"); WZ.step = "save"; wizDraw(); return; }
+  const r = await cutDraft(d);
+  if (r && !r.held && /exact bytes/.test(String(r.error || ""))){   // an earlier walk left the same bytes on the shelf — it STANDS (JB's step 17 re-walk, 2026-10-12)
+    const ver = (String(r.error).match(/\(version (\d+)\)/) || [])[1];
+    if (k === "template"){
+      wizNote(`<b>${esc(WZ.name)}</b>'s template already stands on the shelf with these exact bytes${ver ? " (version " + ver + ")" : ""} — nothing to experiment on. An experiment needs a change to judge: go back and change what ${esc(WZ.name)} is for (its words at NAME) or its graph, then SAVE and CUT again — the graph and golden set that stand unchanged are skipped`, "red");
+      wizDraw(); return;
+    }
+    WZ.standing = (WZ.standing || []).concat([k]); WZ.cut.push(k); WZ.chain = WZ.chain.filter(x => x !== k);
+    sysline(`the ${esc(plainKind(k))} <b>${esc(d.name)}</b> already stands on the shelf with these exact bytes${ver ? " (version " + ver + ")" : ""} — nothing to cut; the wizard goes on`);
+    wizDraw(); return wizCutNext();
+  }
+  if (!r || !r.held){ wizNote(r && r.error ? esc(r.error) : "the draft shelf did not answer", "red"); wizDraw(); return; }
+  WZ.held = r.held; WZ.heldKind = k; WZ.gate = r; if (k === "template") WZ.cutAt = Date.now(); wizDraw();
+}
+function wizOutcome(id, v){                     // a hold the wizard filed settled (renderOutcome's hook)
+  if (!WZ || WZ.held !== id) return;
+  const k = WZ.heldKind; WZ.held = null; WZ.heldKind = null;
+  if (v.status === "replied"){
+    if (k === "promote"){ WZ.promoted = v.reply || ""; if (WZ.step !== "joined") WZ.step = "promote"; wizDraw(); return; }
+    if (!WZ.cut.includes(k)) WZ.cut.push(k); WZ.chain = WZ.chain.filter(x => x !== k);
+    if (k === "template"){ if (WZ.step === "cut") WZ.step = "card"; wizNote(""); wizDraw(); }
+    else wizCutNext();
+    return;
+  }
+  if (v.status === "cancelled") wizNote(k === "promote" ? "you cancelled — nothing ran; PROMOTE again when ready" : `you cancelled ${esc(plainKind(k))}'s cut — nothing ran; CUT goes on from here when you are ready`, "red");
+  else wizNote(`refused at the door — ${esc(v.reply || "nothing ran")}`, "red");
+  if (k !== "promote") WZ.step = "cut"; else WZ.step = "card";
+  wizDraw();
+}
+function wizExperiment(n, x){                   // the kernel's facts on the wizard's own experiment (onNotice's hook)
+  if (!WZ || !x || x.agent !== WZ.name || !["cut", "card", "promote"].includes(WZ.step)) return;
+  WZ.experiment = x;
+  if (x.state === "promoted"){ if (WZ.step !== "promote") WZ.step = "promote"; wizDraw(); return; }
+  if (WZ.step === "cut" && (WZ.heldKind === "template" || WZ.cut.includes("template"))) WZ.step = "card";
+  if (WZ.step === "card") wizDraw(); else wizKeep();
+}
+function wizVerdict(){ if (WZ && WZ.step === "card" && WZ.experiment && WZ.experiment.state === "running"){ WZ.verdicts += 1; wizDraw(); } }
+function wizJoined(name){ if (WZ && name === WZ.name && (WZ.step === "promote" || (WZ.step === "card" && WZ.experiment && WZ.experiment.state === "promoted"))){ WZ.step = "joined"; wizNote(""); wizDraw(); } }
+async function wizPromote(decline){
+  const x = WZ.experiment; if (!x) return;
+  if (decline){ serviceWords(`decline the ${WZ.name} experiment`); return; }   // the chat's own word (W118)
+  const r = await promoteAgent(WZ.name, WZ.at || undefined);
+  if (!r || !r.held){ wizNote(r && r.error ? esc(r.error) : "the experiments door did not answer", "red"); wizDraw(); return; }
+  WZ.held = r.held; WZ.heldKind = "promote"; WZ.promo = r; WZ.step = "promote"; wizDraw();
+}
+/* ---- the three doors a typed word and a button both go through (W118's law: one door, never a second path) ---- */
+async function cutDraft(d){                     // "cut the <name> draft" · the declaration's CUT · the wizard's chain — held at the interlock; an agent's cut OPENS the Experiment
+  toggleChat(true);
+  const r = await fetch("/drafts/cut", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({draft_id: d.draft_id, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+  if (r && r.held){
+    PENDING[r.held] = el("journey", r.gate === "experiment"      // Phase 8 sp4: an agent's cut OPENS the Experiment
+      ? `an agent's cut goes through the Experiment: opening one on ${esc(d.name)} (${esc(r.room || "an experiment room")}, ${r.cases} golden case${r.cases === 1 ? "" : "s"}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`
+      : `cutting the ${esc(d.name)} ${esc(d.kind)} onto the shelf (${esc(r.verb)} → version ${r.version}) is consequential — the kernel holds it at the interlock (${esc(r.level)})…`);
+    const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+    if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+    return r;
+  }
+  sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer");
+  return r;
+}
+async function promoteAgent(name, at){         // "promote <name> [to floor <f>]" · the card's PROMOTE · the wizard's — held at the interlock (L2)
+  toggleChat(true);
+  const r0 = await fetch("/experiments?agent=" + encodeURIComponent(name) + "&state=proposed").then(x=>x.json()).catch(()=>null);
+  const x = r0 && (r0.experiments || [])[0];
+  if (!x){ sysline(`no proposed experiment on ${esc(name)} — say “show the experiments”`); return null; }
+  const r = await fetch("/experiments/promote", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({experiment_id: x.experiment_id, at, person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+  if (r && r.held){
+    PENDING[r.held] = el("journey", `promoting ${esc(name)} to version ${r.version} — its next life on ${esc(r.at)} — is consequential: the kernel holds it at the interlock (${esc(r.level)})…`);
+    const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+    if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+    return r;
+  }
+  sysline(r && r.error ? esc(r.error) : "the experiments door did not answer");
+  return r;
+}
+async function registerSource(name, repo, commit, entry){   // "register the source <name> from <repo> at <commit> entry <module:callable>" · the wizard's form — onto the shelf at once
+  const r = await fetch("/services", {method: "POST", headers: {"content-type": "application/json"},
+    body: JSON.stringify({name: name.toLowerCase(), kind: "source", manifest: {repo, commit, entry}, person: PERSON})}).then(x=>x.json()).catch(()=>null);
+  if (r && !r.error) sysline(`the source <b>${esc(name)}</b> stands on the shelf — ${esc(repo)} at ${esc(commit.slice(0, 12))}, entry ${esc(entry)}; a graph node of kind import naming it runs the repo's entry inside the hull (a dev universe only)`);
+  else sysline(r && r.error ? esc(r.error) : "the shelf door did not answer");
+  return r;
 }
 
 /* W102: the Workshop yields to the chat — the chat docks full-height on the right, the Workshop's right edge meets it */
@@ -3634,7 +4103,7 @@ async function isSeat(name){                         // Phase 8 sp4: does a prom
   const r = await fetch("/seats").then(x=>x.json()).catch(()=>null);
   return !!(r && (r.seats || []).some(s => s.name === name));
 }
-function experimentCard(id, x){                      // Phase 8 sp4: THE EXPERIMENT card — the arms, every reviewer by name, the leaning, the two words
+function experimentCard(id, x, into, bare){          // Phase 8 sp4: THE EXPERIMENT card — the arms, every reviewer by name, the leaning, the two words · THE WIZARD lands it INLINE (`into`) with its own two words (`bare`)
   const arms = x.arms || {}, rv = x.reviewers || {};
   const arm = (side, a) => a === null || a === undefined ? `${side}: none — the first version` : a.skipped ? `${side}: ${esc(a.skipped)}` : a.passed === null || a.passed === undefined ? `${side}: running` : `${side}: ${a.passed} passed, ${a.failed} failed`;
   const who = (name, slot) => slot && slot.verdict ? `${name}${slot.signed ? " (signed)" : ""}: candidate ${esc(slot.verdict.candidate || "?")}${slot.verdict.current ? ", current " + esc(slot.verdict.current) : ""} → ${esc(slot.verdict.verdict || "no side")}`
@@ -3643,12 +4112,13 @@ function experimentCard(id, x){                      // Phase 8 sp4: THE EXPERIM
                             : slot && slot.security ? `${name}${slot.signed ? " (signed)" : ""}: ${esc(slot.security)}${slot.line ? " — " + esc(slot.line) : ""}`
                             : `${name}: ${esc((slot && slot.missing) || "waiting")}`;   // Phase 8 sp6: the two chips' words
   const lean = {promote: "leans to promote", hold: "says hold", unsure: "is unsure"}[x.leaning] || "is running";
-  const b = el("msg theirs", `<div class="who">THE EXPERIMENT · ${esc(x.agent)} · ${esc(x.state)}</div>` +
+  const html = `<div class="who">THE EXPERIMENT · ${esc(x.agent)} · ${esc(x.state)}</div>` +
     `<div class="meta">${esc(id)} · ${esc(x.room)}</div>` +
     `<div>${arm("candidate", arms.candidate)} · ${arm("current", arms.current)}</div>` +
     `<div class="meta">${who("the grader", rv.grader)} · ${who("the critic", rv.critic)} · ${who("the identity chip", rv.identity)} · ${who("the security chip", rv.security)}</div>` +
     `<div class="meta">resiliency: ${x.resiliency ? (x.resiliency.reds ? x.resiliency.reds + " watch(es) turned red while the arms ran" : "no watch turned red while the arms ran") : "running"} · the evidence ${lean}</div>` +
-    (x.state === "proposed" ? `<div class="acts"><button class="ws-btn p" data-promote>promote ${esc(x.agent)}</button> <button class="ws-btn" data-decline>decline</button><span class="meta"> · or say “promote ${esc(x.agent)} to floor ops”</span></div>` : ""));
+    (x.state === "proposed" && !bare ? `<div class="acts"><button class="ws-btn p" data-promote>promote ${esc(x.agent)}</button> <button class="ws-btn" data-decline>decline</button><span class="meta"> · or say “promote ${esc(x.agent)} to floor ops”</span></div>` : "");
+  const b = into ? elIn(into, "msg theirs", html) : el("msg theirs", html);
   const pb = b.querySelector("[data-promote]"); if (pb) pb.onclick = () => serviceWords(`promote ${x.agent}`);                  // W118: a button's word goes where a typed word goes —
   const db = b.querySelector("[data-decline]"); if (db) db.onclick = () => serviceWords(`decline the ${x.agent} experiment`);   // through the glass's own parser, never straight to a body
   return b;
@@ -3666,6 +4136,7 @@ async function rollSession(announce){
   SESSION = r.session_id;
   try { localStorage.setItem("orreth.session", SESSION); } catch (e) {}
   popAllFocus();                    // a new topic starts at the bridge's focus
+  if (workshopPull && workshopPull.classList.contains("open")) pushFocus(workshopFocus());   // W126 (JB, 2026-10-12): the Workshop still open keeps its focus — the chat speaks to its agent, not past it
   clearDisplay();
   MITL_SAID = false; loadMitl(); loadIncludes();    // the toggle is per session; the name in full again (P18) · sp5: the summoned too
   if (announce) sysline(`a fresh session · ${esc(SESSION.slice(4, 10))} — the previous one is ` +
@@ -3853,6 +4324,9 @@ function windowize(el, opts){
   };
   const apply = () => {
     if (opts.docked && opts.docked()) return;                  // the Workshop lays a pinned window out
+    el.classList.add("placing"); place(); void el.offsetHeight; el.classList.remove("placing");   // W128: placed without the slide — the reflow commits the place before the transition returns
+  };
+  const place = () => {
     const g = read()[winCtx()];
     if (!g){ el.style.left = ""; el.style.top = ""; el.style.right = ""; el.classList.remove("moved"); el.style.setProperty("--win-top", "0px");
              const s0 = read().size; if (s0){ el.style.width = Math.min(s0.w, window.innerWidth - 24) + "px"; el.style.height = Math.min(s0.h, window.innerHeight - 24) + "px"; }
@@ -4463,13 +4937,14 @@ document.getElementById("i-close").onclick = inspClose;
 
 /* ---- the feed: one SSE stream, pointer-only, gap-repairing ---- */
 const pulse = document.getElementById("pulse");
+function pulseSay(t){ pulse.textContent = t; const p2 = document.getElementById("chat-pulse"); if (p2){ p2.textContent = t.replace(/^PULSE · /, ""); p2.classList.toggle("away", /reconnecting|resync/.test(t)); } }   // W129 (iii): the feed's state in the chat's own header — seen from the Workshop too
 let lastRev = null;
 function connectFeed(){
   if (!SEAT){ unseated(); return; }           // P7 sp8 row 3: no seat, no feed — the form first
   const src = new EventSource("/feed?seat=" + encodeURIComponent(SEAT));
   let bandTimer = null;
   src.onmessage = e => { const n = JSON.parse(e.data);
-    lastRev = n.rev; pulse.textContent = "PULSE · rev " + n.rev;
+    lastRev = n.rev; pulseSay("PULSE · rev " + n.rev);
     onNotice(n);
     if (band.classList.contains("open") && !bandTimer)   // P17: one state,
       bandTimer = setTimeout(() => { bandTimer = null;   // every lens
@@ -4477,10 +4952,9 @@ function connectFeed(){
     refreshPulls(); };
   src.addEventListener("delta", e => onDelta(JSON.parse(e.data)));
   src.addEventListener("resync", () => {          // the ring moved on without this glass: the still panel is read whole again
-    pulse.textContent = "PULSE · resync — fetch fresh through the doors"; panelHydrate().catch(()=>{}); });
-  src.onopen = () => { versionRead(); pulse.textContent = "PULSE · listening" +
-    (lastRev ? " · rev " + lastRev : ""); };
-  src.onerror = () => pulse.textContent = "PULSE · reconnecting…";
+    pulseSay("PULSE · resync — fetch fresh through the doors"); panelHydrate().catch(()=>{}); });
+  src.onopen = () => { versionRead(); pulseSay("PULSE · listening" + (lastRev ? " · rev " + lastRev : "")); if (lastRev) rereadPending(); };   // W129 (ii): back after a gap
+  src.onerror = () => pulseSay("PULSE · reconnecting… — the kernel's feed is away; what settles meanwhile is read through the doors when it returns");
 }
 /* ---- the version whisper (JB's ask, 2026-09-28): a LIVE version number up top — what the kernel says of itself through its
    health door (its version · which kernel · when it was lit), read on load and again on every feed connection, so a relit

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — the guide held to the glass (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing) · 2026-10-06
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE WIZARD's words (new agent · make an agent · open the wizard) · 2026-10-12
 """THE GUIDE NEVER DRIFTS FROM THE GLASS (JB, 2026-10-06, after the sp2 walk: "ensure that it
 remains updated so it doesn't drift too far from what we know we can do").
 
@@ -31,6 +32,8 @@ COMMAND_HEADS = (
     "open the workshop", "close the workshop", "load ", "workshop,",            # Phase 8 sp3: THE WORKSHOP
     "promote ", "decline the ", "rest ", "decommission ",                       # Phase 8 sp4: THE EXPERIMENT AND THE CUT
     "dismiss ", "register the source",                                           # Phase 8 sp5: THE OPERATING STATE
+    "new agent", "make an agent", "open the wizard",                             # THE WIZARD (JB's lock 2026-10-12)
+    "close the draft", "clear the workshop",                                     # W127: the first screen again (JB, 2026-10-12)
 )
 # lines the glass hears through a body or a door, not a parser — named, never silently skipped
 BODY_OR_DOOR = (

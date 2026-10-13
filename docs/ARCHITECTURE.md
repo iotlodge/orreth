@@ -261,8 +261,10 @@ hearing every live reply and signing its verdict; 👍 👎 under every reply; t
 owner; "summon critic"; a repo'd graph run inside the hull by an import node; Phase 8 sp6: THE TWO CHIPS — the identity
 and security chips reviewing at the gate beside the grader and the critic, so no slot on the card stands empty, and THE
 KEY-CHECK: every seated body challenged on a cadence to prove who and what it is, the join desk's challenge repeated,
-its verdict a fact, the day's failures the kernel's seventh watch — "show the key checks") are the same truth from the
-same doors, and every row is a door.
+its verdict a fact, the day's failures the kernel's seventh watch — "show the key checks"; THE WIZARD, 2026-10-12: the
+Workshop's first screen, "+ new agent" — one flow from a name to the body joined with no JSON: the graph shaped, the golden
+cases as a form, three ordinary drafts saved, three cuts each held at the interlock, the Experiment's card inline, the
+promotion with where the next life stands, "name joined") are the same truth from the same doors, and every row is a door.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/monitor-dark.jpg">
