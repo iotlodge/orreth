@@ -376,6 +376,52 @@ returning `"the repo says: " + text.upper()`, committed; the shell printed its c
 eleven — the walker's way and the record; the wizard is the person's way in.
 
 
+## THE STUDIO WALK — SPEC-STUDIO-01 (canon 0011, JB's lock 2026-10-13)
+
+The measure is JB's: *"how well Orreth can do it vs YOU"*. Part A is by hand on the bench; Part B
+(spoonful 11) is by the Workshop agent on one brief. Each typed sentence stands alone in a code block.
+
+### Part A — one effort, one place (sp8 THE BENCH; walked by JB in the glass, OWED)
+
+1. **The rail.** Open the Workshop. The left rail reads YOUR BENCHES first (none open, or the ones
+   you left), then LOOSE DRAFTS, then THE SHELF folded by kind with counts (click a kind to open
+   it), then THE HOUSE folded under one row. The chat's residents rail shows the agents you made
+   first and "the house · N" folded. PASS: no scrolling zoo; a search by name still opens every fold.
+2. **A new bench.** Click "+ new agent". NAME it `studio1`, next. PASS: the rail shows the bench
+   `studio1 · at GRAPH`; the inspector is the wizard at GRAPH; the bench's row is lit.
+3. **The place survives.** Click "leave the bench". Reload the page. Open the Workshop. PASS: the
+   bench stands on the rail at GRAPH; click its row and the wizard opens there, the name filled.
+   Then, in the chat:
+
+   ```
+   open the studio1 bench
+   ```
+
+   PASS: the same.
+4. **The drafts under the bench.** GRAPH echo, next; one golden case `hello` → `HELLO`, next; SAVE.
+   PASS: the three drafts stand UNDER the bench's row on the rail (not under LOOSE DRAFTS); click
+   the template draft — the inspector says "this draft is on the studio1 bench, which stands at
+   CUT" with "open the studio1 bench at CUT"; click it.
+5. **The second face.** CUT. PASS: the hold stands pinned in the chat AND on the bench's card with
+   its own "Yes — do it" and Cancel. Click Yes ON THE CARD. PASS: the chat's pinned hold folds to
+   "held at the interlock · you said yes", the kernel's "Done, on your word" lands in the chat, the
+   wizard goes on to the next cut. Answer the second hold IN THE CHAT. PASS: the card's face settles
+   too. The third cut opens the experiment; the card reads it from the ground (W133).
+6. **A bench, let go.** Say:
+
+   ```
+   my benches
+   ```
+
+   PASS: `studio1 · at THE CARD · 0 drafts · an experiment open` (the drafts are spent by the cuts).
+   Click "let the studio1 bench go" on the card (or say `let the studio1 bench go`). PASS: the line
+   "the studio1 bench is let go — 0 drafts discarded, 1 experiment declined; what reached the shelf
+   stays"; the rail shows "1 bench at rest · show"; the shelf keeps studio1.v0 · studio1 golden ·
+   nothing promoted.
+7. **Joined closes the bench.** "+ new agent" → `studio2`, echo, `hello` → `HELLO`, SAVE, CUT ×3
+   (either face), the card, PROMOTE, Yes, "studio2 JOINED". PASS: the bench rests on its own
+   ("2 benches at rest"); studio2 stands in the chat's residents rail ABOVE "the house".
+
 ## Walk records
 
 ### Before-walk #1 — the old glass, 2026-09-16 (P0 sp3)

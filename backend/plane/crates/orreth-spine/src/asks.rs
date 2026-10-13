@@ -48,7 +48,7 @@ pub use crate::watch::WATCH_TURNED;
 /// (a body parked, a tool hop, a lease crossing the line, a lever pulled, a seat taken, a
 /// body at the join desk, an intention's life, the shelf's and the Stable's changes, a
 /// memory landed, the kernel's own heartbeat) now reaches THE PANEL as a pointer.
-pub const FEED_TOPICS: [&str; 51] = [
+pub const FEED_TOPICS: [&str; 53] = [
     ASK_RECEIVED,
     crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
@@ -108,6 +108,9 @@ pub const FEED_TOPICS: [&str; 51] = [
     // ---- Phase 8 sp6: THE TWO CHIPS — a body challenged to prove who and what it is · the kernel's verdict on its proof ----
     crate::chips::KEYCHECK_ASKED,
     crate::chips::KEYCHECK_VERDICT,
+    // ---- Phase 8 sp8: THE BENCH — an effort opened · let go (a step moved is read, not announced) ----
+    crate::benches::BENCH_OPENED,
+    crate::benches::BENCH_CLOSED,
 ];
 
 // ---- the fact, minted now ------------------------------------------------------------

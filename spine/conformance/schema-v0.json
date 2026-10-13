@@ -1,19 +1,19 @@
 {
  "contract": "orreth.schema/1",
  "version": 0,
- "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2); version 7 by Phase 8 sp4 THE EXPERIMENT AND THE CUT",
- "generated_at": "2026-10-08",
+ "generated_by": "orreth_spine.ground (the Python reference) - rearch row 4, re-base sp1: THE MIGRATOR (lock 2); version 10 by Phase 8 sp8 THE BENCH (canon 0011)",
+ "generated_at": "2026-10-13",
  "cases": [
   {
-   "name": "schema_version: both kernels carry the same number - 9: THE TWO CHIPS (spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row; Phase 8 sp6, 2026-10-09), after 8: THE OPERATING STATE, 7: the experiments, 6: the wear table and the draft shelf, 5: the levels, 4: an ask's resent_at (W91), 3: a watch's rest and a peer's forgetting, 2: the indexes; bumped together whenever any DDL statement changes",
+   "name": "schema_version: both kernels carry the same number - 10: THE BENCH (spine_benches, one effort one row, the wizard's place on the ground; spine_drafts.bench; Phase 8 sp8 THE STUDIO, canon 0011, 2026-10-13), after 9: THE TWO CHIPS, 8: THE OPERATING STATE, 7: the experiments, 6: the wear table and the draft shelf, 5: the levels, 4: the desk, 3: the seats, 2: the perf indexes, 1: the migrator's first",
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 9
+    "version": 10
    }
   },
   {
-   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 50 tables at schema 9 (spine_keychecks joins at Phase 8 sp6)",
+   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 51 tables at schema 10 (spine_benches joins at Phase 8 sp8)",
    "kind": "schema_tables",
    "input": {},
    "expect": {
@@ -21,6 +21,7 @@
      "spine_aggregate_cursor",
      "spine_asks",
      "spine_authenticators",
+     "spine_benches",
      "spine_body_seats",
      "spine_desk",
      "spine_digests",
@@ -69,7 +70,7 @@
      "spine_wear",
      "spine_world"
     ],
-    "count": 50
+    "count": 51
    }
   }
  ]

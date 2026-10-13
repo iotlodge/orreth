@@ -111,8 +111,12 @@ hosts; the kernel is their hull, their gate, their record and their Studio.
   the one next act. Clicking a draft on the bench opens it IN the bench; the
   draft knows its bench (W135 made whole).
 - A bench **closes** when its agent is joined or let go; closed benches fold.
-  Letting a bench go discards its drafts (held, L1) and declines its open
-  experiment (the chat's own word); the trial lives rest with it.
+  Letting a bench go is ROUTINE (L1), as discard and decline are: its drafts
+  discarded, its open experiment declined through the experiments' own word;
+  what reached the shelf stays (a version is never deleted). THE WORD: the
+  dispatcher already has a "bench" — the asks' waiting bench (W91's sweep,
+  `bench.rs` · `dispatch.py`). That one is the kernel's; this one is the
+  Workshop's, in its own table; the two never meet in code.
 
 ### 3. The rails reorganized (JB, 2026-10-13: "this will be a zoo when there are lots")
 
@@ -234,16 +238,36 @@ record and the walker's way. The guide turning with the glass.
 The spine that survives all four is the wizard's own: a name, a source, a
 golden set, a Yes, joined. No walk of 2026-10-12/13 is wasted.
 
-1. **THE BENCH.** The ground: `spine_drafts.bench`, a `spine_benches` row
-   per effort (name · person · step · experiments · lives · closed_at) on
-   both kernels, the next schema; `GET /benches` · `GET /benches/<name>` ·
-   `POST /benches/<name>/close` (held, L1: discards drafts, declines the open
-   experiment). The glass: the rails of §3, the bench's card as the wizard's
-   inspector with THE HOLD'S SECOND FACE (its Yes and cancel through the
-   chat's own confirm door, the chat's line the record), the wizard's place read from the bench (W134's browser copy
-   retired), a draft opened in its bench (W135 whole). The guide turns.
-   Proofs: `test_benches.py` · a fixture `benches-v0.json` on both kernels ·
-   `test_guide.py`.
+1. **THE BENCH — BUILT 2026-10-13 on JB's word ("start spoonful 8").** The
+   ground, schema 10 on both kernels: `spine_benches` (bench_id · scope ·
+   person · name · words · step · body — the wizard's state · hold · state ·
+   at · updated_at · closed_at) and `spine_drafts.bench`; the doors `GET
+   /benches` (each whole: its drafts · its experiments since it opened · its
+   seat) · `GET /benches/<name>` · `POST /benches` (open, or the open one of
+   that name handed back) · `POST /benches/<name>` (the place kept: step ·
+   body · hold · words) · `POST /benches/<name>/close` (routine: drafts
+   discarded, the open experiment declined, closed) — all under the seat's
+   person (AG-9); `orreth.bench.opened.v1` · `closed.v1` on the feed; the
+   door name folds to `/benches/:id`. The glass: the rails of §3 (YOUR
+   BENCHES with the drafts under each · LOOSE DRAFTS · THE SHELF folded by
+   kind with counts · THE HOUSE folded; the chat's residents rail folds the
+   house under one chip), the bench's card as the wizard's inspector with THE
+   HOLD'S SECOND FACE (`holdRow` through `decide`, the chat's own confirm
+   door; the chat's line the record; the face reads the outcome itself after
+   a reload), the wizard's place read from the bench (`wizKeep` → `POST
+   /benches/<name>` on every redraw, W134's browser copy retired; "+ new
+   agent" is always a new bench; typing an open bench's name at NAME opens
+   it; a bench closes itself when its agent joins), a draft opened in its
+   bench (W135 whole), "+ new draft" picks its bench; the chat's words "open
+   the <name> bench" · "my benches" · "let the <name> bench go". The guide
+   0.13.0. Proofs: `test_benches.py` ×3 · `benches-v0.json` ×23 on both
+   kernels (`bench_step` · `bench_name` · two `door_name`) · `schema-v0` at 10
+   with 51 tables · `tests/benches.rs` (the doors on a lit kernel, AG-9) ·
+   `test_guide.py` · `test_workshop.py`. NAMED, NOT BUILT: THE HOUSE is told
+   by the crew's names and a worn count (a wearers' list on the shelf row
+   would make it exact); the bench's card re-reads the experiment and the
+   join on a clock (W133) but not the bench row itself — a second browser
+   sees the step on the rail at the next load.
 2. **THE TRUE GRAPH.** The Python body reads the compiled graph's shape at
    import and the kernel records it on the graph craft; the canvas draws it
    inside the hull's ring; a run from the bench lights the nodes from the

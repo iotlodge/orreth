@@ -58,6 +58,7 @@ from . import projector as _projector                                           
 from . import experiments as _xp                                                       # Phase 8 sp4: THE EXPERIMENT AND THE CUT
 from . import chips as _chips                                                          # Phase 8 sp6: THE TWO CHIPS — the key-check
 from . import operating as _op                                                         # Phase 8 sp5: THE OPERATING STATE
+from . import benches as _bench                                                        # Phase 8 sp8: THE BENCH (canon 0011)
 from .rails import PG_DSN
 from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRefused, Resident
 
@@ -94,7 +95,9 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                # Phase 8 sp5: THE OPERATING STATE — a thumb given, a body summoned · dismissed, a draft proposed
                _op.FEEDBACK_GIVEN, _op.INCLUDE_SUMMONED, _op.INCLUDE_DISMISSED, _op.DRAFT_PROPOSED,
                # Phase 8 sp6: THE TWO CHIPS — a body challenged to prove who and what it is · the kernel's verdict on its proof
-               _chips.KEYCHECK_ASKED, _chips.KEYCHECK_VERDICT]
+               _chips.KEYCHECK_ASKED, _chips.KEYCHECK_VERDICT,
+               # Phase 8 sp8: THE BENCH — an effort opened · let go (a step moved is read, not announced)
+               _bench.BENCH_OPENED, _bench.BENCH_CLOSED]
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -808,6 +811,17 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                     return self._json(200, {"services": services.listing(conn, kind=kind),
                                             "kinds": list(services.KINDS),
                                             "ground": {"cell": here["cell"], "metal": here["metal"]}})
+            if path == "/benches" or path.startswith("/benches/"):   # Phase 8 sp8: THE BENCH — one effort, one row, under the person (AG-9)
+                if not person:
+                    return self._json(401, {"error": "a bench is read by its owner's seat — knock with yours"})
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    if path == "/benches":
+                        return self._json(200, {"benches": [_bench.whole(conn, person, b) for b in _bench.listing(conn, person)],
+                                                "person": person, "steps": list(_bench.STEPS)})
+                    b = _bench.get(conn, person, path.split("/", 2)[2].split("/")[0])
+                    if b is None:
+                        return self._json(404, {"error": "no bench of that name under your seat"})
+                    return self._json(200, {"bench": _bench.whole(conn, person, b)})
             if path == "/drafts":                        # Phase 8 sp2: THE DRAFT SHELF — this person's own drafts, and no one else's (AG-9)
                 if not person:
                     return self._json(401, {"error": "a draft is read by its author's seat — knock with yours"})
@@ -1262,6 +1276,26 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 except ValueError as e:
                     return self._json(400, {"error": str(e)})
                 return self._json(201, made)
+            if path == "/benches" or path.startswith("/benches/"):   # Phase 8 sp8: THE BENCH — open · move · close, routine (L1) under the person
+                if not person:
+                    return self._json(401, {"error": "a bench is kept by its owner's seat — knock with yours"})
+                segs = path.split("/")
+                try:
+                    with psycopg.connect(dsn, autocommit=True) as conn:
+                        if path == "/benches":                        # open (or the open one of that name, handed back)
+                            b = _bench.open_bench(conn, person, str(p.get("name") or ""), words=str(p.get("words") or "") or None)
+                            return self._json(201, {"bench": _bench.whole(conn, person, b)})
+                        name = segs[2]
+                        if len(segs) > 3 and segs[3] == "close":      # let the effort go
+                            return self._json(200, _bench.close(conn, person, name, reason=str(p.get("reason") or "") or None))
+                        body_ = p.get("body")
+                        b = _bench.move(conn, person, name, step=str(p["step"]) if p.get("step") is not None else None,
+                                        body=body_ if isinstance(body_, dict) else None,
+                                        hold=str(p["hold"]) if p.get("hold") is not None else None,
+                                        words=str(p["words"]) if p.get("words") is not None else None)
+                        return self._json(200, {"bench": _bench.whole(conn, person, b)})
+                except (_bench.BenchRefused, _xp.ExperimentRefused) as e:
+                    return self._json(400, {"error": str(e)})
             if path in ("/drafts", "/drafts/discard", "/drafts/cut"):   # Phase 8 sp2: THE DRAFT SHELF — under the person; the cut is the gate
                 try:
                     with psycopg.connect(dsn, autocommit=True) as conn:
@@ -1274,7 +1308,8 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                                     return self._json(400, {"error": "a draft's body is an object (JSON) — the declaration as it stands"})
                             made = crafts.save_draft(conn, person, str(p.get("kind") or ""), str(p.get("name") or ""),
                                                      body_ if body_ is not None else {}, words=str(p.get("words") or "") or None,
-                                                     draft_id=str(p.get("draft_id") or "") or None)
+                                                     draft_id=str(p.get("draft_id") or "") or None,
+                                                     bench=str(p.get("bench") or "") or None)   # sp8: on a bench, or loose
                             return self._json(201, {"draft": made})
                         if path == "/drafts/discard":
                             gone = crafts.discard_draft(conn, person, str(p.get("draft_id") or ""))

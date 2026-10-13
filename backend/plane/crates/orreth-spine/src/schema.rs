@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 9; // 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row (Phase 8 sp6, 2026-10-09) · 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
+pub const SCHEMA_VERSION: i32 = 10; // 10: THE BENCH — spine_benches, one effort one row, the wizard's place on the ground; spine_drafts.bench (Phase 8 sp8 THE STUDIO, canon 0011, 2026-10-13) · 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row (Phase 8 sp6, 2026-10-09) · 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -458,7 +458,7 @@ pub const EXPERIMENTS_DDL: &[&str] = &[
      opened_at timestamptz NOT NULL DEFAULT now(), proposed_at timestamptz, settled_at timestamptz, settled_by text, \
      at_path text)",
     "CREATE INDEX IF NOT EXISTS spine_experiments_scope ON spine_experiments (scope, state, opened_at DESC)",
-    "CREATE TABLE IF NOT EXISTS spine_verdicts ( verdict_id text PRIMARY KEY, scope text NOT NULL, experiment_id text \
+    "CREATE TABLE IF NOT EXISTS spine_verdicts ( verdict_id text PRIMARY KEY, scope text NOT NULL, experiment_id text, \
      by_did text NOT NULL, by_name text NOT NULL, reviewer text NOT NULL, ask text, verdict text NOT NULL, \
      words text NOT NULL, sig text NOT NULL, at timestamptz NOT NULL DEFAULT now(), on_ask text)",
     "CREATE INDEX IF NOT EXISTS spine_verdicts_experiment ON spine_verdicts (experiment_id, at)",
@@ -499,8 +499,18 @@ pub const CHIPS_DDL: &[&str] = &[
     "ALTER TABLE spine_experiments ADD COLUMN IF NOT EXISTS diff text",
 ];
 
+/// `benches.ensure_schema` — Phase 8 sp8 THE BENCH (canon 0011 §2, schema 10): one effort, one
+/// row; the drafts' bench column (after `crafts`, whose table it alters).
+pub const BENCHES_DDL: &[&str] = &[
+    "CREATE TABLE IF NOT EXISTS spine_benches ( bench_id text PRIMARY KEY, scope text NOT NULL, person text NOT NULL, name text NOT NULL, \
+     words text, step text NOT NULL DEFAULT 'name', body text NOT NULL DEFAULT '{}', hold text, state text NOT NULL DEFAULT 'open', \
+     at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(), closed_at timestamptz)",
+    "CREATE INDEX IF NOT EXISTS spine_benches_person ON spine_benches (scope, person, state, updated_at DESC)",
+    "ALTER TABLE spine_drafts ADD COLUMN IF NOT EXISTS bench text",
+];
+
 /// The tags and their DDL, in the order the road ensures them.
-pub const ROAD: [(&str, &[&str]); 26] = [
+pub const ROAD: [(&str, &[&str]); 27] = [
     ("resident", RESIDENT_DDL),
     ("markers", MARKERS_DDL),
     ("proof", PROOF_DDL),
@@ -529,6 +539,7 @@ pub const ROAD: [(&str, &[&str]); 26] = [
     ("experiments", EXPERIMENTS_DDL), // Phase 8 sp4: THE EXPERIMENT AND THE CUT — the experiments, the verdicts, the body seats (schema 7)
     ("operating", OPERATING_DDL), // Phase 8 sp5: THE OPERATING STATE — feedback, the includes, the grading; the meter's ask, the intention's watches (schema 8)
     ("chips", CHIPS_DDL), // Phase 8 sp6: THE TWO CHIPS — the key-checks; the chips' evidence on the experiment's row (schema 9)
+    ("benches", BENCHES_DDL), // Phase 8 sp8: THE BENCH — one effort, one row; the drafts' bench column (schema 10)
 ];
 
 /// Every table the ask road stands on, once per ground per process.

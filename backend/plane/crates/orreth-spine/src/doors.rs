@@ -77,6 +77,7 @@ const KNOWN: &[&str] = &[
     "levels", // Phase 8 sp1: THE PATH (named here in sp2 — the sp1 doors folded to `other`)
     "drafts", // Phase 8 sp2: the draft shelf under the person
     "wear",   // Phase 8 sp2: the wear table
+    "benches", // Phase 8 sp8: THE BENCH — one effort, one place (canon 0011)
 ];
 
 /// A door's name: `METHOD /route` as the router spells it. The second
@@ -96,7 +97,7 @@ pub fn door_name(method: &str, path: &str) -> String {
     let mut name = format!("{method} /{first}");
     if let Some(s) = second.filter(|s| !s.is_empty()) {
         let folded = match first {
-            "ask" | "fact" | "session" | "digest" | "join" => ":id",
+            "ask" | "fact" | "session" | "digest" | "join" | "benches" => ":id",
             "schedules" if s != "rest" => ":runner",
             _ => s,
         };

@@ -693,15 +693,17 @@ def wear_table(conn) -> list[dict]:
 
 def _draft_row(r) -> dict:
     return {"draft_id": r[0], "person": r[1], "kind": r[2], "name": r[3], "body": json.loads(r[4]),
-            "words": r[5], "from_marker": r[6], "at": r[7].isoformat(), "updated_at": r[8].isoformat()}
+            "words": r[5], "from_marker": r[6], "at": r[7].isoformat(), "updated_at": r[8].isoformat(),
+            "bench": r[9]}                                   # Phase 8 sp8 THE BENCH: the effort it files on, or None (loose)
 
 
-_DRAFT_COLS = "draft_id, person, kind, name, body, words, from_marker, at, updated_at"
+_DRAFT_COLS = "draft_id, person, kind, name, body, words, from_marker, at, updated_at, bench"
 
 
 def drafts(conn, person: str) -> list[dict]:
     """This person's drafts, newest first — and ONLY this person's (AG-9)."""
-    ensure_schema(conn)
+    from . import benches
+    benches.ensure_schema(conn)                 # sp8: the bench column stands before the read
     cur = conn.cursor()
     cur.execute(f"SELECT {_DRAFT_COLS} FROM spine_drafts WHERE scope = %s AND person = %s ORDER BY updated_at DESC",
                 (ev.universe(), person))
@@ -709,7 +711,8 @@ def drafts(conn, person: str) -> list[dict]:
 
 
 def draft(conn, person: str, draft_id: str) -> dict | None:
-    ensure_schema(conn)
+    from . import benches
+    benches.ensure_schema(conn)                 # sp8
     cur = conn.cursor()
     cur.execute(f"SELECT {_DRAFT_COLS} FROM spine_drafts WHERE draft_id = %s AND scope = %s AND person = %s",
                 (draft_id, ev.universe(), person))
@@ -718,7 +721,7 @@ def draft(conn, person: str, draft_id: str) -> dict | None:
 
 
 def save_draft(conn, person: str, kind: str, name: str, body: dict, *, words: str | None = None,
-               draft_id: str | None = None, from_marker: str | None = None) -> dict:
+               draft_id: str | None = None, from_marker: str | None = None, bench: str | None = None) -> dict:
     """Routine (L1): the draft lands under the person — new, or the same draft updated. No
     fact, no marker: an unversioned draft is private. The kind is checked; the body is kept
     as given (a draft may be unfinished — the cut checks it whole)."""
@@ -733,7 +736,8 @@ def save_draft(conn, person: str, kind: str, name: str, body: dict, *, words: st
     body.setdefault("format", FORMATS[kind])
     if kind in ("template", "binding", "skill", "graph"):
         body.setdefault("name", n)
-    ensure_schema(conn)
+    from . import benches
+    benches.ensure_schema(conn)                 # sp8
     did = draft_id or ("draft_" + secrets.token_hex(6))
     with conn.transaction():
         cur = conn.cursor()
@@ -743,12 +747,12 @@ def save_draft(conn, person: str, kind: str, name: str, body: dict, *, words: st
             if not cur.fetchone():
                 raise CraftRefused("no such draft of yours here")
             cur.execute("UPDATE spine_drafts SET kind = %s, name = %s, body = %s, words = %s,"
-                        " updated_at = clock_timestamp() WHERE draft_id = %s",
-                        (kind, n, json.dumps(body), words, draft_id))
+                        " bench = coalesce(%s, bench), updated_at = clock_timestamp() WHERE draft_id = %s",
+                        (kind, n, json.dumps(body), words, bench, draft_id))     # sp8: a bench named moves it; unnamed keeps it
         else:
-            cur.execute("INSERT INTO spine_drafts (draft_id, scope, person, kind, name, body, words, from_marker)"
-                        " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                        (did, ev.universe(), person, kind, n, json.dumps(body), words, from_marker))
+            cur.execute("INSERT INTO spine_drafts (draft_id, scope, person, kind, name, body, words, from_marker, bench)"
+                        " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        (did, ev.universe(), person, kind, n, json.dumps(body), words, from_marker, bench))
     return draft(conn, person, did)
 
 

@@ -1,0 +1,240 @@
+{
+ "contract": "orreth.benches/1",
+ "version": 0,
+ "generated_by": "orreth_spine.benches (the Python reference) - Phase 8 sp8 THE BENCH (canon 0011)",
+ "generated_at": "2026-10-13",
+ "cases": [
+  {
+   "name": "bench_step: name is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "name"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: graph is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "graph"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: golden is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "golden"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: save is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "save"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: cut is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "cut"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: card is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "card"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: promote is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "promote"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: joined is a step of the making",
+   "kind": "bench_step",
+   "input": {
+    "step": "joined"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_step: 'NAME' is not a step",
+   "kind": "bench_step",
+   "input": {
+    "step": "NAME"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_step: 'done' is not a step",
+   "kind": "bench_step",
+   "input": {
+    "step": "done"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_step: '' is not a step",
+   "kind": "bench_step",
+   "input": {
+    "step": ""
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_step: 'experiment' is not a step",
+   "kind": "bench_step",
+   "input": {
+    "step": "experiment"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_name: 'jonathan' is an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "jonathan"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_name: 'imp2' is an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "imp2"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_name: 'bob-2' is an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "bob-2"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_name: 'a_b' is an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "a_b"
+   },
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "bench_name: 'Bob' is not an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "Bob"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_name: 'bob.v0' is not an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "bob.v0"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_name: '' is not an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": ""
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_name: '-bob' is not an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "-bob"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_name: 'xxxxxxxxxxxx' is not an agent's name (a bench is the agent - no dots, no capitals)",
+   "kind": "bench_name",
+   "input": {
+    "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+   },
+   "expect": {
+    "ok": false
+   }
+  },
+  {
+   "name": "bench_door: the bench's name folds to :id on the doors' tape",
+   "kind": "door_name",
+   "input": {
+    "method": "GET",
+    "path": "/benches/jonathan"
+   },
+   "expect": {
+    "door": "GET /benches/:id"
+   }
+  },
+  {
+   "name": "bench_door: the close verb folds with the name",
+   "kind": "door_name",
+   "input": {
+    "method": "POST",
+    "path": "/benches/jonathan/close"
+   },
+   "expect": {
+    "door": "POST /benches/:id"
+   }
+  }
+ ]
+}

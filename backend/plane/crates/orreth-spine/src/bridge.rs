@@ -997,6 +997,9 @@ fn router(app: Arc<App>) -> Router {
         .route("/drafts", get(drafts_door).post(drafts_post)) // Phase 8 sp2: THE DRAFT SHELF — the seat's own drafts; saving one is routine
         .route("/drafts/discard", post(drafts_post))
         .route("/drafts/cut", post(drafts_post)) // THE CUT — a draft onto the shelf, held at the class's level
+        .route("/benches", get(benches_door).post(benches_post)) // Phase 8 sp8 THE BENCH (canon 0011): one effort, one row — the seat's own benches
+        .route("/benches/:name", get(benches_door).post(benches_post)) // one bench whole · its step, state and hold kept (routine)
+        .route("/benches/:name/close", post(benches_post)) // let the effort go — routine, like discard and decline
         .route("/wear", get(wear_door)) // THE WEAR TABLE — which body wears which component at which version
         .route("/experiments", get(experiments_door)) // Phase 8 sp4: THE EXPERIMENT — this universe's experiments, one whole by id
         .route("/experiments/promote", post(experiments_post)) // the stamped promotion — held at L2 (an agent) · L3 (a resident)
@@ -2498,6 +2501,7 @@ async fn drafts_post(
                 let made = crate::crafts_live::save_draft(
                     &mut g, w, &person, &s_or(&p, "kind", ""), &s_or(&p, "name", ""), &body_v,
                     s_opt(&p, "words").as_deref(), s_opt(&p, "draft_id").as_deref(), None,
+                    s_opt(&p, "bench").as_deref(),   // sp8: on a bench, or loose
                 )
                 .await?;
                 Ok::<_, RoadError>((201, json!({"draft": made})))
@@ -2515,6 +2519,73 @@ async fn drafts_post(
                 Ok((202, made))
             }
         }
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(RoadError::Refused(words)) => answer(400, json!({"error": words})),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `GET /benches` · `GET /benches/:name` — Phase 8 sp8 THE BENCH (canon 0011 §2): the seat's own benches, each whole
+/// (its drafts · its experiments since it opened · its seat), the open ones first; one by name, or 404.
+async fn benches_door(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>, uri: axum::http::Uri) -> Response {
+    let person = seated.person.clone();
+    let name = uri.path().trim_start_matches("/benches").trim_start_matches('/').split('/').next().unwrap_or_default().to_string();
+    let out = async {
+        let g = ground(&app).await?;
+        let sc = scope(&app);
+        if name.is_empty() {
+            let mut out = vec![];
+            for b in crate::benches_live::listing(g.client(), sc, &person, None).await? {
+                out.push(crate::benches_live::whole(g.client(), sc, &person, &b).await?);
+            }
+            return Ok::<_, RoadError>((200, json!({"benches": out, "person": person, "steps": crate::benches::STEPS})));
+        }
+        match crate::benches_live::get(g.client(), sc, &person, &name).await? {
+            Some(b) => Ok((200, json!({"bench": crate::benches_live::whole(g.client(), sc, &person, &b).await?}))),
+            None => Ok((404, json!({"error": "no bench of that name under your seat"}))),
+        }
+    }
+    .await;
+    match out {
+        Ok((code, v)) => answer(code, v),
+        Err(e) => refuse(e),
+    }
+}
+
+/// `POST /benches {name, words?}` (201: opened, or the open one of that name handed back) ·
+/// `POST /benches/:name {step?, body?, hold?, words?}` (200: the place kept; `hold: ""` clears it) ·
+/// `POST /benches/:name/close {reason?}` (200: let go — drafts discarded, the open experiment declined, the bench closed).
+/// All routine (L1) under the seat's person, like a draft's save and discard.
+async fn benches_post(State(app): State<Arc<App>>, Extension(seated): Extension<Seated>, uri: axum::http::Uri, body: Bytes) -> Response {
+    let path = uri.path().to_string();
+    let p = body_json(&body);
+    let person = seated.person.clone();
+    let segs: Vec<&str> = path.trim_start_matches('/').split('/').collect();
+    let out = async {
+        let mut g = ground(&app).await?;
+        let w = &app.cfg.world;
+        let sc = scope(&app);
+        if segs.len() == 1 {
+            let b = crate::benches_live::open_bench(&mut g, w, &person, &s_or(&p, "name", ""), s_opt(&p, "words").as_deref()).await?;
+            return Ok::<_, RoadError>((201, json!({"bench": crate::benches_live::whole(g.client(), sc, &person, &b).await?})));
+        }
+        let name = segs[1].to_string();
+        if segs.len() > 2 && segs[2] == "close" {
+            return Ok((200, crate::benches_live::close(&mut g, w, &person, &name, s_opt(&p, "reason").as_deref()).await?));
+        }
+        let body_v = p.get("body").filter(|v| v.is_object()).cloned();
+        let b = crate::benches_live::move_bench(
+            &mut g, w, &person, &name,
+            p.get("step").and_then(Value::as_str),
+            body_v.as_ref(),
+            p.get("hold").and_then(Value::as_str),
+            p.get("words").and_then(Value::as_str),
+        )
+        .await?;
+        Ok((200, json!({"bench": crate::benches_live::whole(g.client(), sc, &person, &b).await?})))
     }
     .await;
     match out {

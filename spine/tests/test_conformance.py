@@ -33,7 +33,7 @@ from pathlib import Path
 
 import pytest
 
-from orreth_spine import (body as _body, cells, crafts, desk, dispatch, doors, envelope as ev, experiments, export, ground, harness, intent, levels, operating,
+from orreth_spine import (benches, body as _body, cells, crafts, desk, dispatch, doors, envelope as ev, experiments, export, ground, harness, intent, levels, operating,
                           levers, markers, mcp, mitl, monitor, placement, presence, profile, projector, proof, rails, resident,
                           scheduler, seat, services, stable, store, digest, tools)
 from orreth_spine.identity import Identity
@@ -309,6 +309,10 @@ def test_fixture(contract, case):
         assert experiments.prune_words(inp["name"], inp["kind"], inp["last_wearer"]) == exp["words"]
     elif kind == "worn_words":
         assert crafts.worn_words(inp["component"], inp["wearers"]) == exp["words"]
+    elif kind == "bench_step":                       # Phase 8 sp8 THE BENCH
+        assert benches.step_ok(inp["step"]) == exp["ok"]
+    elif kind == "bench_name":
+        assert benches.name_ok(inp["name"]) == exp["ok"]
     elif kind == "schema_version":
         assert ground.SCHEMA_VERSION == exp["version"]
     elif kind == "schema_tables":

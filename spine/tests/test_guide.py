@@ -34,6 +34,7 @@ COMMAND_HEADS = (
     "dismiss ", "register the source",                                           # Phase 8 sp5: THE OPERATING STATE
     "new agent", "make an agent", "open the wizard",                             # THE WIZARD (JB's lock 2026-10-12)
     "close the draft", "clear the workshop",                                     # W127: the first screen again (JB, 2026-10-12)
+    "open the ", "resume the ", "my benches", "let the ", "close the ",          # Phase 8 sp8 THE BENCH (canon 0011)
 )
 # lines the glass hears through a body or a door, not a parser — named, never silently skipped
 BODY_OR_DOOR = (

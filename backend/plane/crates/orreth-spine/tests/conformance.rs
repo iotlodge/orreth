@@ -26,7 +26,7 @@
 use orreth_spine::{
     ask, beat, body, canonical, cells, content_hash, desk, doors, envelope, export, intent,
     kernel_self, levers, mcp, memory, mitl, placement, profile, proof, rails, seat, services,
-    stable, tools, watch, levels, crafts, experiments, operating, chips};
+    stable, tools, watch, levels, crafts, experiments, operating, chips, benches};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
@@ -181,6 +181,9 @@ const PORTED_KINDS: &[&str] = &[
     // row 4, re-base sp1 — orreth.schema/1: THE MIGRATOR's contract (the version and the tables)
     "schema_version",
     "schema_tables",
+    // Phase 8 sp8: THE BENCH (benches-v0) — the steps of the making, an agent's name
+    "bench_step",
+    "bench_name",
     // row 4, re-base sp1 — orreth.bodies/1: a body joined (a life) — the roster's fact
     "joined_fact",
     // row 4, re-base sp1 — orreth.impact/1: the four doors cross (the passages, the metric in words, the
@@ -641,6 +644,9 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
                 "the hash"
             );
         }
+        // ---- orreth.benches/1 (Phase 8 sp8): THE BENCH's pure laws ----
+        "bench_step" => same!(json!(benches::step_ok(s(&inp["step"]))), exp["ok"], "ok"),
+        "bench_name" => same!(json!(benches::name_ok(s(&inp["name"]))), exp["ok"], "ok"),
         // ---- orreth.schema/1 (row 4, re-base sp1, lock 2): THE MIGRATOR's contract ----
         "schema_version" => {
             same!(

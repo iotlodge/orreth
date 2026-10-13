@@ -476,6 +476,8 @@
   #workshop>header .sub{color:var(--dim);letter-spacing:.06em;font-size:10.5px;font-weight:normal}
   .ws-h{font-size:10.5px;letter-spacing:.2em;color:var(--dim);margin:10px 0 4px} .ws-h.sub{margin:6px 0 2px;letter-spacing:.14em;opacity:.8}
   .ws-row{padding:4px 7px;border-radius:6px;cursor:pointer;color:var(--ink);display:flex;gap:8px;align-items:baseline;border-left:2px solid transparent}
+  .ws-row.sub{padding-left:24px;font-size:11.5px} .ws-row.fold{color:var(--dim);font-size:11px} .ws-h.fold{cursor:pointer} .ws-h.fold:hover{color:var(--ink)}   /* sp8 THE BENCH: a bench's drafts under it; the shelf folded by kind */
+  .wz-hold{margin:8px 0;padding:8px 10px;border-radius:7px;background:var(--well);border-left:2px solid var(--amber)} .wz-hold .confirm-row{margin-top:6px}   /* THE HOLD'S SECOND FACE (JB's lock 2026-10-13) */
   .ws-row:hover{background:var(--hover)} .ws-row.on{background:var(--well);border-left-color:var(--amber)} .ws-row.retired{opacity:.55} .ws-row.new{color:var(--amber)}
   .ws-row .kind{color:var(--dim);font-size:10.5px;letter-spacing:.1em;flex:none} .ws-row .meta{color:var(--dim);font-size:10.5px;margin-left:auto;flex:none}
   #ws-filter{width:100%;box-sizing:border-box;font:inherit;font-size:12px;color:var(--ink);background:var(--field);border:1px solid var(--seam);border-radius:8px;padding:6px 9px;outline:none}
@@ -1214,13 +1216,14 @@ document.getElementById("space").addEventListener("scroll", () => { if (tourOpen
 const NAMES = {};                 // did -> name
 let SELECTED = new Set();
 let ROSTER = [];
-var CHIPS_REST = false;                       // W136: the trial lives at rest, shown on a click
+var CHIPS_REST = false, CHIPS_HOUSE = false;   // W136: the trial lives at rest, shown on a click · sp8 (canon 0011 §3): THE HOUSE folded under one chip, the agents you made first
 function drawChips(){
   const box = document.getElementById("chips"); box.innerHTML = "";
-  let rest = 0;
+  let rest = 0, house = 0;
   for (const res of ROSTER){
     if (res.kind === "firmware" && !(res.name === "mitl" && MITL_ON)) continue;   // the includes live on
     if (!CHIPS_REST && !res.alive && /\/r:exp-/.test(res.scope || "")){ rest += 1; continue; }   // W136 (JB, 2026-10-13: "things retired still show up in chat"): an experiment's trial life at rest answers nothing — folded
+    if (!CHIPS_HOUSE && res.kind !== "agent" && !SELECTED.has(res.name) && !res.refused){ house += 1; continue; }   // sp8: the house's residents fold unless lit — an agent you made stands first
     const b = document.createElement("button");                                  // the top edge; MITL joins
     b.className = "chip" + (SELECTED.has(res.name) ? " on" : "") + (res.refused ? " refused" : "");   // the rail when summoned
     const head = res.name === "mitl" ? "mitl · the Master Mind In the Loop" : res.name + (res.refused ? "" : " · life " + res.lives);
@@ -1232,6 +1235,13 @@ function drawChips(){
            b.onclick = () => { SELECTED.has(res.name) ? SELECTED.delete(res.name)
                                                       : SELECTED.add(res.name);
                                b.classList.toggle("on"); }; }
+    box.appendChild(b);
+  }
+  if (house || CHIPS_HOUSE){
+    const b = document.createElement("button"); b.className = "chip";
+    b.innerHTML = CHIPS_HOUSE ? `fold the house<span class="nat">the kernel's own residents — the librarian, the keepers, the reviewers</span>` : `the house · ${house}<span class="nat">the kernel's own residents, folded — click to show; a lit one always stands</span>`;
+    b.title = "THE HOUSE: the residents the kernel ships with — librarian · planner · the keepers · the reviewers · echo; the agents you made stand above";
+    b.onclick = () => { CHIPS_HOUSE = !CHIPS_HOUSE; drawChips(); };
     box.appendChild(b);
   }
   if (rest || CHIPS_REST){
@@ -2615,6 +2625,18 @@ async function serviceWords(text){                 // "what services are here?" 
     await registerMcp(name, locator, String(m[4] || "").split(/[,\s]+/).filter(Boolean).map(x => x.toUpperCase()));
     return true;
   }
+  m = t.match(/^(?:open|resume)\s+(?:the\s+)?([a-z0-9][a-z0-9_-]*)\s+bench$/);                        // sp8 THE BENCH (canon 0011): the wizard where the bench stands
+  if (m){ el("msg mine", esc(text)); await wizOpenBench(m[1]); return true; }
+  if (/^(?:my\s+benches|show\s+(?:my\s+|the\s+)?benches)$/.test(t)){
+    el("msg mine", esc(text));
+    const r = await fetch("/benches").then(x=>x.json()).catch(()=>null);
+    const bs = r && r.benches || [];
+    if (!r) sysline("the benches door did not answer"); else if (!bs.length) sysline("no bench under your seat — “+ new agent” in the Workshop opens one");
+    else sysline("your benches: " + bs.map(b => `<b>${esc(b.name)}</b> · ${b.state === "open" ? "at " + esc(wizStepWords(b.step)) : "at rest"} · ${(b.drafts || []).length} draft${(b.drafts || []).length === 1 ? "" : "s"}${(b.experiments || []).some(x => ["running", "proposed"].includes(x.state)) ? " · an experiment open" : ""}`).join(" · ") + " — “open the <name> bench”");
+    return true;
+  }
+  m = t.match(/^(?:let\s+(?:the\s+)?([a-z0-9][a-z0-9_-]*)\s+bench\s+go|close\s+(?:the\s+)?([a-z0-9][a-z0-9_-]*)\s+bench)$/);
+  if (m){ el("msg mine", esc(text)); await benchLetGo(m[1] || m[2]); return true; }
   // P6.5 sp3: the Stable's own words — the mind cards in words, a body's fuel, a refill, an assignment (held at the interlock)
   m = t.match(/^(?:what|which)\s+(?:minds?|llms?|models?)\s+(?:are|is)\s+(?:here|in the stable|registered|standing|available)$|^show\s+(?:me\s+)?(?:the\s+)?(?:minds|llms|models|stable)$|^(?:what'?s|what is)\s+in the stable$/);
   if (m){
@@ -2841,9 +2863,10 @@ async function serviceWords(text){                 // "what services are here?" 
         if (WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id){ WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null; }
         loadWorkshop();
       }
-      if (r && r.discarded && WZ && WZ.step !== "joined" && WZ.name && (d.name === WZ.name || d.name === WZ.name + ".v0")){   // W130: the wizard's own draft discarded — the wizard lets the agent go with it
-        WZ = wizFresh(); wizKeep(); if (WS.open && WS.open.source === "wizard"){ WS.open = null; WS.decl = null; }
-        sysline(`the wizard let <b>${esc(d.name)}</b> go with its draft — “+ new agent” starts at NAME`);
+      if (r && r.discarded && d.bench && WZ && WZ.name === d.bench && WZ.step !== "joined"){   // W130 → sp8: a bench's draft discarded by hand — the open wizard is told; the bench stands (“let the <name> bench go” closes it)ith it
+        wizNote(`your ${esc(plainKind(d.kind))} draft <b>${esc(d.name)}</b> was discarded by hand — SAVE again from the step that makes it, or let the bench go`, "red");
+        if (WZ.step === "cut" && !WZ.held) WZ.step = "save";
+        wizDraw();
         if (workshopPull && workshopPull.classList.contains("open")) drawWorkshop();
       }
       return true;
@@ -2976,7 +2999,8 @@ function refreshPulls(){                 // P17: a change anywhere reflects in
    so the agent reads YOUR draft on YOUR ask alone (AG-9). Floor and room are not chosen here (JB's lock 2026-10-06):
    the Workshop shows WHERE a craft's wearers stand; where a next life stands is a field on sp4's promotion. ---- */
 var workshopPull = document.getElementById("workshop");   // `var`: a pull toggled at load (before this line runs) finds it undefined, never a dead zone
-const WS = {drafts: [], shelf: [], tools: [], sources: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}, retired: false, xp: null};   // W136 retired folded · W135 the open draft's experiment
+const WS = {drafts: [], shelf: [], tools: [], sources: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}, retired: false, xp: null,
+            benches: [], fold: {}};   // W136 retired folded · W135 the open draft's experiment · sp8 THE BENCH: the person's benches; the rail's folds (kind → open)
 const NODE_KINDS = ["think", "echo", "import"], WHEN_KINDS = ["otherwise", "edge", "ask", "reply"], HULL_EDGES = ["chat", "work", "event"];   // THE WIZARD (2026-10-12): import a kind the inspector offers — both kernels run it (sp5); before, the canvas called it "not a kind the hull runs"
 const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words back", import: "IMPORT · a repository's code"};
 var WZ = null;   // THE WIZARD's state — one agent in flight, kept while the human looks at other drafts and resumed from "+ new agent"
@@ -2998,12 +3022,13 @@ function toggleWorkshop(open){
 }
 let workshopTimer = null;
 async function loadWorkshop(){
-  wizRestore();                                 // W134: the wizard where the last page left it
-  const [dr, sv, md] = await Promise.all([
+  const [dr, sv, md, bn] = await Promise.all([
     fetch("/drafts").then(x=>x.json()).catch(()=>null),
     fetch("/services").then(x=>x.json()).catch(()=>null),
-    fetch("/minds").then(x=>x.json()).catch(()=>null)]);
+    fetch("/minds").then(x=>x.json()).catch(()=>null),
+    fetch("/benches").then(x=>x.json()).catch(()=>null)]);   // sp8 THE BENCH (canon 0011 §2): one effort, one row of the ground
   WS.drafts = (dr && dr.drafts) || [];
+  WS.benches = (bn && bn.benches) || [];
   const all = (sv && sv.services) || [];
   WS.shelf = all.filter(s => CRAFT_KINDS.includes(s.kind));
   WS.tools = all.filter(s => s.kind === "tool" && s.state !== "retired").map(s => s.name);
@@ -3026,39 +3051,67 @@ async function loadWorkshop(){
 }
 function plainKind(k){ return k === "golden" ? "golden set" : k; }
 function pluralKind(k){ return {template: "templates", prompt: "prompts", skill: "skills", policy: "policies", graph: "graphs", binding: "bindings", golden: "golden sets"}[k] || k + "s"; }   // W103: "policys"
-function drawWorkshopRail(){
-  const box = document.getElementById("ws-list"); if (!box) return;
+function drawWorkshopRail(){                 // sp8 THE BENCH (canon 0011 §3, JB 2026-10-13: "a zoo when there are lots"): YOUR BENCHES first, each with its drafts under it ·
+  const box = document.getElementById("ws-list"); if (!box) return;   // LOOSE DRAFTS · THE SHELF folded by kind with counts · THE HOUSE (the firmware's own crafts) folded under one row
   const f = WS.filter.trim().toLowerCase();
   const hit = (words) => !f || words.toLowerCase().includes(f);
-  let h = `<div class="ws-h">YOUR DRAFTS · under your seat alone</div>`;
-  const mine = WS.drafts.filter(d => hit(`${d.name} ${d.kind} ${d.words || ""}`));
-  if (!WS.drafts.length) h += `<div class="meta">none yet — start one below, or say “draft a prompt called greeting: …” in the chat</div>`;
-  else if (!mine.length) h += `<div class="meta">no draft matches “${esc(f)}”</div>`;
-  for (const d of mine)
-    h += `<div class="ws-row ${WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id ? "on" : ""}" data-draft="${esc(d.draft_id)}" title="${esc(d.draft_id)} · saved ${hhmm(d.updated_at)}"><span class="kind">${esc(plainKind(d.kind))}</span>${esc(d.name)}<span class="meta">${hhmm(d.updated_at)}</span></div>`;
-  const wzOn = WS.open && WS.open.source === "wizard", wzMid = WZ && WZ.step !== "name" && WZ.step !== "joined";   // THE WIZARD (JB's lock 2026-10-12): the first screen's door, beside "+ new draft"
-  h += `<div class="ws-row new ${wzOn ? "on" : ""}" data-new-agent title="THE WIZARD — a new agent in one flow: name it, shape its graph, write its golden cases, SAVE, CUT through the interlock, read the Experiment's card, PROMOTE — until the body joins. What it makes are ordinary drafts you can still edit by hand."><span class="kind">+</span>${wzMid ? `new agent · <i>resume ${esc(WZ.name)} at ${esc(wizStepWords(WZ.step))}</i>` : "new agent · the wizard"}</div>`;
-  if (wzMid) h += `<div class="ws-row new" data-new-agent-fresh title="W130: the wizard above keeps ${esc(WZ.name)}'s place until you start another — this lets it go (its drafts stay yours on the left) and begins at NAME"><span class="kind">+</span>new agent · <i>start another, let ${esc(WZ.name)} go</i></div>`;
-  h += `<div class="ws-row new" data-new title="a new draft of yours — pick its kind and name in the inspector"><span class="kind">+</span>new draft</div>`;
-  h += `<div class="ws-h">THE SHELF · the crafts a body is made of</div>`;
-  let folded = 0;                                // W136 (JB, 2026-10-13: "a bunch of retired elements cluttering up menu"): a retired craft is at rest — folded unless shown, or searched for by name
+  const onDraft = (d) => WS.open && WS.open.source === "draft" && WS.open.draft.draft_id === d.draft_id;
+  const draftRow = (d, sub) => `<div class="ws-row ${sub ? "sub" : ""} ${onDraft(d) ? "on" : ""}" data-draft="${esc(d.draft_id)}" title="${esc(d.draft_id)} · saved ${hhmm(d.updated_at)}"><span class="kind">${esc(plainKind(d.kind))}</span>${esc(d.name)}<span class="meta">${hhmm(d.updated_at)}</span></div>`;
+  const craftRow = (s) => `<div class="ws-row sub ${WS.open && WS.open.source === "shelf" && WS.open.craft.name === s.name ? "on" : ""} ${s.state === "retired" ? "retired" : ""}" data-craft="${esc(s.name)}" title="${esc(s.did)} · v${s.version} · ${esc(s.state)}">${esc(s.craft || s.name)}<span class="meta">v${s.version}${s.worn_by ? ` · worn by ${s.worn_by}` : ""}${s.state === "retired" ? " · retired" : ""}</span></div>`;
+  const wzOn = WS.open && WS.open.source === "wizard";
+  const open = WS.benches.filter(b => b.state === "open"), rest = WS.benches.filter(b => b.state !== "open");
+  let h = `<div class="ws-h">YOUR BENCHES · one effort, one place — under your seat alone</div>`;
+  if (!open.length) h += `<div class="meta">none open — “+ new agent” opens one: the wizard from a name to the body joined, its drafts under the bench</div>`;
+  for (const b of open){
+    if (!hit(`${b.name} ${b.words || ""} ${(b.drafts || []).map(d => d.name + " " + d.kind).join(" ")}`)) continue;
+    const x = (b.experiments || []).find(e => ["running", "proposed"].includes(e.state));
+    h += `<div class="ws-row ${wzOn && WZ && WZ.name === b.name ? "on" : ""}" data-bench="${esc(b.name)}" title="the ${esc(b.name)} bench · opened ${hhmm(b.at)} · click to open it where it stands"><span class="kind">bench</span>${esc(b.name)}<span class="meta">at ${esc(wizStepWords(b.step))}${x ? " · experiment " + esc(x.state) : ""}${b.seat ? " · seated" : ""}${b.hold ? " · a hold waits" : ""}</span></div>`;
+    for (const d of (b.drafts || [])) if (hit(`${d.name} ${d.kind}`) || !f) h += draftRow(d, true);
+  }
+  h += `<div class="ws-row new" data-new-agent title="THE WIZARD on a new bench — a new agent in one flow: name it, shape its graph, write its golden cases, SAVE, CUT through the interlock, read the Experiment's card, PROMOTE — until the body joins. The bench keeps its place on the ground: leave and come back, reload, change browsers."><span class="kind">+</span>new agent · a new bench, the wizard</div>`;
+  if (rest.length){
+    h += `<div class="ws-row fold" data-fold="benches" title="a bench at rest was let go, or its agent joined — its drafts are spent; what reached the shelf stands">${WS.fold.benches ? "hide the benches at rest" : `${rest.length} bench${rest.length === 1 ? "" : "es"} at rest · show`}</div>`;
+    if (WS.fold.benches) for (const b of rest) h += `<div class="ws-row sub retired ${WS.open && WS.open.source === "rest" && WS.open.bench.bench_id === b.bench_id ? "on" : ""}" data-bench="${esc(b.name)}" title="${esc(b.bench_id)} · click to read its record"><span class="kind">bench</span>${esc(b.name)}<span class="meta">${b.step === "joined" ? "its agent joined" : "let go at " + esc(wizStepWords(b.step))} · ${hhmm(b.closed_at || b.updated_at)}</span></div>`;   // W139: a bench at rest opens as its record · W140: what it reached, in words
+  }
+  const looseAll = WS.drafts.filter(d => !d.bench), loose = looseAll.filter(d => hit(`${d.name} ${d.kind} ${d.words || ""}`));
+  h += `<div class="ws-h">LOOSE DRAFTS · under your seat, on no bench</div>`;
+  if (!looseAll.length) h += `<div class="meta">none — “+ new draft” below, or say “draft a prompt called greeting: …” in the chat</div>`;
+  else if (!loose.length) h += `<div class="meta">no loose draft matches “${esc(f)}”</div>`;
+  for (const d of loose) h += draftRow(d, false);
+  h += `<div class="ws-row new" data-new title="a new draft of yours — pick its kind, its name and its bench (or loose) in the inspector"><span class="kind">+</span>new draft</div>`;
+  h += `<div class="ws-h">THE SHELF · the crafts a body is made of — folded by kind, open on a click</div>`;
+  let folded = 0;
   for (const k of CRAFT_KINDS){
-    const every = WS.shelf.filter(s => s.kind === k && hit(`${s.craft || s.name} ${s.kind} ${((s.manifest || {}).words || "")}`));
-    const rows = WS.retired || f ? every : every.filter(s => s.state !== "retired");
+    const every = WS.shelf.filter(s => s.kind === k && !houseCraft(s) && hit(`${s.craft || s.name} ${s.kind} ${((s.manifest || {}).words || "")}`));
+    const rows = WS.retired || f ? every : every.filter(s => s.state !== "retired");   // W136: a retired craft is at rest — folded unless shown, or searched for by name
     folded += every.length - rows.length;
     if (!rows.length) continue;
-    h += `<div class="ws-h sub">${esc(pluralKind(k))}</div>`;
-    for (const s of rows)
-      h += `<div class="ws-row ${WS.open && WS.open.source === "shelf" && WS.open.craft.name === s.name ? "on" : ""} ${s.state === "retired" ? "retired" : ""}" data-craft="${esc(s.name)}" title="${esc(s.did)} · v${s.version} · ${esc(s.state)}">${esc(s.craft || s.name)}<span class="meta">v${s.version}${s.worn_by ? ` · worn by ${s.worn_by}` : ""}${s.state === "retired" ? " · retired" : ""}</span></div>`;
+    const openK = !!WS.fold[k] || !!f || (WS.open && WS.open.source === "shelf" && WS.open.kind === k);   // a search opens every fold; the open craft's kind stays open
+    h += `<div class="ws-h sub fold" data-fold="${esc(k)}" title="click to ${openK ? "fold" : "open"} the ${esc(pluralKind(k))}">${openK ? "▾" : "▸"} ${esc(pluralKind(k))} · ${rows.length}</div>`;
+    if (openK) for (const s of rows) h += craftRow(s);
   }
-  if (folded || WS.retired) h += `<div class="ws-row new" data-retired title="retired crafts stay on the shelf as versions — at rest, worn by no body; restore one from its card">${WS.retired ? "hide the retired crafts" : `${folded} retired craft${folded === 1 ? "" : "s"} at rest · show`}</div>`;   // W136
+  if (folded || WS.retired) h += `<div class="ws-row fold" data-retired title="retired crafts stay on the shelf as versions — at rest, worn by no body; restore one from its card">${WS.retired ? "hide the retired crafts" : `${folded} retired craft${folded === 1 ? "" : "s"} at rest · show`}</div>`;   // W136
+  const house = WS.shelf.filter(s => houseCraft(s) && hit(`${s.craft || s.name} ${s.kind}`)).filter(s => WS.retired || f || s.state !== "retired");
+  if (house.length){
+    const openH = !!WS.fold.house || !!f;
+    h += `<div class="ws-h sub fold" data-fold="house" title="THE HOUSE: the crafts the kernel's own crew is made of — the firmware's and the residents' templates, graphs, bindings, skills, policies, prompts; an agent you made is never here">${openH ? "▾" : "▸"} THE HOUSE · ${house.length} — the crew's own crafts</div>`;
+    if (openH) for (const s of house) h += craftRow(s);
+  }
   box.innerHTML = h;
+  box.querySelectorAll("[data-bench]").forEach(r => r.onclick = () => wizOpenBench(r.dataset.bench));
+  box.querySelectorAll("[data-fold]").forEach(r => r.onclick = () => { WS.fold[r.dataset.fold] = !WS.fold[r.dataset.fold]; drawWorkshopRail(); });
   const rt = box.querySelector("[data-retired]"); if (rt) rt.onclick = () => { WS.retired = !WS.retired; drawWorkshopRail(); };
   box.querySelectorAll("[data-draft]").forEach(r => r.onclick = () => wsOpenDraft(WS.drafts.find(d => d.draft_id === r.dataset.draft)));
   box.querySelectorAll("[data-craft]").forEach(r => r.onclick = () => wsOpenCraft(WS.shelf.find(s => s.name === r.dataset.craft)));
   const nw = box.querySelector("[data-new]"); if (nw) nw.onclick = wsNewDraft;
   const na = box.querySelector("[data-new-agent]"); if (na) na.onclick = wsNewAgent;
-  const nf = box.querySelector("[data-new-agent-fresh]"); if (nf) nf.onclick = wizStartOver;   // W130
+}
+function houseCraft(s){                       // THE HOUSE (canon 0011 §3): a craft of the kernel's own crew. By the crew's names: a template or graph named for a firmware or resident body;
+  const base = String(s.craft || s.name).replace(/\.v\d+$/, "");   // every binding and policy; the kernel's own graph mind.v0; a skill or prompt some body wears when no agent bears its name.
+  const body = (typeof ROSTER !== "undefined" ? ROSTER : []).find(r => r.name === base);   // (a wearers' list on the shelf row would make this exact — owed)
+  if (body) return body.kind !== "agent";
+  if (["binding", "policy"].includes(s.kind) || base === "mind") return true;
+  return ["skill", "prompt"].includes(s.kind) && (s.worn_by || 0) > 0;
 }
 function wsCloseOpen(){                        // W127: the first screen again — the draft stays under your seat, the craft on the shelf; nothing is discarded
   if (!WS.open){ sysline("the Workshop's first screen — nothing is open; + new agent (the wizard) or + new draft on the left"); return; }
@@ -3066,7 +3119,7 @@ function wsCloseOpen(){                        // W127: the first screen again �
   const was = WS.open;
   WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null;
   drawWorkshopRail(); drawWorkshop();
-  sysline(was.source === "draft" ? `closed your ${esc(plainKind(was.kind))} draft <b>${esc(was.name)}</b> — it stays under your seat on the left; the first screen again` :
+  sysline(was.source === "rest" ? `closed the record of the <b>${esc(was.name)}</b> bench — it rests on the left` : was.source === "draft" ? `closed your ${esc(plainKind(was.kind))} draft <b>${esc(was.name)}</b> — it stays under your seat on the left; the first screen again` :
           was.source === "wizard" ? `the wizard is set aside — <b>+ new agent</b> on the left resumes it where it stood` : `the first screen again — nothing open`);
 }
 function wsOpenDraft(d){
@@ -3173,6 +3226,7 @@ function drawCanvas(){
   if (!WS.open){   // THE FIRST SCREEN (JB's lock 2026-10-12): the wizard's door first, the hand's way beside it
     box.innerHTML = `<div class="ws-empty">THE WORKSHOP · to make an agent, click <b>+ new agent</b> on the left — THE WIZARD takes you from a name to the body joined in one flow, no JSON, and what it makes are ordinary drafts you can still edit by hand · or pick a draft of yours or a craft from the shelf on the left: a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the workshop” any time, or “load the librarian template in the workshop”<br><button class="ws-btn p" data-wizard>+ new agent — the wizard</button></div>`;
     const b = box.querySelector("[data-wizard]"); if (b) b.onclick = wsNewAgent; return; }
+  if (WS.open.source === "rest"){ box.innerHTML = `<div class="ws-empty">THE BENCH AT REST · <b>${esc(WS.open.name)}</b> — its record is on the right: the step it reached, its experiments, where its agent stands. Its drafts are spent; what reached the shelf stands under THE SHELF. A new effort under the same name is a new bench — the wizard skips what already stands.</div>`; return; }   // W139
   if (WS.open.source === "new"){ box.innerHTML = `<div class="ws-empty">a new draft — name it in the inspector; a graph starts as one think node (the metered mind), a template as an agent wearing mind.v0</div>`; return; }
   if (WS.open.source === "wizard" && !WS.decl){ box.innerHTML = `<div class="ws-empty">THE WIZARD · name the agent in the inspector on the right — its graph draws itself here as you shape it, and the declaration below shows the same truth</div>`; return; }
   const gf = graphOf();
@@ -3245,14 +3299,33 @@ function defaultLine(g){
 function opt(list, cur, none){ return (none ? `<option value="">${esc(none)}</option>` : "") + list.map(v => `<option value="${esc(v)}" ${String(v) === String(cur ?? "") ? "selected" : ""}>${esc(v)}</option>`).join(""); }
 function drawInspector(){
   const box = document.getElementById("ws-insp-in"); if (!box) return;
-  if (!WS.open){ box.innerHTML = `<div class="ws-h">THE INSPECTOR</div><div class="meta">click <b>+ new agent</b> on the left for the wizard · or a node or an arrow on the canvas, or a row on the left</div>`; return; }
+  if (!WS.open){ box.innerHTML = `<div class="ws-h">THE INSPECTOR</div><div class="meta">click a <b>bench</b> on the left to open it where it stands · <b>+ new agent</b> for a new one · or a node or an arrow on the canvas, or a draft or a craft on the left</div>`; return; }
   if (WS.open.source === "wizard"){ wizInspector(box); return; }   // THE WIZARD lives in the inspector; the canvas and the declaration follow it
+  if (WS.open.source === "rest"){                                   // W139: THE BENCH AT REST — its record, and the one way on
+    const b = WS.open.bench, xs = b.experiments || [];
+    const seat = b.seat && typeof b.seat === "object" ? b.seat : null;
+    box.innerHTML = `<div class="ws-h">THE BENCH AT REST · ${esc(b.name)}</div>` +
+      `<div class="ws-kv"><span>what for</span><b>${esc(b.words || "—")}</b></div>` +
+      `<div class="ws-kv"><span>reached</span><b>${b.step === "joined" ? "JOINED — its agent lives" : esc(wizStepWords(b.step)) + " — let go there"}</b></div>` +
+      `<div class="ws-kv"><span>opened</span><b>${hhmm(b.at)}</b></div><div class="ws-kv"><span>at rest since</span><b>${hhmm(b.closed_at || b.updated_at)}</b></div>` +
+      `<div class="ws-kv"><span>its agent</span><b>${seat ? `seated — version ${esc(String(seat.version || "?"))} on ${esc(String(seat.at_path || ""))}, ${esc(String(seat.state || ""))}` : "never promoted from this bench"}</b></div>` +
+      `<div class="ws-h sub">ITS EXPERIMENTS · ${xs.length || "none"}</div>` +
+      (xs.map(x => `<div class="ws-text">${esc(x.experiment_id)} · <b>${esc(x.state)}</b>${x.leaning ? " · leaned to " + esc(x.leaning) : ""} · opened ${hhmm(x.opened_at)}${x.settled_at ? " · settled " + hhmm(x.settled_at) : ""}</div>`).join("") || `<div class="meta">no experiment opened on this bench</div>`) +
+      `<div class="meta">A bench rests when its agent joins, or when you let it go (its drafts discarded, its open experiment declined). What reached the shelf stands under THE SHELF on the left — the graph, the golden set, the agent's versions. The record stays; the effort does not reopen.</div>` +
+      `<div class="acts"><button class="ws-btn p" id="ws-rest-new">start a new ${esc(b.name)} bench</button><button class="ws-btn" id="ws-rest-close">close</button></div>` +
+      `<div class="meta">A new bench under the same name goes through the wizard again — what already stands on the shelf with the same bytes is skipped at the cut; a changed graph or golden set lands as the next version; the agent's cut opens a new experiment.</div>`;
+    box.querySelector("#ws-rest-new").onclick = () => { wsNewAgent(); WZ.name = b.name; WZ.words = b.words || ""; wizDraw(); };
+    box.querySelector("#ws-rest-close").onclick = wsCloseOpen;
+    return;
+  }
   if (WS.open.source === "new"){
-    box.innerHTML = `<div class="ws-h">A NEW DRAFT · yours alone until the cut</div><label>kind</label><select id="ws-new-kind">${opt(CRAFT_KINDS, "graph")}</select><label>name · lowercase letters, digits, - _ .</label><input id="ws-new-name" placeholder="bob.v0"><div class="acts"><button class="ws-btn p" id="ws-new-go">start the draft</button></div><div class="meta">saved under your seat at once (routine, L1); the Workshop agent can edit it on your words; “cut the &lt;name&gt; draft” puts it on the shelf (held at the interlock)</div>`;
+    const benchOpts = WS.benches.filter(b => b.state === "open").map(b => `<option value="${esc(b.name)}">the ${esc(b.name)} bench</option>`).join("");
+    box.innerHTML = `<div class="ws-h">A NEW DRAFT · yours alone until the cut</div><label>kind</label><select id="ws-new-kind">${opt(CRAFT_KINDS, "graph")}</select><label>name · lowercase letters, digits, - _ .</label><input id="ws-new-name" placeholder="bob.v0"><label>bench · the effort it files on (sp8)</label><select id="ws-new-bench"><option value="">loose — on no bench</option>${benchOpts}</select><div class="acts"><button class="ws-btn p" id="ws-new-go">start the draft</button></div><div class="meta">saved under your seat at once (routine, L1); the Workshop agent can edit it on your words; “cut the &lt;name&gt; draft” puts it on the shelf (held at the interlock)</div>`;
     box.querySelector("#ws-new-go").onclick = async () => {
       const kind = box.querySelector("#ws-new-kind").value, name = box.querySelector("#ws-new-name").value.trim().toLowerCase();
       if (!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(name)){ sysline("a draft's name is a short lowercase name: letters, digits, dashes, dots, underscores"); return; }
-      const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind, name, body: skeleton(kind, name), person: PERSON})}).then(x=>x.json()).catch(()=>null);
+      const bench = (box.querySelector("#ws-new-bench") || {}).value || undefined;
+      const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind, name, body: skeleton(kind, name), person: PERSON, bench})}).then(x=>x.json()).catch(()=>null);
       if (!r || !r.draft){ sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer"); return; }
       sysline(`started your ${esc(kind)} draft <b>${esc(name)}</b> (${esc(r.draft.draft_id)}) — under your seat alone`);
       await loadWorkshop(); wsOpenDraft(WS.drafts.find(d => d.draft_id === r.draft.draft_id));
@@ -3307,8 +3380,9 @@ function drawInspector(){
     } else h += `<div class="ws-kv"><span>taken</span><b>${esc(whenWords(e))}</b></div>`;
   } else if (!ro){
     const d = WS.open.draft;
-    const wzMine = WZ && WZ.name && WZ.step !== "name" && WZ.step !== "joined" && (d.name === WZ.name || d.name === WZ.name + ".v0");   // W135: the wizard's own draft says so, with the way back
-    if (wzMine) h += `<div class="wz-note">this draft is <b>the wizard's</b> — <b>${esc(WZ.name)}</b> stands at <b>${esc(wizStepWords(WZ.step))}</b>; the steps are in the wizard, not here <div class="acts"><button class="ws-btn p" id="ws-wz-resume">resume the wizard at ${esc(wizStepWords(WZ.step))}</button></div></div>`;
+    const bench = d.bench ? WS.benches.find(b => b.name === d.bench && b.state === "open") : null;   // W135 → sp8: a draft on a bench says so, with the way back to the bench where it stands
+    if (bench) h += `<div class="wz-note">this draft is on the <b>${esc(bench.name)}</b> bench, which stands at <b>${esc(wizStepWords(bench.step))}</b> — the steps are on the bench, not here <div class="acts"><button class="ws-btn p" id="ws-wz-resume">open the ${esc(bench.name)} bench at ${esc(wizStepWords(bench.step))}</button></div></div>`;
+    else if (d.bench) h += `<div class="meta">this draft was on the <b>${esc(d.bench)}</b> bench, now at rest</div>`;
     const xp = d.kind === "template" && WS.xp && WS.xp.name === d.name ? WS.xp.x : null;
     if (xp) h += `<div class="ws-h sub">THE EXPERIMENT · ${esc(d.name)} · ${esc(xp.state)}</div>` + (xp.state === "running" ? `<div class="meta">running in ${esc(xp.room)} — the four reviewers are judging it; the card lands here when they are done</div>` : `<div class="meta">the proposal stands — promote or decline here, or in the wizard</div>`) + `<div class="wz-card" id="ws-xp-card"></div>`;
     h += `<div class="ws-h">THE DRAFT · yours alone until the cut</div><div class="ws-kv"><span>what</span><b>${esc(plainKind(d.kind))} ${esc(d.name)}</b></div><div class="ws-kv"><span>id</span><b>${esc(d.draft_id)}</b></div><div class="ws-kv"><span>saved</span><b>${hhmm(d.updated_at)}${WS.dirty ? " · <i>unsaved changes here</i>" : ""}</b></div>` +
@@ -3318,7 +3392,7 @@ function drawInspector(){
     if (editable && g && !(g.nodes || []).length) h += `<div class="acts"><button class="ws-btn" id="ws-n-first">add the first node</button></div>`;
   }
   box.innerHTML = h;
-  if (box.querySelector("#ws-wz-resume")) box.querySelector("#ws-wz-resume").onclick = wsNewAgent;   // W135
+  if (box.querySelector("#ws-wz-resume")) box.querySelector("#ws-wz-resume").onclick = () => wizOpenBench(WS.open.draft.bench);   // W135 → sp8
   if (box.querySelector("#ws-xp-card") && WS.xp && WS.xp.x && WS.xp.x.state === "proposed") experimentCard(WS.xp.x.experiment_id, WS.xp.x, box.querySelector("#ws-xp-card"), false);
   // the wires
   const q = (id) => box.querySelector("#" + id);
@@ -3383,6 +3457,7 @@ function drawDecl(){
     head.textContent = d ? `THE WIZARD fills it · ${wizDeclWords()} · read-only here — after SAVE each is an ordinary draft on the left, yours to edit by hand` : "THE WIZARD fills it as you go — name the agent first";
     acts.innerHTML = ""; return;
   }
+  if (WS.open && WS.open.source === "rest"){ ta.value = ""; ta.readOnly = true; ta.classList.add("ro"); head.textContent = "a bench at rest keeps no draft — its versions stand on the shelf"; acts.innerHTML = ""; return; }   // W139
   const ro = !WS.open || WS.open.source !== "draft";
   ta.value = WS.decl ? JSON.stringify(WS.decl, null, 2) : ""; ta.readOnly = ro; ta.classList.toggle("ro", ro);
   head.textContent = !WS.open ? "the same truth as the canvas" : ro ? `${WS.open.source === "shelf" ? "as it stands on the shelf (read-only)" : "name the draft first"}` : `${plainKind(WS.open.kind)} ${WS.open.name} · edit here or on the canvas${WS.dirty ? " · UNSAVED" : ""}`;
@@ -3456,33 +3531,81 @@ function wizStepWords(s){ return (WZ_STEPS.find(x => x[0] === s) || [s, s])[1]; 
 function wizFresh(){ return {step: "name", name: "", words: "", shape: "echo", prompt: "", mind: "", source: "", regOpen: false, reg: {name: "", repo: "", commit: "", entry: ""},
                              cases: [], graph: null, golden: null, template: null, drafts: {}, chain: [], cut: [], held: null, heldKind: null, gate: null,
                              experiment: null, verdicts: 0, at: "", promo: null, promoted: null, note: "", noteHue: "", seat: null, standing: []}; }
-function wizStartOver(){ WZ = wizFresh(); wizKeep(); wsNewAgent(); }   // W130 (JB, 2026-10-13: "it goes right back to the previous incorrect one"): a second door that lets the mid-flight agent go
-function wsNewAgent(){                          // the door: a finished wizard starts fresh; one mid-flight resumes where it stood
+function wsNewAgent(){                          // sp8: "+ new agent" is always a NEW bench (a bench in flight is on the rail, opened by its row; W130's two doors retired)
   if (WS.open && WS.open.source === "draft" && WS.dirty && !confirmLeave()) return;   // W117's guard: a draft open AND unsaved
-  if (!WZ || WZ.step === "joined") WZ = wizFresh();
+  WZ = wizFresh();
+  WS.open = {source: "wizard", kind: "graph", name: WZ.name}; WS.sel = null; WS.selEdge = null; WS.dirty = false;
+  WS.decl = null;
+  drawWorkshopRail(); drawWorkshop();
+}
+async function wizOpenBench(name){              // sp8 THE BENCH: the wizard where the bench's row says it stands — from the rail, the chat ("open the <name> bench"), a draft's banner
+  const r = await fetch("/benches/" + encodeURIComponent(name)).then(x=>x.json()).catch(()=>null);
+  const b = r && r.bench;
+  if (!b){ sysline(`no bench named <b>${esc(name)}</b> under your seat — say “my benches”`); return; }
+  if (WS.open && WS.open.source === "draft" && WS.dirty && !confirmLeave()) return;
+  if (b.state !== "open"){                      // W139 (JB, 2026-10-13: "studio1 is still showing in benches at rest … I couldn't find a way to load it back up"): a bench at rest opens as its RECORD
+    toggleWorkshop(true);
+    WS.open = {source: "rest", bench: b, kind: "bench", name: b.name}; WS.decl = null; WS.sel = null; WS.selEdge = null; WS.dirty = false;
+    drawWorkshopRail(); drawWorkshop(); return;
+  }
+  WZ = Object.assign(wizFresh(), b.body || {}, {name: b.name, step: b.step, held: b.hold || null, bench: b.bench_id, force: false, note: "", noteHue: ""});
+  toggleWorkshop(true);
   WS.open = {source: "wizard", kind: "graph", name: WZ.name}; WS.sel = null; WS.selEdge = null; WS.dirty = false;
   WS.decl = WZ.step === "name" ? null : wizGraphDecl();
   drawWorkshopRail(); drawWorkshop();
+  if (WZ.held) wizHoldRead();                   // a hold from before: still waiting (the card's second face), or settled while the page was away
+}
+async function benchLetGo(name){                // "let the <name> bench go" · the card's button — routine like discard and decline: its drafts discarded, its open experiment declined, the bench closed
+  const r = await fetch("/benches/" + encodeURIComponent(name) + "/close", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({person: PERSON})}).then(x=>x.json()).catch(()=>null);
+  if (!r || !r.bench){ sysline(r && r.error ? esc(r.error) : "the benches door did not answer"); return false; }
+  sysline(esc(r.words));
+  if (WZ && WZ.name === name){ WZ = null; if (WS.open && WS.open.source === "wizard"){ WS.open = null; WS.decl = null; } }
+  if (workshopPull && workshopPull.classList.contains("open")){ await loadWorkshop(); drawWorkshop(); }
+  return true;
 }
 function wizLeave(){ WS.open = null; WS.decl = null; WS.sel = null; WS.selEdge = null; drawWorkshopRail(); drawWorkshop(); }   // the wizard's state stays for "+ new agent" to resume
-function wizDraw(){ wizKeep(); if (WZ && ["cut", "card", "promote"].includes(WZ.step)) wizWatch(); if (WS.open && WS.open.source === "wizard"){ WS.open.name = WZ.name; WS.decl = WZ.step === "name" ? null : wizGraphDecl(); WZ.force = true; try { drawWorkshop(); } finally { WZ.force = false; } } else drawWorkshopRail(); }
+function wizDraw(){ wizKeep(); if (WZ && ["cut", "card", "promote"].includes(WZ.step)) wizWatch(); if (WS.open && WS.open.source === "wizard"){ WS.open.name = WZ.name; WS.decl = WZ.step === "name" ? null : wizGraphDecl(); WZ.force = true; try { drawWorkshop(); } finally { WZ.force = false; } } else drawWorkshopRail(); }   // W138: the hold's face is the inspector's own to re-read
 /* ---- W133 · W134 (JB, 2026-10-13: "sticks at the experiment and doesn't seem to move beyond the test … when I reloaded the wizard was no
    longer on the agent I was working on"). W133 THE CARD READS THE GROUND: the card waited on the feed's notice alone; the feed had fallen
    (W129's wound again) and jonathan's experiment stood PROPOSED on the ground, leaning promote, four verdicts signed, while the card said
    "running". From the agent's cut to the body joined the wizard now reads the experiments door every 3 s and the crew door for the join
    (the feed's notice, if it comes first, lands once — `cardOnce`). W134 THE WIZARD'S PLACE SURVIVES A RELOAD: kept in this browser under
    the seat's person on every redraw; a hold from before the reload is let go (CUT again — what stands with the same bytes is skipped). ---- */
-var wizTimer = null, ANNOUNCED = new Set();
+var wizTimer = null, ANNOUNCED = new Set(), wizKeepTimer = null;
 function cardOnce(x){ if (!x || ANNOUNCED.has(x.experiment_id)) return; ANNOUNCED.add(x.experiment_id); experimentCard(x.experiment_id, x); }
-function wizKey(){ return "orreth.wz." + (PERSON || "seat"); }
-function wizKeep(){ try { if (WZ && WZ.name && WZ.step !== "joined"){ const v = Object.assign({}, WZ); delete v.force; localStorage.setItem(wizKey(), JSON.stringify(v)); } else localStorage.removeItem(wizKey()); } catch (e) {} }
-function wizRestore(){                           // W134: the Workshop's load finds the wizard where the last page left it
-  if (WZ) return;
-  let v = null; try { v = JSON.parse(localStorage.getItem(wizKey()) || "null"); } catch (e) {}
-  if (!v || !v.name || v.step === "joined") return;
-  WZ = Object.assign(wizFresh(), v, {held: null, heldKind: null, force: false});
-  if (WZ.step === "cut") WZ.note = "the page was reloaded — a Yes from before it is on the chat's record; CUT goes on from here, and what already stands on the shelf is skipped";
-  if (["cut", "card", "promote"].includes(WZ.step)) wizWatch();
+function wizKeep(){                              // sp8 THE BENCH: the wizard's place is the bench's ROW ON THE GROUND (W134's browser copy retired) — the step, the state, the hold; routine, debounced
+  if (!WZ || !WZ.name || !WZ.bench) return;
+  clearTimeout(wizKeepTimer);
+  wizKeepTimer = setTimeout(() => {
+    if (!WZ || !WZ.bench) return;
+    const body = Object.assign({}, WZ); for (const k of ["force", "note", "noteHue", "bench"]) delete body[k];
+    fetch("/benches/" + encodeURIComponent(WZ.name), {method: "POST", headers: {"content-type": "application/json"},
+          body: JSON.stringify({step: WZ.step, body, hold: WZ.held || "", person: PERSON})}).catch(()=>{});
+  }, 250);
+}
+async function wizHoldRead(){                    // the hold's state through its own door (W129's law): awaiting → the card's second face; settled → the wizard's next step
+  const id = WZ && WZ.held; if (!id) return;
+  const v = await askRead(id, true); if (!v || !WZ || WZ.held !== id) return;
+  if (v.status === "awaiting-confirm"){ wizHoldFace(v); return; }
+  wizOutcome(id, v);
+}
+function wizHoldFace(v){                         // THE HOLD'S SECOND FACE (JB's lock 2026-10-13, canon 0011 §3): the same hold, answered from the bench's card through the chat's own door —
+  const slot = document.getElementById("wz-hold"); if (!slot || !WZ || !WZ.held || slot.dataset.hold === WZ.held) return;   // the chat's line is the record either way
+  const id = WZ.held, hold = v.hold || {}, level = hold.level || "L2";
+  const step = level === "L3-code" || (level === "L3-master" && hold.needs_code && !hold.code_ok) ? "code" : level === "L3-master" ? "master" : "yes";
+  slot.dataset.hold = id;
+  slot.innerHTML = `<div class="meta"><b>held at the interlock</b> (${esc(level)}) — ${esc(v.reply || v.text || "")} · the same hold stands pinned in the chat; a Yes here or there is one Yes, recorded in the chat</div>`;
+  const row = holdRow(id, step, level, v.person);
+  row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => wizHoldSettle(id)));   // after the click, this face reads the outcome itself (the chat's line may not exist after a reload)
+  slot.appendChild(row);
+}
+async function wizHoldSettle(id){
+  for (let i = 0; i < 60; i++){
+    await new Promise(r => setTimeout(r, 2000));
+    if (!WZ || WZ.held !== id) return;
+    const v = await askRead(id, true);
+    if (v && v.status !== "awaiting-confirm"){ wizOutcome(id, v); return; }
+  }
 }
 function wizWatch(){ if (wizTimer) return; wizTimer = setInterval(wizTick, 3000); wizTick(); }
 async function wizTick(){
@@ -3539,7 +3662,10 @@ function wizInspector(box){
   const note = WZ.note ? `<div class="wz-note ${esc(WZ.noteHue)}">${WZ.note}</div>` : "";
   const q = (id) => box.querySelector("#" + id);
   const bind = (id, fn) => { const e = q(id); if (e) e.oninput = () => fn(e.value); };
-  const leave = `<button class="ws-btn" id="wz-leave" title="the wizard keeps its place — “+ new agent” on the left resumes it">leave the wizard</button>`;
+  const leave = `<button class="ws-btn" id="wz-leave" title="the bench keeps its place on the ground — its row on the left opens it again">leave the bench</button>` +
+                (WZ.bench ? `<button class="ws-btn" id="wz-letgo" title="routine, like discard: the bench's drafts are discarded, its open experiment declined, the bench closed; what reached the shelf stands">let the ${esc(WZ.name)} bench go</button>` : "");
+  const holdSlot = WZ.held ? `<div class="wz-hold" id="wz-hold"><div class="meta">reading the hold at the interlock…</div></div>` : "";
+  setTimeout(() => { const lg = q("wz-letgo"); if (lg) lg.onclick = () => benchLetGo(WZ.name); if (WZ && WZ.held) wizHoldRead(); }, 0);   // W138 (JB, 2026-10-13: "a momentary Yes — do it … before it left"): EVERY redraw of the inspector re-reads the hold — the feed's redraws too, not the wizard's alone
   let h = `<div class="ws-h">THE WIZARD · a new agent, from its name to the body joined</div>` + strip + note;
   if (WZ.step === "name"){
     h += `<label>its name · lowercase letters, digits, - _</label><input id="wz-name" value="${esc(WZ.name)}" placeholder="bob" autocomplete="off">` +
@@ -3554,6 +3680,10 @@ function wizInspector(box){
       const r = await fetch("/seats").then(x=>x.json()).catch(()=>null);
       const s = r && (r.seats || []).find(x => x.name === WZ.name);
       WZ.seat = s || null;
+      const ob = await fetch("/benches", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({name: WZ.name, words: WZ.words, person: PERSON})}).then(x=>x.json()).catch(()=>null);   // sp8: the bench opens here
+      if (!ob || !ob.bench){ wizNote(ob && ob.error ? esc(ob.error) : "the benches door did not answer", "red"); wizDraw(); return; }
+      if (ob.bench.step !== "name" || (ob.bench.drafts || []).length){ sysline(`a bench named <b>${esc(WZ.name)}</b> already stands open at ${esc(wizStepWords(ob.bench.step))} — opened where it stands (“let the ${esc(WZ.name)} bench go” starts over)`); wizOpenBench(WZ.name); return; }
+      WZ.bench = ob.bench.bench_id;
       wizNote(s ? `<b>${esc(WZ.name)}</b> already holds a seat here (${esc(s.template || WZ.name + ".template")}${s.version ? " v" + s.version : ""}) — this wizard makes its NEXT version: the Experiment will run two arms, the standing version and the candidate` : "", s ? "" : "");
       WZ.step = "graph"; wizDraw();
     };
@@ -3649,7 +3779,7 @@ function wizInspector(box){
       const mine = await fetch("/drafts").then(x=>x.json()).catch(()=>null);
       for (const [kind, name, body] of plan){
         const prior = mine && (mine.drafts || []).find(d => d.name === name && d.kind === kind);
-        const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind, name, body, person: PERSON, words: `made by the wizard for ${WZ.name}`, draft_id: prior ? prior.draft_id : undefined})}).then(x=>x.json()).catch(()=>null);
+        const r = await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind, name, body, person: PERSON, words: `made by the wizard for ${WZ.name}`, draft_id: prior ? prior.draft_id : undefined, bench: WZ.name})}).then(x=>x.json()).catch(()=>null);
         if (!r || !r.draft){ wizNote(`the ${esc(plainKind(kind))} draft did not save — ${r && r.error ? esc(r.error) : "the draft shelf did not answer"}`, "red"); wizDraw(); return; }
         WZ.drafts[kind] = r.draft;
       }
@@ -3667,6 +3797,7 @@ function wizInspector(box){
     h += `<div class="ws-h sub">CUT · onto the shelf, through the interlock</div>` +
          `<div class="meta">Three cuts, in order, each held at the interlock in the chat — your Yes is a click there, never Enter. The third is the agent's own: a trial life of ${esc(WZ.name)} in an experiment room, judged on its golden cases by the grader, the critic, the identity chip and the security chip, each under its own name.</div>` +
          `<div class="wz-chain">${order.map(([k, w]) => `<div class="${WZ.cut.includes(k) ? "done" : WZ.heldKind === k ? "on" : "todo"}">${WZ.cut.includes(k) ? "✓" : WZ.heldKind === k ? "▸" : "·"} ${esc(w)}${WZ.heldKind === k ? " — <b>held at the interlock: click Yes — do it in the chat</b>" : (WZ.standing || []).includes(k) ? " — already on the shelf with these exact bytes, it stands" : ""}</div>`).join("")}</div>` +
+         holdSlot +
          `<div class="acts">${WZ.held ? "" : next ? `<button class="ws-btn hold" id="wz-cut">CUT — ${esc(WZ.cut.length ? "go on with " + next[1].split(" — ")[0] : "start with the graph")} → the interlock</button>` : ""}${WZ.held ? "" : `<button class="ws-btn" id="wz-back">back${WZ.cut.length ? " — change something" : ""}</button>`}${leave}</div>`;
     box.innerHTML = h;
     if (q("wz-cut")) q("wz-cut").onclick = wizCut;
@@ -3712,6 +3843,7 @@ function wizInspector(box){
          (WZ.held ? `<div class="meta">promoting ${esc(WZ.name)} to version ${esc(String(p.version || "?"))} — its next life on ${esc(String(p.at || WZ.at || "?"))} — <b>held at the interlock: click Yes — do it in the chat</b></div>`
                   : WZ.promoted ? `<div class="meta">${esc(WZ.promoted)}</div><div class="meta">${esc(WZ.name)}'s next life is being seated from the shelf — the join lands here within a few seconds</div>`
                   : `<div class="meta">the experiment on ${esc(WZ.name)} is promoted — waiting for the body to join</div>`) +
+         holdSlot +
          `<div class="acts">${leave}</div>`;
     box.innerHTML = h; q("wz-leave").onclick = wizLeave; return;
   }
@@ -3721,7 +3853,7 @@ function wizInspector(box){
        `<div class="acts"><button class="ws-btn p" id="wz-hello">say hello to ${esc(WZ.name)}</button><button class="ws-btn" id="wz-again">make another agent</button><button class="ws-btn" id="wz-close">close the wizard</button></div>`;
   box.innerHTML = h;
   q("wz-hello").onclick = () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = `${WZ.name}, hello`; i.focus(); };
-  q("wz-again").onclick = () => { WZ = wizFresh(); wsNewAgent(); };
+  q("wz-again").onclick = () => { wsNewAgent(); };
   q("wz-close").onclick = () => { WZ = null; wizLeave(); };
 }
 function wizCut(){ WZ.chain = ["graph", "golden", "template"].filter(k => !WZ.cut.includes(k)); wizNote(""); wizCutNext(); }
@@ -3766,7 +3898,11 @@ function wizExperiment(n, x){                   // the kernel's facts on the wiz
   if (WZ.step === "card") wizDraw(); else wizKeep();
 }
 function wizVerdict(){ if (WZ && WZ.step === "card" && WZ.experiment && WZ.experiment.state === "running"){ WZ.verdicts += 1; wizDraw(); } }
-function wizJoined(name){ if (WZ && name === WZ.name && (WZ.step === "promote" || (WZ.step === "card" && WZ.experiment && WZ.experiment.state === "promoted"))){ WZ.step = "joined"; wizNote(""); wizDraw(); } }
+function wizJoined(name){ if (WZ && name === WZ.name && (WZ.step === "promote" || (WZ.step === "card" && WZ.experiment && WZ.experiment.state === "promoted"))){ WZ.step = "joined"; wizNote(""); wizDraw();
+  if (WZ.bench){ clearTimeout(wizKeepTimer); const hdr = {method: "POST", headers: {"content-type": "application/json"}};   // W140: the step JOINED lands on the row before the close (the debounced keep was losing the race)
+    fetch("/benches/" + encodeURIComponent(name), Object.assign({body: JSON.stringify({step: "joined", hold: "", person: PERSON})}, hdr))
+      .then(() => fetch("/benches/" + encodeURIComponent(name) + "/close", Object.assign({body: JSON.stringify({person: PERSON, reason: "joined"})}, hdr)))
+      .then(() => { if (WZ) WZ.bench = null; if (workshopPull && workshopPull.classList.contains("open")) loadWorkshop(); }).catch(()=>{}); } } }   // sp8: a bench closes when its agent joins (canon 0011 §2) — the row rests on the rail
 async function wizPromote(decline){
   const x = WZ.experiment; if (!x) return;
   if (decline){ serviceWords(`decline the ${WZ.name} experiment`); return; }   // the chat's own word (W118)

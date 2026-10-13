@@ -237,13 +237,20 @@ pub async fn wear_table<C: GenericClient>(c: &C, scope: &str) -> Result<Vec<Valu
 
 // ---- the draft shelf, under the person ----
 
-const DRAFT_COLS: &str = "draft_id, person, kind, name, body, words, from_marker, at, updated_at";
+const DRAFT_COLS: &str = "draft_id, person, kind, name, body, words, from_marker, at, updated_at, bench";
 
 fn draft_row(r: &tokio_postgres::Row) -> Value {
     json!({"draft_id": r.get::<_, String>(0), "person": r.get::<_, String>(1), "kind": r.get::<_, String>(2),
            "name": r.get::<_, String>(3), "body": serde_json::from_str::<Value>(&r.get::<_, String>(4)).unwrap_or(json!({})),
            "words": r.get::<_, Option<String>>(5), "from_marker": r.get::<_, Option<String>>(6),
-           "at": isoformat(r.get::<_, SystemTime>(7)), "updated_at": isoformat(r.get::<_, SystemTime>(8))})
+           "at": isoformat(r.get::<_, SystemTime>(7)), "updated_at": isoformat(r.get::<_, SystemTime>(8)),
+           "bench": r.get::<_, Option<String>>(9)})   // Phase 8 sp8 THE BENCH: the effort it files on, or null (loose)
+}
+
+/// `benches.whole`'s drafts: the person's drafts ON a bench, newest first.
+pub async fn drafts_on<C: GenericClient>(c: &C, scope: &str, person: &str, bench: &str) -> Result<Vec<Value>, RoadError> {
+    let q = format!("SELECT {DRAFT_COLS} FROM spine_drafts WHERE scope = $1 AND person = $2 AND bench = $3 ORDER BY updated_at DESC");
+    Ok(c.query(&q, &[&scope, &person, &bench]).await?.iter().map(draft_row).collect())
 }
 
 /// `crafts.drafts`: this person's drafts, newest first — and ONLY this person's (AG-9).
@@ -269,6 +276,7 @@ pub async fn save_draft(
     words: Option<&str>,
     draft_id: Option<&str>,
     from_marker: Option<&str>,
+    bench: Option<&str>,
 ) -> Result<Value, RoadError> {
     if !is_craft(kind) {
         return Err(refused(format!("a draft is of a craft kind — one of {}, not {}", CRAFT_KINDS.join(", "), crate::py::repr_str(kind))));
@@ -297,14 +305,14 @@ pub async fn save_draft(
             return Err(refused("no such draft of yours here"));
         }
         tx.execute(
-            "UPDATE spine_drafts SET kind = $1, name = $2, body = $3, words = $4, updated_at = clock_timestamp() WHERE draft_id = $5",
-            &[&kind, &n, &body_txt, &words, &d],
+            "UPDATE spine_drafts SET kind = $1, name = $2, body = $3, words = $4, bench = coalesce($6, bench), updated_at = clock_timestamp() WHERE draft_id = $5",
+            &[&kind, &n, &body_txt, &words, &d, &bench],   // sp8: a bench named moves it; unnamed keeps it
         )
         .await?;
     } else {
         tx.execute(
-            "INSERT INTO spine_drafts (draft_id, scope, person, kind, name, body, words, from_marker) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
-            &[&did, &scope, &person, &kind, &n, &body_txt, &words, &from_marker],
+            "INSERT INTO spine_drafts (draft_id, scope, person, kind, name, body, words, from_marker, bench) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+            &[&did, &scope, &person, &kind, &n, &body_txt, &words, &from_marker, &bench],
         )
         .await?;
     }

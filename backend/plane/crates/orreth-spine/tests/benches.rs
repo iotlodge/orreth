@@ -1,0 +1,162 @@
+// PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE STUDIO sp8, THE BENCH: the bench's proof on the rig · 2026-10-13
+//! THE BENCH'S PROOF (canon 0011 §2 · 0005 Phase 8 sp8), on the dev rig, by name:
+//!
+//!     cargo test -p orreth-spine --features bridge --test benches -- --nocapture
+//!
+//! One Rust kernel lit alone: a person opens a bench (201; the same name opened again is handed
+//! back, not doubled); a draft files ON the bench and a loose one beside it; the bench reads whole
+//! (its drafts under it, no experiment, no seat); its step, state and hold are kept and cleared
+//! (routine); another seat sees none of it (AG-9); letting it go discards its drafts and leaves the
+//! loose one; a closed bench is at rest and a new one opens under the same name. With no rig it
+//! prints "rails not up — skipped by name" and passes green.
+
+#![cfg(feature = "bridge")]
+
+use orreth_spine::bridge::{glass_path, light, Config};
+use orreth_spine::world::{token_hex, World};
+use orreth_spine::{proof, proof_live, rails};
+use serde_json::{json, Value};
+use std::time::Duration;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::net::TcpStream;
+
+fn port_open(port: u16) -> bool {
+    std::net::TcpStream::connect_timeout(&std::net::SocketAddr::from(([127, 0, 0, 1], port)), Duration::from_millis(400)).is_ok()
+}
+
+fn rig_up(test: &str) -> bool {
+    let up = std::env::var("SPINE_PG").is_ok() || port_open(5433);
+    if !up {
+        println!("rails not up — skipped by name: {test} (start the rig: scripts/dev.sh up)");
+    }
+    up
+}
+
+fn spine_dir() -> std::path::PathBuf {
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../../spine")
+}
+
+async fn knock(port: u16, method: &str, path: &str, body: Option<&Value>, headers: &[(&str, &str)]) -> (u16, Value) {
+    let mut s = TcpStream::connect(("127.0.0.1", port)).await.expect("the door answers");
+    let body = body.map(|b| b.to_string()).unwrap_or_default();
+    let extra: String = headers.iter().map(|(k, v)| format!("{k}: {v}\r\n")).collect();
+    let req = format!(
+        "{method} {path} HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n{extra}content-type: application/json\r\ncontent-length: {}\r\n\r\n{body}",
+        body.len()
+    );
+    s.write_all(req.as_bytes()).await.unwrap();
+    let mut raw = Vec::new();
+    let _ = tokio::time::timeout(Duration::from_secs(10), s.read_to_end(&mut raw)).await;
+    let text = String::from_utf8_lossy(&raw).to_string();
+    let status: u16 = text.split_whitespace().nth(1).and_then(|c| c.parse().ok()).unwrap_or(0);
+    let body = text.split_once("\r\n\r\n").map(|(_, b)| b.to_string()).unwrap_or_default();
+    (status, serde_json::from_str(&body).unwrap_or(Value::Null))
+}
+
+async fn sit(port: u16, person: &str, owner: Option<&str>) -> String {
+    let h: Vec<(&str, &str)> = owner.map(|w| vec![("authorization", w)]).unwrap_or_default();
+    let (s, b) = knock(port, "POST", "/enroll", Some(&json!({"person": person})), &h).await;
+    assert_eq!(s, 201, "enroll {person}: {b}");
+    let secret = b["secret"].as_str().unwrap().to_string();
+    let code = proof::totp(&secret, proof_live::now_unix()).unwrap();
+    let (s, b) = knock(port, "POST", "/enroll/confirm", Some(&json!({"person": person, "code": code})), &[]).await;
+    assert_eq!(s, 200, "confirm {person}: {b}");
+    let code = proof::totp(&secret, proof_live::now_unix()).unwrap();
+    let (s, b) = knock(port, "POST", "/seat", Some(&json!({"person": person, "code": code})), &[]).await;
+    assert_eq!(s, 201, "seat {person}: {b}");
+    format!("Bearer {}", b["wire"].as_str().unwrap())
+}
+
+#[tokio::test]
+async fn a_bench_is_one_effort_one_place_under_the_seat() {
+    if !rig_up("a_bench_is_one_effort_one_place_under_the_seat") {
+        return;
+    }
+    if port_open(4600) || port_open(4601) {
+        println!("a kernel holds :4600 or the reference :4601 — the bench proof refuses to run beside a live rig (stop it: scripts/dev.sh kernel stop · scripts/dev.sh reference stop)");
+        return;
+    }
+    let tok = token_hex(3);
+    let world = World { scope: format!("u:bench-{tok}"), ns: format!("t{tok}"), pg_dsn: rails::pg_dsn(), rabbit_url: rails::rabbit_url(), kafka: rails::kafka_bootstrap() };
+    let home = std::env::temp_dir().join(format!("orreth-benches-{tok}"));
+    std::fs::create_dir_all(home.join("agents")).unwrap();
+    std::env::set_var("ORRETH_HOME", &home);
+    std::env::set_var("SPINE_KERNEL_HOME", home.join("kernel"));
+    std::env::set_var("SPINE_SERVICES_HOME", home.join("services"));
+    std::env::set_var("SPINE_GATEWAY", "http://127.0.0.1:1");
+    std::env::set_var("SPINE_MIND_CHECK_S", "3600");
+    std::env::set_var("SPINE_TOOL_CHECK_S", "3600");
+    std::env::remove_var("SPINE_MODE");
+    let crew = home.join("crew.v0.json");
+    std::fs::write(&crew, json!({"format": "orreth-crew/1", "seats": [{"template": "templates/echo-resident.v0.json"}]}).to_string()).unwrap();
+    std::env::set_var("SPINE_CREW", &crew);
+    let lit = light(Config {
+        port: 0, world: world.clone(), glass: glass_path(), masters: String::new(), human_zone: "America/Denver".into(),
+        bodies: false, ephemeral: true, spine: spine_dir(), cell: "local".into(), peers: vec![], kernel_home: Some(home.join("kernel")),
+    })
+    .await
+    .expect("the Rust kernel lights alone");
+    let port = lit.port;
+    assert!(lit.wait_ready(Duration::from_secs(60)).await);
+    let jb_wire = sit(port, "jb", None).await;
+    let quinn_wire = sit(port, "quinn", Some(&jb_wire)).await;
+    let jb = [("authorization", jb_wire.as_str())];
+    let quinn = [("authorization", quinn_wire.as_str())];
+
+    // 1. a bench opens; the same name opened again is handed back, never doubled
+    let (s, r) = knock(port, "POST", "/benches", Some(&json!({"name": "jonathan", "words": "answers hello"})), &jb).await;
+    assert_eq!(s, 201, "{r}");
+    let b = &r["bench"];
+    assert_eq!((b["name"].as_str(), b["step"].as_str(), b["state"].as_str()), (Some("jonathan"), Some("name"), Some("open")));
+    assert!(b["drafts"].as_array().unwrap().is_empty() && b["experiments"].as_array().unwrap().is_empty() && b["seat"].is_null());
+    let bid = b["bench_id"].as_str().unwrap().to_string();
+    let (s, r) = knock(port, "POST", "/benches", Some(&json!({"name": "jonathan"})), &jb).await;
+    assert_eq!((s, r["bench"]["bench_id"].as_str()), (201, Some(bid.as_str())));
+    let (s, r) = knock(port, "POST", "/benches", Some(&json!({"name": "Bob.v0"})), &jb).await;
+    assert_eq!(s, 400, "{r}");
+
+    // 2. a draft files ON the bench; a loose one beside it; the bench reads whole
+    let (s, r) = knock(port, "POST", "/drafts", Some(&json!({"kind": "graph", "name": "jonathan.v0", "bench": "jonathan", "body": {"entry": "say", "nodes": [{"id": "say", "kind": "echo"}], "edges": []}})), &jb).await;
+    assert_eq!((s, r["draft"]["bench"].as_str()), (201, Some("jonathan")), "{r}");
+    let (s, r) = knock(port, "POST", "/drafts", Some(&json!({"kind": "prompt", "name": "greeting", "body": {"text": "hi"}})), &jb).await;
+    assert_eq!((s, r["draft"]["bench"].is_null()), (201, true), "{r}");
+    let (s, r) = knock(port, "GET", "/benches/jonathan", None, &jb).await;
+    assert_eq!(s, 200, "{r}");
+    let names: Vec<&str> = r["bench"]["drafts"].as_array().unwrap().iter().map(|d| d["name"].as_str().unwrap()).collect();
+    assert_eq!(names, vec!["jonathan.v0"]);
+
+    // 3. the place is kept and cleared (routine); a wrong step is refused in words
+    let (s, r) = knock(port, "POST", "/benches/jonathan", Some(&json!({"step": "golden", "body": {"shape": "echo", "cases": [{"ask": "hello", "expect": ["HELLO"]}]}, "hold": "ask_1"})), &jb).await;
+    assert_eq!((s, r["bench"]["step"].as_str(), r["bench"]["hold"].as_str(), r["bench"]["body"]["shape"].as_str()), (200, Some("golden"), Some("ask_1"), Some("echo")), "{r}");
+    let (s, r) = knock(port, "POST", "/benches/jonathan", Some(&json!({"hold": ""})), &jb).await;
+    assert_eq!((s, r["bench"]["hold"].is_null()), (200, true), "{r}");
+    let (s, r) = knock(port, "POST", "/benches/jonathan", Some(&json!({"step": "experiment"})), &jb).await;
+    assert_eq!(s, 400, "{r}");
+
+    // 4. another seat sees none of it (AG-9)
+    let (s, r) = knock(port, "GET", "/benches", None, &quinn).await;
+    assert_eq!((s, r["benches"].as_array().unwrap().len()), (200, 0));
+    let (s, _) = knock(port, "GET", "/benches/jonathan", None, &quinn).await;
+    assert_eq!(s, 404);
+    let (s, r) = knock(port, "GET", "/benches", None, &jb).await;
+    assert_eq!((s, r["benches"].as_array().unwrap().len(), r["steps"].as_array().unwrap().len()), (200, 1, 8));
+
+    // 5. letting it go discards its drafts and leaves the loose one; at rest, a new effort opens under the same name
+    let (s, r) = knock(port, "POST", "/benches/jonathan/close", None, &jb).await;
+    assert_eq!((s, r["discarded"].as_i64(), r["bench"]["state"].as_str()), (200, Some(1), Some("closed")), "{r}");
+    assert!(r["declined"].as_array().unwrap().is_empty() && r["words"].as_str().unwrap().contains("1 draft discarded"));
+    let (_, r) = knock(port, "GET", "/drafts", None, &jb).await;
+    let names: Vec<&str> = r["drafts"].as_array().unwrap().iter().map(|d| d["name"].as_str().unwrap()).collect();
+    assert_eq!(names, vec!["greeting"]);
+    let (s, r) = knock(port, "POST", "/benches/jonathan/close", None, &jb).await;
+    assert_eq!(s, 400, "closed is closed: {r}");
+    let (s, r) = knock(port, "POST", "/benches", Some(&json!({"name": "jonathan"})), &jb).await;
+    assert_eq!(s, 201);
+    assert_ne!(r["bench"]["bench_id"].as_str(), Some(bid.as_str()));
+    let (_, r) = knock(port, "GET", "/benches", None, &jb).await;
+    let states: Vec<&str> = r["benches"].as_array().unwrap().iter().map(|b| b["state"].as_str().unwrap()).collect();
+    assert_eq!(states, vec!["open", "closed"]);
+    println!("benches · jonathan opened once, kept its place, let go with its draft, opened again — quinn saw none of it");
+
+    lit.stop().await;
+}

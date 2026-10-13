@@ -37,8 +37,9 @@ KNOWN = frozenset((
     "parked",           # re-base sp1: the poison events held at, and the advance
     "levels",           # Phase 8 sp1: THE PATH (named here in sp2 — the sp1 doors folded to `other`)
     "drafts", "wear",   # Phase 8 sp2: the draft shelf under the person · the wear table
+    "benches",          # Phase 8 sp8: THE BENCH — one effort, one place (canon 0011)
 ))
-_ID_AFTER = frozenset(("ask", "fact", "session", "digest", "join"))
+_ID_AFTER = frozenset(("ask", "fact", "session", "digest", "join", "benches"))
 
 
 def door_name(method: str, path: str) -> str:
