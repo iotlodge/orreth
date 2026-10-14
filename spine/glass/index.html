@@ -498,6 +498,12 @@
   #ws-canvas .edge path{fill:none;stroke:var(--dim);stroke-width:1.4;cursor:pointer} #ws-canvas .edge path.hit{stroke:transparent;stroke-width:16px}
   #ws-canvas .edge.when path:not(.hit){stroke:var(--violet)} #ws-canvas .edge.on path:not(.hit){stroke:var(--amber);stroke-width:2}
   #ws-canvas .edge text{fill:var(--dim);font-size:10px;font-family:inherit;pointer-events:none} #ws-canvas .edge.when text{fill:var(--violet)} #ws-canvas .edge.on text{fill:var(--amber)}
+  /* sp9 THE TRUE GRAPH (canon 0011 §4): the compiled graph's own shape, inside the hull's ring; a run lights the hops it took */
+  #ws-canvas .true{margin:10px 14px 14px;padding:10px 12px;border:1px dashed var(--seam);border-radius:10px} #ws-canvas .true .ws-h{margin-top:0}
+  #ws-canvas .true .hull{color:var(--dim);font-size:11px;margin-bottom:6px} #ws-canvas .true .hull b{color:var(--ink)}
+  #ws-canvas .node.ghost rect{stroke-dasharray:4 3;fill:transparent} #ws-canvas .node.ghost text{fill:var(--dim)}
+  #ws-canvas .node.lit rect{stroke:var(--amber);stroke-width:2;fill:var(--amber-dim)} #ws-canvas .edge.lit path:not(.hit){stroke:var(--amber);stroke-width:2}
+  #ws-canvas .edge.when path:not(.hit){stroke-dasharray:5 4}
   #ws-canvas .a-dim{fill:var(--dim)} #ws-canvas .a-when{fill:var(--violet)} #ws-canvas .a-on{fill:var(--amber)}
   /* THE WIZARD (JB's lock 2026-10-12): the steps strip, a golden case's row, the card inline, the first screen's door */
   .wz-steps{display:flex;flex-wrap:wrap;gap:4px 6px;margin:8px 0 6px;font-size:10px;letter-spacing:.14em;color:var(--dim)}
@@ -1858,6 +1864,7 @@ function renderOutcome(id, v, line){
     b.onclick = () => { b.remove(); send(v.offer.ask, `propose it — on your word → monitor${v.offer.words ? ` · “${esc(v.offer.words)}”` : ""}`, ["monitor"]); };
     (line._into || log).appendChild(b); log.scrollTop = log.scrollHeight;
   }
+  if (v.status === "replied" && typeof litFromJourney === "function") litFromJourney(v);   // sp9 THE TRUE GRAPH: the hops light the canvas
   if (v.replied_at){                         // P7: who took it, on which
     const read = (v.journey || []).map(n => n.replace(/^[^:]+: /, ""))       // scope,
       .find(n => n.startsWith("read the session's results by"));           // whose
@@ -3000,7 +3007,7 @@ function refreshPulls(){                 // P17: a change anywhere reflects in
    the Workshop shows WHERE a craft's wearers stand; where a next life stands is a field on sp4's promotion. ---- */
 var workshopPull = document.getElementById("workshop");   // `var`: a pull toggled at load (before this line runs) finds it undefined, never a dead zone
 const WS = {drafts: [], shelf: [], tools: [], sources: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}, retired: false, xp: null,
-            benches: [], fold: {}};   // W136 retired folded · W135 the open draft's experiment · sp8 THE BENCH: the person's benches; the rail's folds (kind → open)
+            benches: [], fold: {}, lit: {}};   // W136 retired folded · W135 the open draft's experiment · sp8 THE BENCH: the person's benches; the rail's folds (kind → open) · sp9: the hops a run lit, by source
 const NODE_KINDS = ["think", "echo", "import"], WHEN_KINDS = ["otherwise", "edge", "ask", "reply"], HULL_EDGES = ["chat", "work", "event"];   // THE WIZARD (2026-10-12): import a kind the inspector offers — both kernels run it (sp5); before, the canvas called it "not a kind the hull runs"
 const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words back", import: "IMPORT · a repository's code"};
 var WZ = null;   // THE WIZARD's state — one agent in flight, kept while the human looks at other drafts and resumed from "+ new agent"
@@ -3286,8 +3293,65 @@ function drawCanvas(){
   }
   svg.onclick = () => { WS.sel = null; WS.selEdge = null; drawWorkshop(); };
   box.appendChild(svg);
+  for (const n of (g.nodes || [])) if (n && n.kind === "import" && n.source) drawTrueGraph(box, g, n);   // sp9 THE TRUE GRAPH
   const spine = defaultLine(g);
   box.insertAdjacentHTML("beforeend", `<div class="ws-legend">entry ringed cyan · a plain arrow is the default way out (“otherwise”) · a violet arrow wears a <b>when</b> (the hull's edge · the ask's words · the last reply) · the default line: ${esc(spine.join(" → ") || "—")}${L.branching.size ? ` · branches at ${esc([...L.branching].join(", "))}` : ""} · forward only (a loop refuses at the cut)</div>`);
+}
+/* ---- sp9 THE TRUE GRAPH (canon 0011 §4, JB's lock 2026-10-13): LangGraph code is the agent's graph. The body reads the compiled graph's own shape
+   when it runs an import node (`get_graph().to_json()` — the same JSON Studio draws) and records it on the source's row; the canvas draws it
+   here INSIDE THE HULL'S RING — hear → recall → route → [this graph] → the reply — and a run lights the hops the graph took (the reply's
+   journey names them: "hops: greet → shout"). Nothing the kernel does hides behind the agent's nodes (0010 §6's law). ---- */
+function drawTrueGraph(box, g, node){
+  const src = (WS.sources || []).find(s => s.name === node.source);
+  const m = (src && src.manifest) || {}, shape = src && src.shape, lit = WS.lit[node.source] || [];
+  const wrap = document.createElement("div"); wrap.className = "true";
+  const head = `<div class="ws-h">THE TRUE GRAPH · ${esc(node.source)}${m.commit ? " @ " + esc(String(m.commit).slice(0, 12)) : ""}${m.entry ? " · " + esc(String(m.entry)) : ""} — the node <b>${esc(String(node.id))}</b> runs it</div>` +
+               `<div class="hull">inside the hull's ring: hear → recall → route → <b>[ this graph ]</b> → the reply — the kernel's laws live in the hull, never in the agent's nodes</div>`;
+  if (!src){ wrap.innerHTML = head + `<div class="meta">no source named ${esc(node.source)} stands on the shelf</div>`; box.appendChild(wrap); return; }
+  if (!shape || !Array.isArray(shape.nodes) || !shape.nodes.length){
+    wrap.innerHTML = head + `<div class="meta">its shape is not read yet — the body reads the compiled graph the first time it runs this node (an experiment's trial run, or an ask); the canvas draws it then</div>`;
+    box.appendChild(wrap); return;
+  }
+  const sg = {entry: "__start__", nodes: shape.nodes, edges: (shape.edges || []).map(e => ({from: e.from, to: e.to, when: !!e.when}))};
+  const L = layoutGraph(sg), NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("width", L.width); svg.setAttribute("height", L.height); svg.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
+  const litSet = new Set(lit);
+  L.edges.forEach(e => {
+    const a = L.pos[String(e.from)], b = L.pos[String(e.to)]; if (!a || !b) return;
+    const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
+    const twins = L.edges.filter(x => String(x.from) === String(e.from) && String(x.to) === String(e.to)); const bow = (twins.indexOf(e) - (twins.length - 1) / 2) * 48;
+    const d = `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1 + bow}, ${(x1 + x2) / 2} ${y2 + bow}, ${x2} ${y2}`;
+    const ia = lit.indexOf(String(e.from)), ib = lit.indexOf(String(e.to));
+    const walked = (ia >= 0 && ib === ia + 1) || (String(e.from) === "__start__" && ib === 0) || (String(e.to) === "__end__" && ia === lit.length - 1 && lit.length);
+    const gE = document.createElementNS(NS, "g"); gE.setAttribute("class", "edge" + (e.when ? " when" : "") + (walked ? " lit" : ""));
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("marker-end", `url(#${walked ? "arrow-on" : e.when ? "arrow-when" : "arrow"})`); gE.appendChild(p);
+    const t = document.createElementNS(NS, "title"); t.textContent = `${e.from} → ${e.to}${e.when ? " · a conditional way out (the code picks it as the run goes)" : ""}`; gE.appendChild(t);
+    svg.appendChild(gE);
+  });
+  for (const n of L.nodes){
+    const id = String(n.id), p = L.pos[id]; if (!p) continue;
+    const ghost = n.kind === "start" || n.kind === "end";
+    const gN = document.createElementNS(NS, "g"); gN.setAttribute("class", "node" + (ghost ? " ghost" : "") + (litSet.has(id) ? " lit" : "")); gN.setAttribute("transform", `translate(${p.x},${p.y})`);
+    const r = document.createElementNS(NS, "rect"); r.setAttribute("width", p.w); r.setAttribute("height", p.h); r.setAttribute("rx", 10); gN.appendChild(r);
+    const t1 = document.createElementNS(NS, "text"); t1.setAttribute("x", 12); t1.setAttribute("y", 24); t1.textContent = ghost ? (n.kind === "start" ? "start" : "end") : id; gN.appendChild(t1);
+    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k");
+    t2.textContent = ghost ? "the graph's own " + n.kind : n.kind === "callable" ? "a plain callable — the words in, the words out" : litSet.has(id) ? `a node of the code · lit by the last run (hop ${lit.indexOf(id) + 1})` : "a node of the code";
+    gN.appendChild(t2);
+    const title = document.createElementNS(NS, "title"); title.textContent = `${id} · read from the compiled graph at ${m.commit ? String(m.commit).slice(0, 12) : "?"}`; gN.appendChild(title);
+    svg.appendChild(gN);
+  }
+  const defs = box.querySelector("svg defs"); if (defs) svg.insertBefore(defs.cloneNode(true), svg.firstChild);
+  wrap.innerHTML = head; wrap.appendChild(svg);
+  wrap.insertAdjacentHTML("beforeend", `<div class="meta">${lit.length ? `the last run took ${lit.length} hop${lit.length === 1 ? "" : "s"}: <b>${esc(lit.join(" → "))}</b> — lit above` : "ask the agent (in the chat, or from its bench) and the hops it takes light up here"} · read from the code, never drawn by hand; a conditional way out is dashed</div>`);
+  box.appendChild(wrap);
+}
+function litFromJourney(v){                   // sp9: a reply's journey names the hops an import node took — the open graph's true graph lights
+  let hit = false;
+  for (const n of (v && v.journey) || []){
+    const m = String(n).match(/ran the imported graph (\S+) at \S+ — entry \S+ · hops: (.+)$/);
+    if (m){ WS.lit[m[1]] = m[2].split(" → ").map(x => x.trim()).filter(Boolean); hit = true; }
+  }
+  if (hit && workshopPull && workshopPull.classList.contains("open")){ if (!WS.sources.some(s => s.shape && WS.lit[s.name])) loadWorkshop().then(drawCanvas); else drawCanvas(); }
 }
 function defaultLine(g){
   const outs = {}; for (const e of (g.edges || [])) if (e && !e.when && outs[String(e.from)] == null) outs[String(e.from)] = String(e.to);
@@ -3549,6 +3613,7 @@ async function wizOpenBench(name){              // sp8 THE BENCH: the wizard whe
     drawWorkshopRail(); drawWorkshop(); return;
   }
   WZ = Object.assign(wizFresh(), b.body || {}, {name: b.name, step: b.step, held: b.hold || null, bench: b.bench_id, force: false, note: "", noteHue: ""});
+  if (WZ.regOpen) WZ.source = "";               // W141: the register form open means no source picked
   toggleWorkshop(true);
   WS.open = {source: "wizard", kind: "graph", name: WZ.name}; WS.sel = null; WS.selEdge = null; WS.dirty = false;
   WS.decl = WZ.step === "name" ? null : wizGraphDecl();
@@ -3701,11 +3766,11 @@ function wizInspector(box){
            `<label>mind · pins a stall of the Stable (optional — else the template's own)</label><select id="wz-mind">${opt(stalls, WZ.mind, "— the template's own —")}</select>`;
     if (WZ.shape === "import"){
       const names = WS.sources.map(s => s.name);
-      h += `<label>the source · a repository on the shelf (its path or URL · the commit · the entry module:callable)</label><select id="wz-source">${opt(names, WZ.source, names.length ? "— pick one —" : "— no source on the shelf yet —")}<option value="+">+ register a source now…</option></select>`;
+      h += `<label>the source · a repository on the shelf (its path or URL · the commit · the entry module:callable)</label><select id="wz-source">${opt(names, WZ.regOpen ? "" : WZ.source, names.length ? "— pick one —" : "— no source on the shelf yet —")}<option value="+" ${WZ.regOpen ? "selected" : ""}>+ register a source now…</option></select>`;   // W141: the form open = "+" shown, no source picked
       const src = WS.sources.find(s => s.name === WZ.source); const m = src && src.manifest || null;
       if (m) h += `<div class="meta">${esc(String(m.repo || "?"))} at ${esc(String(m.commit || "?").slice(0, 12))} · entry ${esc(String(m.entry || "?"))}</div>`;
       if (WZ.regOpen || !names.length)
-        h += `<div class="ws-h sub">REGISTER A SOURCE · a local repository is a repository — no GitHub needed</div>` +
+        h += `<div class="ws-h sub">REGISTER A SOURCE · a local repository is a repository — no GitHub needed · the entry node runs the source you register here</div>` +
              `<label>its name on the shelf</label><input id="wz-r-name" value="${esc(WZ.reg.name)}" placeholder="bob-src" autocomplete="off">` +
              `<label>the repository · a path on this machine, or a URL</label><input id="wz-r-repo" value="${esc(WZ.reg.repo)}" placeholder="/Users/you/orreth-walk/bobrepo" autocomplete="off">` +
              `<label>the commit · the hash git rev-parse HEAD prints (its first 12 characters will do)</label><input id="wz-r-commit" value="${esc(WZ.reg.commit)}" placeholder="25649bb1dd16" autocomplete="off">` +
@@ -3718,20 +3783,23 @@ function wizInspector(box){
     q("wz-shape").onchange = () => { WZ.shape = q("wz-shape").value; wizDraw(); };
     if (q("wz-prompt")) q("wz-prompt").onchange = () => { WZ.prompt = q("wz-prompt").value; wizDraw(); };
     if (q("wz-mind")) q("wz-mind").onchange = () => { WZ.mind = q("wz-mind").value; wizDraw(); };
-    if (q("wz-source")) q("wz-source").onchange = () => { const v = q("wz-source").value; if (v === "+"){ WZ.regOpen = true; } else { WZ.source = v; WZ.regOpen = false; } wizDraw(); };
+    if (q("wz-source")) q("wz-source").onchange = () => { const v = q("wz-source").value; if (v === "+"){ WZ.regOpen = true; WZ.source = ""; } else { WZ.source = v; WZ.regOpen = false; } wizDraw(); };   // W141 (JB, 2026-10-13: "the field for the register doesn't stay and later it shows bob-src"): "+" kept the source picked before
     bind("wz-r-name", v => { WZ.reg.name = v.trim().toLowerCase(); }); bind("wz-r-repo", v => { WZ.reg.repo = v.trim(); }); bind("wz-r-commit", v => { WZ.reg.commit = v.trim(); }); bind("wz-r-entry", v => { WZ.reg.entry = v.trim(); });
-    if (q("wz-r-go")) q("wz-r-go").onclick = async () => {
+    const wizRegister = async () => {           // W141: ONE door for the form — its button, and "next" with the form filled (W118's law)
       const g = WZ.reg;
-      if (!/^[a-z0-9][a-z0-9._-]*$/.test(g.name)){ wizNote("a source's name is a short lowercase name — bob-src", "red"); wizDraw(); return; }
-      if (!g.repo){ wizNote("the repository is a path on this machine or a URL — /Users/you/orreth-walk/bobrepo", "red"); wizDraw(); return; }
-      if (!/^[0-9a-fA-F]{7,64}$/.test(g.commit)){ wizNote("the commit is the hash git rev-parse HEAD prints — 7 to 64 hex characters", "red"); wizDraw(); return; }
-      if (!/^[^\s;:]+:[^\s;:]+$/.test(g.entry)){ wizNote("the entry is module:callable — bobgraph:answer", "red"); wizDraw(); return; }
+      if (!/^[a-z0-9][a-z0-9._-]*$/.test(g.name)){ wizNote("a source's name is a short lowercase name — bob-src", "red"); wizDraw(); return false; }
+      if (!g.repo){ wizNote("the repository is a path on this machine or a URL — /Users/you/orreth-walk/bobrepo", "red"); wizDraw(); return false; }
+      if (!/^[0-9a-fA-F]{7,64}$/.test(g.commit)){ wizNote("the commit is the hash git rev-parse HEAD prints — 7 to 64 hex characters", "red"); wizDraw(); return false; }
+      if (!/^[^\s;:]+:[^\s;:]+$/.test(g.entry)){ wizNote("the entry is module:callable — bobgraph:answer", "red"); wizDraw(); return false; }
       const r = await registerSource(g.name, g.repo, g.commit, g.entry);
-      if (!r || r.error){ wizNote(r && r.error ? esc(r.error) : "the shelf's door did not answer", "red"); wizDraw(); return; }
+      if (!r || r.error){ wizNote(r && r.error ? esc(r.error) : "the shelf's door did not answer", "red"); wizDraw(); return false; }
       await loadWorkshop();                      // the shelf re-read: the new source stands in the picker
       WZ.source = g.name; WZ.regOpen = false; wizNote(`the source <b>${esc(g.name)}</b> stands on the shelf — the entry node runs it`, "ok"); wizDraw();
+      return true;
     };
-    q("wz-next").onclick = () => {
+    if (q("wz-r-go")) q("wz-r-go").onclick = wizRegister;
+    q("wz-next").onclick = async () => {
+      if (WZ.shape === "import" && WZ.regOpen && (WZ.reg.name || WZ.reg.repo || WZ.reg.commit || WZ.reg.entry) && !(await wizRegister())) return;   // W141: a filled form registers on "next"
       if (WZ.shape === "import" && !WZ.source){ wizNote("an import node names its source — pick a repository on the shelf, or register one here first", "red"); wizDraw(); return; }
       WZ.graph = wizGraphDecl();
       if (!WZ.cases.length) WZ.cases = wizDefaultCases();
@@ -3850,8 +3918,11 @@ function wizInspector(box){
   // joined
   h += `<div class="ws-h sub">${esc(WZ.name)} JOINED · a life begins</div>` +
        `<div class="meta">${esc(WZ.name)} stands on ${esc(String((WZ.promo && WZ.promo.at) || WZ.at || "this universe"))}, wearing ${esc(WZ.name)}.template${WZ.promo && WZ.promo.version ? " v" + esc(String(WZ.promo.version)) : ""} — say “${esc(WZ.name)}, hello” in the chat; “show the seats” names it; the crew shows it alive.</div>` +
-       `<div class="acts"><button class="ws-btn p" id="wz-hello">say hello to ${esc(WZ.name)}</button><button class="ws-btn" id="wz-again">make another agent</button><button class="ws-btn" id="wz-close">close the wizard</button></div>`;
+       `<div class="acts"><button class="ws-btn p" id="wz-hello">say hello to ${esc(WZ.name)}</button><button class="ws-btn" id="wz-again">make another agent</button><button class="ws-btn" id="wz-close">close the wizard</button></div>` +
+       `<label>ask ${esc(WZ.name)} from its bench · the reply lands in the chat; an import node's hops light THE TRUE GRAPH on the canvas (sp9)</label><div class="acts"><input id="wz-run" placeholder="hello" autocomplete="off" style="flex:1"><button class="ws-btn" id="wz-run-go">ask</button></div>`;
   box.innerHTML = h;
+  q("wz-run-go").onclick = () => { const t = q("wz-run").value.trim(); if (!t) return; toggleChat(true); send(`${WZ.name}, ${t}`, `${WZ.name}, ${t}`); q("wz-run").value = ""; };   // through the chat's own door — the ask is recorded there
+  q("wz-run").addEventListener("keydown", e => { if (e.key === "Enter"){ e.preventDefault(); q("wz-run-go").click(); } });
   q("wz-hello").onclick = () => { toggleChat(true); const i = document.getElementById("chat-in"); i.value = `${WZ.name}, hello`; i.focus(); };
   q("wz-again").onclick = () => { wsNewAgent(); };
   q("wz-close").onclick = () => { WZ = null; wizLeave(); };

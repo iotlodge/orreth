@@ -152,8 +152,33 @@ def measurement_watch(name: str) -> dict:
     return {"name": name, "metric": name, "op": WATCH_OP, "threshold": TARGET}
 
 
-def import_words(source: str, commit: str, entry: str) -> str:
-    return f"ran the imported graph {source} at {commit[:12]} — entry {entry}"
+def import_words(source: str, commit: str, entry: str, hops: list[str] | None = None) -> str:
+    """The journey's word for an import node's run; with the hops the compiled graph took, in order
+    (Phase 8 sp9 THE TRUE GRAPH — the canvas lights them)."""
+    return f"ran the imported graph {source} at {commit[:12]} — entry {entry}" + (f" · {hops_words(hops)}" if hops else "")
+
+
+def hops_words(hops: list[str]) -> str:
+    return "hops: " + " → ".join(hops)
+
+
+def shape_of(graph_json: dict) -> dict:
+    """THE TRUE GRAPH (canon 0011 §4, sp9): a compiled LangGraph's own shape — what `get_graph().to_json()`
+    gives (nodes `{id, type, data}` · edges `{source, target, conditional?}`, the same JSON Studio draws) —
+    as the kernel records it on the source: `{nodes: [{id, kind}], edges: [{from, to, when}]}`; `__start__`
+    and `__end__` wear the kinds start and end, every other node the kind node; a conditional edge wears
+    when. The order is the graph's own."""
+    nodes, edges = [], []
+    for n in (graph_json or {}).get("nodes") or []:
+        if not isinstance(n, dict) or n.get("id") is None:
+            continue
+        i = str(n["id"])
+        nodes.append({"id": i, "kind": "start" if i == "__start__" else "end" if i == "__end__" else "node"})
+    for e in (graph_json or {}).get("edges") or []:
+        if not isinstance(e, dict) or e.get("source") is None or e.get("target") is None:
+            continue
+        edges.append({"from": str(e["source"]), "to": str(e["target"]), "when": bool(e.get("conditional"))})
+    return {"nodes": nodes, "edges": edges}
 
 
 # ---- the ground ----------------------------------------------------------------------------------
@@ -551,15 +576,40 @@ def run_import(conn, node: dict, text: str) -> tuple[str, str]:
         target = mod
         for part in attr.split("."):
             target = getattr(target, part)
-        if hasattr(target, "invoke"):
+        hops: list[str] = []
+        if hasattr(target, "stream") and hasattr(target, "get_graph"):   # sp9 THE TRUE GRAPH: a compiled LangGraph streams — every hop named as it lands, the last state the reply
+            last = None
+            for mode, chunk in target.stream({"text": text}, stream_mode=["updates", "values"]):
+                if mode == "updates" and isinstance(chunk, dict):
+                    hops.extend(str(k) for k in chunk.keys())
+                elif mode == "values":
+                    last = chunk
+            out = last if last is not None else target.invoke({"text": text})
+            reply = out.get("reply") if isinstance(out, dict) else None
+            reply = str(reply if reply is not None else out)
+            try:                                                 # the shape on the source's row — read from the code, never drawn by hand (the kernel's record; the canvas draws it)
+                record_shape(conn, name, shape_of(target.get_graph().to_json()))
+            except Exception:                                    # noqa: BLE001 — the shape is a record, never the run
+                pass
+        elif hasattr(target, "invoke"):
             out = target.invoke({"text": text})
             reply = out.get("reply") if isinstance(out, dict) else None
             reply = str(reply if reply is not None else out)
         elif callable(target):
             reply = str(target(text))
+            record_shape(conn, name, {"nodes": [{"id": attr, "kind": "callable"}], "edges": []})
         else:
             reply = str(target)
     except Exception as e:                                       # noqa: BLE001
         return (f"CANNOT ACT: the imported graph {name} ({entry}) failed: {type(e).__name__}: {str(e)[:300]}",
                 f"import node {node.get('id')}: {entry} failed — {type(e).__name__}")
-    return reply, import_words(name, str(m["commit"]), entry)
+    return reply, import_words(name, str(m["commit"]), entry, hops or None)
+
+
+def record_shape(conn, source: str, shape: dict) -> None:
+    """The body writes the source's shape on its row (as it writes its wear rows); both kernels READ it."""
+    from . import services
+    services.ensure_schema(conn)
+    with conn.transaction():
+        conn.cursor().execute("UPDATE spine_services SET shape = %s WHERE name = %s AND scope = %s AND shape IS DISTINCT FROM %s",
+                              (json.dumps(shape, sort_keys=True), source, ev.universe(), json.dumps(shape, sort_keys=True)))

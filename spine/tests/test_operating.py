@@ -268,10 +268,31 @@ def test_summon_is_generalized_and_a_repo_graph_runs_inside_the_hull(pg, monkeyp
     assert out["reply"] == "the repo says: HELLO THERE"
     assert f"ran the imported graph bob-src at {commit[:12]} — entry bobgraph:answer" in out["steps"]
     assert (tmp_path / "home" / "imports" / "bob-src" / commit / "bobgraph.py").exists()
+    assert services.get(pg, "bob-src")["shape"] == {"nodes": [{"id": "answer", "kind": "callable"}], "edges": []}   # sp9: a plain callable's shape
     # a compiled graph's entry answers through invoke; a missing source and a prod universe refuse in words
     services.version(pg, "bob-src", {"repo": str(repo), "commit": commit, "entry": "bobgraph:graph"}, by=PERSON)
     out = imp._graph.invoke({"text": "again", "reply": "", "steps": [], "notes": [], "hold": None, "read": [], "edge": ""})
     assert out["reply"] == "invoked again"
+    # sp9 THE TRUE GRAPH: a real compiled LangGraph streams its hops into the journey and leaves its shape on the source's row
+    (repo / "langgraph_app.py").write_text(
+        "from typing import TypedDict\nfrom langgraph.graph import StateGraph, START, END\n"
+        "class S(TypedDict):\n    text: str\n    reply: str\n"
+        "def greet(s):\n    return {'reply': 'hi ' + s['text']}\n"
+        "def shout(s):\n    return {'reply': s['reply'].upper()}\n"
+        "def pick(s):\n    return 'shout' if len(s['text']) > 3 else END\n"
+        "g = StateGraph(S)\ng.add_node('greet', greet)\ng.add_node('shout', shout)\ng.add_edge(START, 'greet')\n"
+        "g.add_conditional_edges('greet', pick, ['shout', END])\ng.add_edge('shout', END)\ngraph = g.compile()\n")
+    subprocess.run(["git", "-C", str(repo), "-c", "user.email=t@t", "-c", "user.name=t", "add", "."], check=True)
+    subprocess.run(["git", "-C", str(repo), "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "two"], check=True)
+    commit2 = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
+    services.register(pg, "lang-src", "source", {"repo": str(repo), "commit": commit2, "entry": "langgraph_app:graph"}, by=PERSON)
+    reply, said = op.run_import(pg, {"id": "run", "source": "lang-src"}, "hello")
+    assert reply == "HI HELLO" and said == f"ran the imported graph lang-src at {commit2[:12]} — entry langgraph_app:graph · hops: greet → shout"
+    reply, said = op.run_import(pg, {"id": "run", "source": "lang-src"}, "yo")
+    assert reply == "hi yo" and said.endswith("hops: greet")
+    shape = services.get(pg, "lang-src")["shape"]
+    assert [n["id"] for n in shape["nodes"]] == ["__start__", "greet", "shout", "__end__"] and shape["nodes"][0]["kind"] == "start"
+    assert {"from": "greet", "to": "shout", "when": True} in shape["edges"] and {"from": "__start__", "to": "greet", "when": False} in shape["edges"]
     reply, said = op.run_import(pg, {"id": "run", "source": "ghost-src"}, "x")
     assert reply.startswith("CANNOT ACT: no standing source named 'ghost-src'")
     pg.cursor().execute("UPDATE spine_levels SET mode = 'prod' WHERE path = %s", (u,))

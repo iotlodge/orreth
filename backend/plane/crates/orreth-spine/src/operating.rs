@@ -162,6 +162,43 @@ pub fn import_words(source: &str, commit: &str, entry: &str) -> String {
     format!("ran the imported graph {source} at {c} — entry {entry}")
 }
 
+/// `operating.import_words(..., hops)` — Phase 8 sp9 THE TRUE GRAPH: the journey's word carries the
+/// hops the compiled graph took, in order (the canvas lights them).
+pub fn import_words_hops(source: &str, commit: &str, entry: &str, hops: &[String]) -> String {
+    if hops.is_empty() {
+        return import_words(source, commit, entry);
+    }
+    format!("{} · {}", import_words(source, commit, entry), hops_words(hops))
+}
+
+pub fn hops_words(hops: &[String]) -> String {
+    format!("hops: {}", hops.join(" → "))
+}
+
+/// `operating.shape_of` — THE TRUE GRAPH (canon 0011 §4, sp9): a compiled LangGraph's `get_graph().to_json()`
+/// (nodes `{id, type, data}` · edges `{source, target, conditional?}`) as the kernel records it on the
+/// source: `{nodes: [{id, kind}], edges: [{from, to, when}]}` — `__start__` and `__end__` wear start and
+/// end, every other node the kind node; a conditional edge wears when; the order is the graph's own.
+pub fn shape_of(graph: &Value) -> Value {
+    let mut nodes = vec![];
+    for n in graph["nodes"].as_array().cloned().unwrap_or_default() {
+        if !n.is_object() || n["id"].is_null() {
+            continue;
+        }
+        let id = python_str(&n["id"]);
+        let kind = if id == "__start__" { "start" } else if id == "__end__" { "end" } else { "node" };
+        nodes.push(json!({"id": id, "kind": kind}));
+    }
+    let mut edges = vec![];
+    for e in graph["edges"].as_array().cloned().unwrap_or_default() {
+        if !e.is_object() || e["source"].is_null() || e["target"].is_null() {
+            continue;
+        }
+        edges.push(json!({"from": python_str(&e["source"]), "to": python_str(&e["target"]), "when": e["conditional"].as_bool().unwrap_or(false)}));
+    }
+    json!({"nodes": nodes, "edges": edges})
+}
+
 /// The measurement's value as the snapshot carries it (null = unknown).
 pub fn value_of(v: Option<f64>) -> Value {
     match v {

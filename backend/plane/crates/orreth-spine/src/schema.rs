@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 10; // 10: THE BENCH — spine_benches, one effort one row, the wizard's place on the ground; spine_drafts.bench (Phase 8 sp8 THE STUDIO, canon 0011, 2026-10-13) · 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row (Phase 8 sp6, 2026-10-09) · 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
+pub const SCHEMA_VERSION: i32 = 11; // 11: THE TRUE GRAPH — spine_services.shape, a source's compiled shape read by the body that ran it (Phase 8 sp9, canon 0011 §4, 2026-10-13) · 10: THE BENCH — spine_benches, one effort one row, the wizard's place on the ground; spine_drafts.bench (Phase 8 sp8 THE STUDIO, canon 0011, 2026-10-13) · 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row (Phase 8 sp6, 2026-10-09) · 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -229,6 +229,7 @@ pub const SERVICES_DDL: &[&str] = &[
     "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = current_schema() AND table_name = \
      'spine_services' AND column_name = 'root_marker') THEN ALTER TABLE spine_services ADD COLUMN root_marker text; END IF; \
      END $$",
+    "ALTER TABLE spine_services ADD COLUMN IF NOT EXISTS shape text", // Phase 8 sp9 THE TRUE GRAPH: a source's compiled shape, written by the body that ran it (schema 11)
 ];
 
 /// `stable.ensure_schema` (P6.5 sp3): the assignments and the bodies' keys (the fuel clause).

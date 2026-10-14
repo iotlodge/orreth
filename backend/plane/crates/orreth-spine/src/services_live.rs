@@ -85,7 +85,7 @@ pub fn service_did(name: &str) -> Result<String, RoadError> {
 }
 
 const COLS: &str = "name, scope, kind, did, manifest, manifest_hash, version, placement, secrets_with, \
-                    state, by_did, since, registered_at, last_ok, last_detail, last_checked_at, marker, root_marker";
+                    state, by_did, since, registered_at, last_ok, last_detail, last_checked_at, marker, root_marker, shape";
 
 /// `services._row`: the record as the reference shapes it.
 pub fn row_of(r: &tokio_postgres::Row) -> Value {
@@ -101,6 +101,7 @@ pub fn row_of(r: &tokio_postgres::Row) -> Value {
         "registered_at": isoformat(r.get::<_, SystemTime>(12)),
         "last_health": checked.map(|at| json!({"ok": r.get::<_, Option<bool>>(13), "detail": r.get::<_, Option<String>>(14), "at": isoformat(at)})),
         "marker": r.get::<_, Option<String>>(16), "root_marker": r.get::<_, Option<String>>(17),
+        "shape": json_text(r.get::<_, Option<String>>(18).as_deref()).unwrap_or(Value::Null),   // sp9: the true graph, when a body has read it
     })
 }
 

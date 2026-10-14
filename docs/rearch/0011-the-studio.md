@@ -268,11 +268,28 @@ golden set, a Yes, joined. No walk of 2026-10-12/13 is wasted.
    would make it exact); the bench's card re-reads the experiment and the
    join on a clock (W133) but not the bench row itself — a second browser
    sees the step on the rail at the next load.
-2. **THE TRUE GRAPH.** The Python body reads the compiled graph's shape at
-   import and the kernel records it on the graph craft; the canvas draws it
-   inside the hull's ring; a run from the bench lights the nodes from the
-   reply's journey. Rust parity for the record and the door. Proofs: the
-   crafts fixture grows a `shape`; THE ONE WALK's repository drawn whole.
+2. **THE TRUE GRAPH — BUILT 2026-10-13 on JB's word ("start spoonful 9").**
+   The body reads the compiled graph's own shape when it runs an import node
+   (`get_graph().to_json()`, the same JSON Studio draws) and records it ON
+   THE SOURCE'S ROW (`spine_services.shape`, schema 11 on both kernels — the
+   source, not the graph craft: a craft is pinned by its bytes and the shape
+   is a reading, not a declaration; the body writes it as it writes its wear
+   rows, both kernels read it); the run STREAMS (`stream_mode` updates +
+   values) so every hop is named in the journey's word — "ran the imported
+   graph lang-src at … — entry … · hops: greet → shout" — and the last state
+   is the reply; a plain callable's shape is one node. The canvas draws THE
+   TRUE GRAPH under the drawn graph for every import node, inside the hull's
+   ring (hear → recall → route → [the graph] → the reply), start and end as
+   ghosts, a conditional way out dashed; a reply's journey lights the hops it
+   took (the chat's own replies too); the bench's JOINED step asks the agent
+   through the chat's door. Laws on both kernels: `shape_of` ·
+   `import_words(…, hops)`; fixture operating-v0 +4 (`op_shape` ×3 ·
+   `op_import_hops`); `test_operating.py`: a real compiled LangGraph in a
+   temp repository streams its hops and leaves its shape. The guide 0.13.1.
+   NAMED, NOT BUILT: the shape is read at the first RUN, not at the source's
+   registration (the kernel runs no code of the repository; the trial run or
+   the first ask reads it); time travel and forks; Rust reads and records,
+   the Python body alone runs the code (the body is Python by design).
 3. **ONE WORD TO WORK.** `POST /benches/<name>/work` (ONE hold at L2, JB's
    lock): cuts in order, skips what stands, opens the experiment; the
    card's lines for every refusal. The chat's word and the bench's button,

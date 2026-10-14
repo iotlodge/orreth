@@ -171,6 +171,7 @@ def ensure_schema(conn) -> None:
         cur.execute("CREATE INDEX IF NOT EXISTS spine_services_kind ON spine_services (scope, kind)")
         # a ground born before the shelf had one origin grows the column (the public ground did)
         cur.execute("ALTER TABLE spine_services ADD COLUMN IF NOT EXISTS root_marker text")
+        cur.execute("ALTER TABLE spine_services ADD COLUMN IF NOT EXISTS shape text")   # Phase 8 sp9 THE TRUE GRAPH: a source's compiled shape, written by the body that ran it (schema 11)
 
 
 def _row(r) -> dict:
@@ -180,11 +181,12 @@ def _row(r) -> dict:
             "by": r[10], "since": r[11].isoformat(), "registered_at": r[12].isoformat(),
             "last_health": ({"ok": r[13], "detail": r[14], "at": r[15].isoformat()}
                             if r[15] is not None else None),
-            "marker": r[16], "root_marker": r[17]}
+            "marker": r[16], "root_marker": r[17],
+            "shape": json.loads(r[18]) if r[18] else None}      # sp9: the true graph, when a body has read it
 
 
 _COLS = ("name, scope, kind, did, manifest, manifest_hash, version, placement, secrets_with,"
-         " state, by_did, since, registered_at, last_ok, last_detail, last_checked_at, marker, root_marker")
+         " state, by_did, since, registered_at, last_ok, last_detail, last_checked_at, marker, root_marker, shape")
 
 
 def get(conn, name: str) -> dict | None:

@@ -421,6 +421,16 @@ The measure is JB's: *"how well Orreth can do it vs YOU"*. Part A is by hand on 
 7. **Joined closes the bench.** "+ new agent" → `studio2`, echo, `hello` → `HELLO`, SAVE, CUT ×3
    (either face), the card, PROMOTE, Yes, "studio2 JOINED". PASS: the bench rests on its own
    ("2 benches at rest"); studio2 stands in the chat's residents rail ABOVE "the house".
+8. **The true graph (sp9).** "+ new agent" → `lang1`, GRAPH import, "+ register a source now": name
+   `lang-src`, the repository `/Users/jb/orreth-walk/langrepo` (a compiled LangGraph `graph` with the
+   nodes greet → shout; make it with the five lines in canon 0011's walk note, `git init`, one commit),
+   its commit, entry `langgraph_app:graph` — "register the source → the shelf" (or "next", which registers a
+   filled form itself; the picker reads "+ register a source now…" until the source stands on the shelf, W141);
+   golden case `hello` → `HI HELLO`; SAVE, CUT ×3. PASS: when
+   the card lands, the canvas shows THE TRUE GRAPH under the drawn graph — start · greet · shout · end,
+   the conditional way out dashed — read by the trial run. PROMOTE, Yes, JOINED. In the JOINED step's
+   box, ask `hello`. PASS: the reply `HI HELLO` lands in the chat; greet and shout light on the true
+   graph with "the last run took 2 hops: greet → shout". Ask `yo`. PASS: `hi yo`, one hop lit.
 
 ## Walk records
 

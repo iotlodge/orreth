@@ -265,6 +265,10 @@ def test_fixture(contract, case):
         assert operating.measurement_watch(inp["name"]) == exp["watch"]
     elif kind == "op_import_words":
         assert operating.import_words(inp["source"], inp["commit"], inp["entry"]) == exp["words"]
+    elif kind == "op_import_hops":                   # Phase 8 sp9 THE TRUE GRAPH
+        assert operating.import_words(inp["source"], inp["commit"], inp["entry"], inp["hops"]) == exp["words"]
+    elif kind == "op_shape":
+        assert operating.shape_of(inp["graph"]) == exp["shape"]
     elif kind == "op_operating":
         assert (operating.OPERATING, list(operating.MEASUREMENTS), operating.SERVES, operating.TARGET, operating.WATCH_OP, list(operating.PASS_GRADES)) == \
             (exp["intention"], exp["measurements"], exp["serves"], exp["target"], exp["op"], exp["pass"])

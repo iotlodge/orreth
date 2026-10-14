@@ -56,6 +56,6 @@ def test_drafts_file_on_a_bench_and_go_with_it(pg, monkeypatch):
 
 def test_the_schema_counts_the_bench(pg, monkeypatch):
     _world(monkeypatch); ground.ensure_all(pg)
-    assert ground.SCHEMA_VERSION == 10 and "spine_benches" in ground.TABLES and "benches" in ground.TAGS
+    assert ground.SCHEMA_VERSION >= 10 and "spine_benches" in ground.TABLES and "benches" in ground.TAGS
     cur = pg.cursor(); cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'spine_drafts' AND column_name = 'bench'")
     assert cur.fetchone(), "the drafts table wears its bench column"

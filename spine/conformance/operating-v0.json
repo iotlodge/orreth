@@ -654,6 +654,178 @@
      "C"
     ]
    }
+  },
+  {
+   "name": "op_shape: a compiled LangGraph's to_json becomes the kernel's shape - start and end wear their kinds, a conditional edge wears when (sp9 THE TRUE GRAPH)",
+   "kind": "op_shape",
+   "input": {
+    "graph": {
+     "nodes": [
+      {
+       "id": "__start__",
+       "type": "runnable",
+       "data": {
+        "id": [
+         "langgraph",
+         "_internal",
+         "_runnable",
+         "RunnableCallable"
+        ],
+        "name": "__start__"
+       }
+      },
+      {
+       "id": "greet",
+       "type": "runnable",
+       "data": {
+        "name": "greet"
+       }
+      },
+      {
+       "id": "shout",
+       "type": "runnable"
+      },
+      {
+       "id": "__end__"
+      }
+     ],
+     "edges": [
+      {
+       "source": "__start__",
+       "target": "greet"
+      },
+      {
+       "source": "greet",
+       "target": "__end__",
+       "conditional": true
+      },
+      {
+       "source": "greet",
+       "target": "shout",
+       "conditional": true
+      },
+      {
+       "source": "shout",
+       "target": "__end__"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "shape": {
+     "nodes": [
+      {
+       "id": "__start__",
+       "kind": "start"
+      },
+      {
+       "id": "greet",
+       "kind": "node"
+      },
+      {
+       "id": "shout",
+       "kind": "node"
+      },
+      {
+       "id": "__end__",
+       "kind": "end"
+      }
+     ],
+     "edges": [
+      {
+       "from": "__start__",
+       "to": "greet",
+       "when": false
+      },
+      {
+       "from": "greet",
+       "to": "__end__",
+       "when": true
+      },
+      {
+       "from": "greet",
+       "to": "shout",
+       "when": true
+      },
+      {
+       "from": "shout",
+       "to": "__end__",
+       "when": false
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "op_shape: nothing read is an empty shape, never a crash",
+   "kind": "op_shape",
+   "input": {
+    "graph": {}
+   },
+   "expect": {
+    "shape": {
+     "nodes": [],
+     "edges": []
+    }
+   }
+  },
+  {
+   "name": "op_shape: a node without an id and an edge without both ends are left out",
+   "kind": "op_shape",
+   "input": {
+    "graph": {
+     "nodes": [
+      {
+       "type": "runnable"
+      },
+      {
+       "id": "a"
+      }
+     ],
+     "edges": [
+      {
+       "source": "a"
+      },
+      {
+       "source": "a",
+       "target": "b"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "shape": {
+     "nodes": [
+      {
+       "id": "a",
+       "kind": "node"
+      }
+     ],
+     "edges": [
+      {
+       "from": "a",
+       "to": "b",
+       "when": false
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "op_import_hops: the journey's word carries the hops the compiled graph took, in order (sp9)",
+   "kind": "op_import_hops",
+   "input": {
+    "source": "lang-src",
+    "commit": "a1b2c3d4e5f6a7b8",
+    "entry": "graph:graph",
+    "hops": [
+     "greet",
+     "shout"
+    ]
+   },
+   "expect": {
+    "words": "ran the imported graph lang-src at a1b2c3d4e5f6 \u2014 entry graph:graph \u00b7 hops: greet \u2192 shout"
+   }
   }
  ]
 }

@@ -61,6 +61,8 @@ const PORTED_KINDS: &[&str] = &[
     "op_summon_words",
     "op_measurement_watch",
     "op_import_words",
+    "op_import_hops", // Phase 8 sp9 THE TRUE GRAPH
+    "op_shape",
     "op_operating",
     // Phase 8 sp4: THE EXPERIMENT AND THE CUT
     "exp_room",
@@ -888,6 +890,11 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
             s(&exp["words"]),
             "the words"
         ),
+        "op_import_hops" => {
+            let hops: Vec<String> = inp["hops"].as_array().cloned().unwrap_or_default().iter().map(|h| s(h).to_string()).collect();
+            same!(operating::import_words_hops(s(&inp["source"]), s(&inp["commit"]), s(&inp["entry"]), &hops), s(&exp["words"]), "the words");
+        }
+        "op_shape" => same!(operating::shape_of(&inp["graph"]), exp["shape"], "the shape"),
         "op_operating" => {
             same!(operating::operating(), exp["intention"], "the intention");
             same!(json!(operating::MEASUREMENTS), exp["measurements"], "the measurements");
