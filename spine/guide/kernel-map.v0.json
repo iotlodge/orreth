@@ -1,0 +1,276 @@
+{
+  "format": "orreth-map/1",
+  "version": "0.1.0",
+  "title": "HOW THE KERNEL WORKS · one ask, from your words to the record",
+  "kept_by": "the kernel — served the same on every door (GET /map); Fable turns it with every spoonful that changes a part named here, as the guide turns with the glass (canon 0011 §4c, JB's lock 2026-10-14)",
+  "words": "Orreth is a kernel: one process that holds the doors, runs every body through one ring, meters every mind, writes every act to a signed record, and watches the whole. The graph you make runs INSIDE the ring — the kernel's laws never hide in your nodes.",
+  "entry": "you",
+  "nodes": [
+    {
+      "id": "you",
+      "kind": "graph",
+      "words": "YOU AND YOUR SEAT — a person at a browser",
+      "graph": {
+        "entry": "person",
+        "nodes": [
+          {
+            "id": "person",
+            "kind": "part",
+            "words": "a person — enrolled once, seated by a signed token the kernel minted"
+          },
+          {
+            "id": "glass",
+            "kind": "part",
+            "words": "THE PANEL — the kernel drawn live in your browser; the chat is its window"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "doors",
+      "kind": "graph",
+      "words": "THE DOORS — every way in, one gate",
+      "live": "doors",
+      "graph": {
+        "entry": "gate",
+        "nodes": [
+          {
+            "id": "gate",
+            "kind": "part",
+            "words": "THE GATE — the browser origin closed, a knock ceiling, your seat's grants read at every door; the unseated wear one face"
+          },
+          {
+            "id": "ask",
+            "kind": "part",
+            "words": "the ask door — your words become a signed fact under your name"
+          },
+          {
+            "id": "feed",
+            "kind": "part",
+            "words": "THE FEED — every fact as it lands, one stream",
+            "live": "topics"
+          },
+          {
+            "id": "shelf-door",
+            "kind": "part",
+            "words": "the shelf's doors — crafts and their versions, the benches, the hops a run took"
+          },
+          {
+            "id": "guide",
+            "kind": "part",
+            "words": "the guide and this map — the same words on every kernel"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "hull",
+      "kind": "graph",
+      "words": "THE HULL — the one ring every body runs, the crew's residents and the agents you make alike",
+      "graph": {
+        "entry": "hear",
+        "nodes": [
+          {
+            "id": "hear",
+            "kind": "part",
+            "words": "hear — the ask read whole, the session it belongs to found"
+          },
+          {
+            "id": "recall",
+            "kind": "part",
+            "words": "recall — what the body remembers of you, the canon it wears, the clock and the world"
+          },
+          {
+            "id": "route",
+            "kind": "part",
+            "words": "route — the way picked: chat · work · event"
+          },
+          {
+            "id": "work",
+            "kind": "part",
+            "words": "work — the template's graph: YOUR nodes; an import node runs a repository's code, every hop recorded"
+          },
+          {
+            "id": "reply",
+            "kind": "part",
+            "words": "the reply — signed by the body, whole, with its journey in plain words"
+          }
+        ],
+        "edges": [
+          {
+            "from": "hear",
+            "to": "recall"
+          },
+          {
+            "from": "recall",
+            "to": "route"
+          },
+          {
+            "from": "route",
+            "to": "work",
+            "words": "chat · work · event"
+          },
+          {
+            "from": "work",
+            "to": "reply"
+          }
+        ]
+      }
+    },
+    {
+      "id": "minds",
+      "kind": "graph",
+      "words": "THE MINDS — metered, never inside the kernel",
+      "graph": {
+        "entry": "gateway",
+        "nodes": [
+          {
+            "id": "gateway",
+            "kind": "part",
+            "words": "THE GATEWAY — one door to every mind; the meter counts every call, every token, every cent, for every body"
+          },
+          {
+            "id": "stable",
+            "kind": "part",
+            "words": "THE STABLE — the stalls: which model answers for which body, at what price"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "house",
+      "kind": "graph",
+      "words": "THE HOUSE — the kernel's own crew",
+      "live": "residents",
+      "graph": {
+        "entry": "desk",
+        "nodes": [
+          {
+            "id": "desk",
+            "kind": "part",
+            "words": "THE DESK — joins, leases, the standing key-check: who a body says it is, proven on a cadence"
+          },
+          {
+            "id": "crew",
+            "kind": "part",
+            "words": "the residents — librarian · planner · echo · grader · critic · the identity and security chips; each a self that outlives its process"
+          },
+          {
+            "id": "workshop",
+            "kind": "part",
+            "words": "THE WORKSHOP — where a craft is authored: the bench, the cut, the experiment, the promotion"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "ground",
+      "kind": "graph",
+      "words": "THE GROUND — one Postgres, every act a row",
+      "live": "tables",
+      "graph": {
+        "entry": "asks",
+        "nodes": [
+          {
+            "id": "asks",
+            "kind": "part",
+            "words": "asks and replies — every one, with its journey"
+          },
+          {
+            "id": "outbox",
+            "kind": "part",
+            "words": "THE OUTBOX — every fact signed and ordered; the feed reads it, nothing is invented"
+          },
+          {
+            "id": "shelf",
+            "kind": "part",
+            "words": "THE SHELF — crafts by kind and version, addressed never minted; the wear table; the benches"
+          },
+          {
+            "id": "hops",
+            "kind": "part",
+            "words": "the hops — every step a compiled graph took: the node, the time, the hashes of what went in and out"
+          }
+        ],
+        "edges": []
+      }
+    },
+    {
+      "id": "watches",
+      "kind": "graph",
+      "words": "THE WATCHES — the kernel keeps itself",
+      "graph": {
+        "entry": "beats",
+        "nodes": [
+          {
+            "id": "beats",
+            "kind": "part",
+            "words": "the keeper's beats — heartbeat · key-check · grade · prune · retention, each on a cadence"
+          },
+          {
+            "id": "measures",
+            "kind": "part",
+            "words": "the five measurements — trust · recall · efficiency · experience · cost; unknown until measured, never a silent 1.0"
+          },
+          {
+            "id": "intentions",
+            "kind": "part",
+            "words": "the intentions — Resiliency and the Operating State; a red watch becomes an objective for the critic"
+          }
+        ],
+        "edges": []
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "you:glass",
+      "to": "doors:ask",
+      "words": "1. you ask"
+    },
+    {
+      "from": "doors:ask",
+      "to": "hull:hear",
+      "words": "2. a signed fact reaches the body"
+    },
+    {
+      "from": "hull:work",
+      "to": "minds:gateway",
+      "words": "3. a mind, on the meter"
+    },
+    {
+      "from": "hull:reply",
+      "to": "ground:asks",
+      "words": "4. recorded"
+    },
+    {
+      "from": "ground:outbox",
+      "to": "doors:feed",
+      "words": "5. the fact lands on the feed"
+    },
+    {
+      "from": "doors:feed",
+      "to": "you:glass",
+      "words": "6. the panel lights"
+    },
+    {
+      "from": "watches:beats",
+      "to": "ground:outbox",
+      "words": "7. the watches read the record"
+    },
+    {
+      "from": "house:desk",
+      "to": "hull:hear",
+      "words": "a body serves under a lease the desk minted"
+    },
+    {
+      "from": "house:crew",
+      "to": "hull:hear",
+      "words": "each resident is a body — it runs the ring too"
+    }
+  ]
+}

@@ -358,6 +358,17 @@
    "expect": {
     "door": "POST /parked/advance"
    }
+  },
+  {
+   "name": "door_name: the kernel's map is its route (THE STUDIO sp9c, canon 0011 section 4c)",
+   "kind": "door_name",
+   "input": {
+    "method": "get",
+    "path": "/map?x=1"
+   },
+   "expect": {
+    "door": "GET /map"
+   }
   }
  ]
 }

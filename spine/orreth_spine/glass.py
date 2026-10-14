@@ -65,6 +65,23 @@ from .resident import ASK_RECEIVED, CONFIRM_NEEDED, JOURNEY, REPLY, PlacementRef
 GLASS_DIR = Path(__file__).resolve().parents[1] / "glass"
 SESSION_OPENED = "orreth.session.opened.v1"     # W51: a roll is a fact — every door's sessions list follows
 GUIDE = Path(__file__).resolve().parents[1] / "guide" / "guide.v0.json"   # THE GUIDE, kept by the kernel
+MAP = Path(__file__).resolve().parents[1] / "guide" / "kernel-map.v0.json"   # HOW THE KERNEL WORKS (canon 0011 §4c): the kernel's own map, a declaration both kernels serve
+
+
+def map_view() -> dict:
+    """HOW THE KERNEL WORKS (canon 0011 §4c, JB 2026-10-14: "Orreth as a kernel needs one of these
+    that we can manage and adjust as kernel does"): the kernel's map is a DECLARATION kept beside
+    the guide and served the same on every door, in the one graph model (a node may contain a
+    graph; a top-level edge names a node by its path, region:part). The kernel adds its LIVE
+    numbers — which kernel, its version and schema, how many doors it answers, how many topics
+    the feed carries, how many tables the ground holds — so the drawing is lit by the kernel it
+    is drawn on, never a static picture. Law for law with the Rust kernel's `map_door`."""
+    from . import doors as _doors, ground as _ground
+    m = json.loads(MAP.read_text("utf-8"))
+    from .bridgefeed import _VERSION                 # the reference's own version, as its health door says it
+    m["live"] = {"kernel": "reference", "version": _VERSION, "schema": _ground.SCHEMA_VERSION,
+                 "doors": len(_doors.KNOWN), "topics": len(FEED_TOPICS), "tables": len(_ground.TABLES)}
+    return m
 FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                harness.HARNESS_FAILED,   # a failing run escalates to the chat
                markers.MARKER_SET,       # a marker set is seen where it lands
@@ -830,6 +847,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"drafts": crafts.drafts(conn, person), "person": person,
                                             "kinds": list(crafts.CRAFT_KINDS)})
+            if path == "/map":                           # THE STUDIO sp9c: HOW THE KERNEL WORKS — the kernel's own map, lit by this kernel's numbers (canon 0011 §4c)
+                try:
+                    return self._json(200, map_view())
+                except (OSError, ValueError) as e:
+                    return self._json(500, {"error": f"the map is not at {MAP} — {e}"})
             if path == "/hops":                          # Phase 8 sp9b: THE REPLAY — a run's hops by the ask it served, or by the harness run and its case
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} if "?" in self.path else {}

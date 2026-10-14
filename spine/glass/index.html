@@ -466,7 +466,6 @@
   #ws-center>*{min-width:0}
   #ws-center.declmax{grid-template-rows:0 0 minmax(0,1fr)} #ws-center.declmax #ws-canvas-card,#ws-center.declmax #ws-split-decl{display:none}
   #ws-canvas{position:relative;overflow:auto;min-height:0;flex:1}
-  #ws-canvas svg{display:block;width:100%;height:auto}   /* sp9b · W143: the drawing fits the canvas, never past its right edge */
   #ws-insp{grid-column:5;overflow:hidden} #ws-insp .ws-scroll{overflow-y:auto;padding:4px 14px 16px;font-size:12px;color:var(--ink);min-height:0;flex:1}
   #ws-decl .ws-pane-h{flex-wrap:wrap;height:auto;white-space:normal;row-gap:6px} #ws-decl .ws-pane-h .acts{margin:0 0 0 auto;gap:5px;flex-wrap:wrap;min-width:0}
   #ws-decl .ws-pane-h .acts .ws-btn{white-space:nowrap}
@@ -492,21 +491,31 @@
   .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
   .ws-btn{font:inherit;font-size:11px;letter-spacing:.08em;background:var(--well);color:var(--ink);border:1px solid var(--seam);border-radius:7px;padding:5px 10px;cursor:pointer}
   .ws-btn:hover{border-color:var(--amber-dim)} .ws-btn.p{background:var(--amber-dim);color:var(--btn-ink);border-color:transparent} .ws-btn.hold{border-color:var(--red)}
-  #ws-canvas .node rect{fill:var(--well);stroke:var(--seam);stroke-width:1.2;cursor:pointer} #ws-canvas .node.on rect{stroke:var(--amber);stroke-width:1.8} #ws-canvas .node.entry rect{stroke:var(--cyan)}
-  #ws-canvas .node text{fill:var(--ink);font-size:12px;font-family:inherit;pointer-events:none} #ws-canvas .node .k{fill:var(--dim);font-size:9.5px;letter-spacing:.12em} #ws-canvas .node .r{fill:var(--amber);font-size:10px}
-  #ws-canvas .node.off rect{stroke-dasharray:4 3;opacity:.6} #ws-canvas .node.bad rect{stroke:var(--red)}
-  #ws-canvas .edge path{fill:none;stroke:var(--dim);stroke-width:1.4;cursor:pointer} #ws-canvas .edge path.hit{stroke:transparent;stroke-width:16px}
-  #ws-canvas .edge.when path:not(.hit){stroke:var(--violet)} #ws-canvas .edge.on path:not(.hit){stroke:var(--amber);stroke-width:2}
-  #ws-canvas .edge text{fill:var(--dim);font-size:10px;font-family:inherit;pointer-events:none} #ws-canvas .edge.when text{fill:var(--violet)} #ws-canvas .edge.on text{fill:var(--amber)}
-  /* sp9 THE TRUE GRAPH (canon 0011 §4): the compiled graph's own shape, inside the hull's ring; a run lights the hops it took */
-  #ws-canvas .true{margin:10px 14px 14px;padding:10px 12px;border:1px dashed var(--seam);border-radius:10px} #ws-canvas .true .ws-h{margin-top:0}
-  #ws-canvas .true .hull{color:var(--dim);font-size:11px;margin-bottom:6px} #ws-canvas .true .hull b{color:var(--ink)}
-  #ws-canvas .node.ghost rect{stroke-dasharray:4 3;fill:transparent} #ws-canvas .node.ghost text{fill:var(--dim)}
-  #ws-canvas .node.lit rect{stroke:var(--amber);stroke-width:2;fill:var(--amber-dim)} #ws-canvas .edge.lit path:not(.hit){stroke:var(--amber);stroke-width:2}
-  #ws-canvas .edge.when path:not(.hit){stroke-dasharray:5 4}
-  #ws-canvas .node.has rect{stroke-width:2;stroke:var(--cyan)} #ws-canvas .node .open{fill:var(--cyan);font-size:10px;letter-spacing:.08em;cursor:pointer;pointer-events:auto}
-  #ws-canvas .ws-crumb{margin:8px 14px 0;font-size:11px;color:var(--dim)} #ws-canvas .ws-crumb [data-up]{color:var(--cyan);cursor:pointer} #ws-canvas .ws-crumb [data-up]:last-of-type{color:var(--ink)} #ws-canvas .ws-crumb .hull b{color:var(--ink)}
-  #ws-canvas .a-dim{fill:var(--dim)} #ws-canvas .a-when{fill:var(--violet)} #ws-canvas .a-on{fill:var(--amber)}
+  .gdraw .node rect{fill:var(--well);stroke:var(--seam);stroke-width:1.2;cursor:pointer} .gdraw .node.on rect{stroke:var(--amber);stroke-width:1.8} .gdraw .node.entry rect{stroke:var(--cyan)}
+  .gdraw .node text{fill:var(--ink);font-size:12px;font-family:inherit;pointer-events:none} .gdraw .node .k{fill:var(--dim);font-size:9.5px;letter-spacing:.12em} .gdraw .node .r{fill:var(--amber);font-size:10px}
+  .gdraw .node.off rect{stroke-dasharray:4 3;opacity:.6} .gdraw .node.bad rect{stroke:var(--red)}
+  .gdraw .edge path{fill:none;stroke:var(--dim);stroke-width:1.4;cursor:pointer} .gdraw .edge path.hit{stroke:transparent;stroke-width:16px}
+  .gdraw .edge.when path:not(.hit){stroke:var(--violet)} .gdraw .edge.on path:not(.hit){stroke:var(--amber);stroke-width:2}
+  .gdraw .edge text{fill:var(--dim);font-size:10px;font-family:inherit;pointer-events:none} .gdraw .edge.when text{fill:var(--violet)} .gdraw .edge.on text{fill:var(--amber)}
+  .gdraw .node.ghost rect{stroke-dasharray:4 3;fill:transparent} .gdraw .node.ghost text{fill:var(--dim)}
+  .gdraw .node.lit rect{stroke:var(--amber);stroke-width:2;fill:color-mix(in srgb,var(--amber) 16%,var(--well))} .gdraw .edge.lit path:not(.hit){stroke:var(--amber);stroke-width:2}
+  .gdraw .edge.when path:not(.hit){stroke-dasharray:5 4}
+  .gdraw .node.has rect{stroke-width:2;stroke:var(--cyan)} .gdraw .node .open{fill:var(--cyan);font-size:10px;letter-spacing:.08em;cursor:pointer;pointer-events:auto}
+  .gdraw .a-dim{fill:var(--dim)} .gdraw .a-when{fill:var(--violet)} .gdraw .a-on{fill:var(--amber)}
+  /* THE NESTED DRAWING + HOW THE KERNEL WORKS (canon 0011 §4c, JB's lock 2026-10-14): boxes inside boxes — a group's box, its header, the stage that pans and zooms, the map's window */
+  .gdraw .node.stage rect{stroke:var(--violet);opacity:.9} .gdraw .node.stage text{fill:var(--ink)}
+  .gdraw .group > rect{fill:var(--well);stroke:var(--seam);stroke-dasharray:6 4;stroke-width:1.2;cursor:pointer} .gdraw .group.hull > rect{stroke:var(--violet);stroke-dasharray:none;fill:transparent} .gdraw .group.work > rect{stroke:var(--amber-dim);stroke-dasharray:none} .gdraw .group.import > rect{stroke:var(--cyan);stroke-dasharray:none}
+  .gdraw .group.on > rect{stroke:var(--amber);stroke-width:1.8} .gdraw .group.lit > rect{stroke:var(--amber)}
+  .gdraw .group > .hd rect.hit{fill:transparent;cursor:pointer} .gdraw .group > .hd text{fill:var(--dim);font-size:10px;letter-spacing:.14em;font-family:inherit;pointer-events:none} .gdraw .group > .hd text.t{fill:var(--ink);font-size:11px} .gdraw .group > .hd text.s{letter-spacing:.04em;font-size:9.5px}
+  .gdraw .group.hull > .hd text.t{fill:var(--violet)} .gdraw .group.work > .hd text.t{fill:var(--amber)} .gdraw .group.import > .hd text.t{fill:var(--cyan)} .gdraw .group > .hd text.live{fill:var(--amber);letter-spacing:.06em}
+  .gdraw .edge.story path:not(.hit){stroke:var(--amber-dim)} .gdraw .edge.story text{fill:var(--amber);font-size:10.5px}
+  .gdraw .edge text{paint-order:stroke;stroke:var(--gbg,var(--hull));stroke-width:5px;stroke-linejoin:round}   /* a halo: the words read over lines and boxes */
+  #ws-canvas{--gbg:var(--hull)} #kmap{--gbg:var(--inspector)}
+  .gstage{position:relative;overflow:hidden;min-height:240px;cursor:grab;user-select:none} .gstage.drag{cursor:grabbing} .gstage svg{position:absolute;inset:0;width:100%!important;height:100%!important;display:block}
+  .gstage .gtools{position:absolute;right:10px;top:8px;display:flex;align-items:center;gap:4px;z-index:2} .gstage .gtools button{font:inherit;font-size:10px;letter-spacing:.1em;background:var(--well);color:var(--dim);border:1px solid var(--seam);border-radius:6px;padding:2px 7px;cursor:pointer} .gstage .gtools button:hover{color:var(--amber);border-color:var(--amber-dim)} .gstage .gtools .pct{color:var(--dim);font-size:10px;margin-left:4px}
+  #kmap{position:fixed;inset:18px;z-index:15;display:none;flex-direction:column;background:var(--inspector);border:1px solid var(--amber-dim);border-radius:12px;box-shadow:0 12px 50px rgba(0,0,0,.45)} #kmap.open{display:flex}
+  #kmap .hd{display:flex;align-items:baseline;gap:14px;padding:12px 18px 8px;border-bottom:1px solid var(--seam-soft)} #kmap .hd b{color:var(--amber);letter-spacing:.16em;font-weight:normal;font-size:11px;white-space:nowrap} #kmap .hd span{color:var(--dim);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} #kmap .hd .x{margin-left:auto;background:none;border:0;color:var(--dim);cursor:pointer;font:inherit;font-size:12px;white-space:nowrap} #kmap .hd .x:hover{color:var(--amber)}
+  #kmap .words{padding:8px 18px;color:var(--ink);font-size:12.5px;line-height:1.55;border-bottom:1px dotted var(--seam)} #kmap .gstage{flex:1} #kmap .read{min-height:1.4em;padding:6px 18px;font-size:12px;color:var(--ink);border-top:1px dotted var(--seam)} #kmap .read b{color:var(--amber);font-weight:normal} #kmap .ws-legend{padding-top:4px}
   /* THE WIZARD (JB's lock 2026-10-12): the steps strip, a golden case's row, the card inline, the first screen's door */
   .wz-steps{display:flex;flex-wrap:wrap;gap:4px 6px;margin:8px 0 6px;font-size:10px;letter-spacing:.14em;color:var(--dim)}
   .wz-steps span{padding:2px 7px;border-radius:9px;border:1px solid var(--seam);white-space:nowrap} .wz-steps span.on{color:var(--amber);border-color:var(--amber-dim)} .wz-steps span.done{color:var(--cyan);border-color:transparent;background:var(--well)}
@@ -770,6 +779,7 @@
     <button class="tog" data-layer="perf" title="PERFORMANCE — the numbers over the same drawing: under each organ its doors' p95 (how long the slowest of twenty knocks took), under the GROUND the pool of lines to the ground, the outbox's age, the spend, the benches' depth, and THE DOORS row — every door answered in the last ten minutes, the slowest first, red past one second"><span class="lamp"></span>PERFORMANCE</button>
     <span class="chips"><span title="the marker groups — dim a group's rows on the board and the tape">markers</span><span id="mchips"></span></span>
     <button class="tog" id="tourbtn" onclick="tourStart()" title="THE TOUR — a soft line around each part of the panel in turn, in plain words: what it is, what to try · ← → to move, Esc to leave · say 'tour' in the chat any time"><span class="lamp"></span>TOUR</button>
+    <button class="tog" id="mapbtn" onclick="mapOpen()" title="HOW THE KERNEL WORKS — the kernel's own map in a window: you and your seat, the doors, the hull every body runs, the minds on the meter, the house, the ground, the watches — one ask's road numbered across it, lit by this kernel's live numbers · say 'how the kernel works' in the chat any time · Esc closes it"><span class="lamp"></span>HOW IT WORKS</button>
     <button class="tog" id="wallbtn" onclick="wall(!document.body.classList.contains('wall'), true)" title="FULL SCREEN — the panel alone, edge to edge, for a wide monitor: the ceiling, the tabs and the floor fold away and the browser goes full screen too · Esc or F leaves it · remembered in this browser"><span class="glyph">⛶</span>FULL SCREEN</button>
     <a class="tog" href="https://docs.orreth.ai" target="_blank" rel="noopener" title="THE BOOK — docs.orreth.ai: what Orreth is, how to run it, how to build a body of your own">📖 THE BOOK</a>
     <a class="tog" href="https://github.com/iotlodge/orreth" target="_blank" rel="noopener" title="THE SOURCE — the kernel is public: read it, run it, star it on GitHub"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>STAR IT</a>
@@ -824,6 +834,13 @@
   <div id="guide-rows"></div>
 </div>
 
+<div id="kmap" role="dialog" aria-label="how the kernel works">
+  <div class="hd"><b>HOW THE KERNEL WORKS</b><span id="kmap-sub">…</span><button class="x" onclick="mapClose()" title="close · Esc">✕ close</button></div>
+  <div class="words" id="kmap-words"></div>
+  <div class="gstage" id="kmap-stage"></div>
+  <div class="read" id="kmap-read"></div>
+  <div class="ws-legend">one ask's road is numbered <b>1 → 7</b> across the boxes · each box is a part of the kernel: click its header to fold it, click a block to read it · drag to pan, wheel to zoom, fit on the right · kept by the kernel as a declaration (its map door), the same on every kernel; the guide's "how the kernel works" opens it</div>
+</div>
 <div id="tour" aria-live="polite">
   <div id="tour-line"></div>
   <div id="tour-card" role="dialog" aria-label="the tour"></div>
@@ -1023,7 +1040,8 @@ function toggleChat(open){
 }
 addEventListener("keydown", e => {
   if (e.key === "Escape") {                             // SPEC-ESC-01 + P19 — W32 (walk #11): ONE Esc, ONE thing —
-    if (tourOpen()) tourEnd();                                       // THE TOUR is the lightest thing on top of everything
+    if (mapIsOpen()) mapClose();                                     // HOW THE KERNEL WORKS: the map's window is on top of everything
+    else if (tourOpen()) tourEnd();                                  // THE TOUR is the lightest thing on top of everything
     else if (inspOpen()) inspClose();                                // the panel's inspector is the smallest thing open
     else if (guideBox.classList.contains("open")) toggleGuide(false); // the guide is on top of everything
     else if (chat.classList.contains("open") && chat.contains(document.activeElement) && workshopPull && workshopPull.classList.contains("open")) toggleChat(false);   // in the chat, over the Workshop: the chat closes, the Workshop stays (JB, 2026-10-09)
@@ -1075,6 +1093,9 @@ function whereAmI(){
 }
 function guideWords(text){
   const t = text.trim().toLowerCase().replace(/[.!]+$/, "");
+  if (/^(how (does )?(the )?kernel works?|how does (this|it|orreth) work|how it works|(show (me )?)?the (kernel'?s )?map)$/.test(t)){
+    el("msg mine", esc(text)); toggleChat(false); mapOpen(); return true;        // HOW THE KERNEL WORKS (canon 0011 §4c): the kernel's own map, in a window
+  }
   if (/^(tour|the tour|show me around|guide the panel|walk me through( the panel| it)?|what am i looking at|where am i)$/.test(t)){
     el("msg mine", esc(text)); toggleChat(false); tourStart(); return true;      // THE TOUR: the panel itself, in plain words
   }
@@ -3009,12 +3030,11 @@ function refreshPulls(){                 // P17: a change anywhere reflects in
    so the agent reads YOUR draft on YOUR ask alone (AG-9). Floor and room are not chosen here (JB's lock 2026-10-06):
    the Workshop shows WHERE a craft's wearers stand; where a next life stands is a field on sp4's promotion. ---- */
 var workshopPull = document.getElementById("workshop");   // `var`: a pull toggled at load (before this line runs) finds it undefined, never a dead zone
-const WS = {drafts: [], shelf: [], tools: [], sources: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}, retired: false, xp: null,
+const WS = {drafts: [], shelf: [], fold: new Map(), foldKey: null, tools: [], sources: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}, retired: false, xp: null,
             benches: [], fold: {}, lit: {}};   // W136 retired folded · W135 the open draft's experiment · sp8 THE BENCH: the person's benches; the rail's folds (kind → open) · sp9: the hops a run lit, by source
 const NODE_KINDS = ["think", "echo", "import"], WHEN_KINDS = ["otherwise", "edge", "ask", "reply"], HULL_EDGES = ["chat", "work", "event"];   // THE WIZARD (2026-10-12): import a kind the inspector offers — both kernels run it (sp5); before, the canvas called it "not a kind the hull runs"
 const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words back", import: "IMPORT · a repository's code",
                     start: "the graph's own start", end: "the graph's own end", node: "a node of the code", callable: "a plain callable — the words in, the words out", graph: "A GRAPH INSIDE · a subgraph of the code"};   // sp9b THE GRAPH MODEL: one drawer, the code's kinds too
-const TRUE_KINDS = ["start", "end", "node", "callable", "graph"];
 var WZ = null;   // THE WIZARD's state — one agent in flight, kept while the human looks at other drafts and resumed from "+ new agent"
 function workshopFocus(){ return {kind: "workspace", id: "ws_workshop", name: "workshop", window: null,
                label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"}; }
@@ -3254,89 +3274,34 @@ function drawCanvas(){
   if (gf.via) box.insertAdjacentHTML("beforeend", `<div class="ws-banner">${gf.via}</div>`);
   if (!gf.g) return;
   const key = `${WS.open.source}:${WS.open.name}:${WS.open.kind}`;
-  if (!WS.into || WS.into.key !== key) WS.into = {key, path: []};        // sp9b THE GRAPH MODEL: the way into a node's graph, kept per open thing
-  const root = composeGraph(gf.g), walk = graphAt(root, WS.into.path);
-  if (!walk){ WS.into.path = []; drawCanvas(); return; }
-  const g = walk.g, inside = WS.into.path.length > 0, prefix = walk.prefix, lit = walk.source ? (WS.lit[walk.source] || []) : [];
-  if (inside){
-    const crumbs = [`<span data-up="0">${esc(gf.g.name || WS.open.name)}</span>`].concat(WS.into.path.map((id, i) => `<span data-up="${i + 1}">${esc(String(id))}</span>`)).join(" › ");
-    box.insertAdjacentHTML("beforeend", `<div class="ws-crumb">${crumbs}${walk.kind === "import" ? ` <span class="hull">· inside the hull's ring: hear → recall → route → <b>[ this graph ]</b> → the reply — the kernel's laws live in the hull, never in the agent's nodes</span>` : " · a graph inside the code"}</div>`);
-    box.querySelectorAll(".ws-crumb [data-up]").forEach(c => c.onclick = () => { WS.into.path = WS.into.path.slice(0, Number(c.dataset.up)); WS.sel = null; WS.selEdge = null; drawWorkshop(); });
-  }
-  const pathOf = (id) => prefix.concat([String(id)]).join(":");
-  const hopAt = (id) => lit.indexOf(pathOf(id));                                            // this node's place in the last run (−1: not taken)
-  const litIn = (id) => lit.some(h => h === pathOf(id) || h.startsWith(pathOf(id) + ":"));  // a node that contains a graph lights when any hop inside it did
-  const viewLit = [];                                                                       // the run's order as THIS view sees it (hops inside a folded node fold to it)
-  for (const h of lit){ const parts = h.split(":"); if (parts.length > prefix.length && prefix.every((p, i) => parts[i] === p)){ const id = parts[prefix.length]; if (viewLit[viewLit.length - 1] !== id) viewLit.push(id); } }
-  const L = layoutGraph(g), NS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("width", L.width); svg.setAttribute("height", L.height); svg.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
-  svg.setAttribute("preserveAspectRatio", "xMinYMin meet"); svg.style.maxWidth = L.width + "px";   // W143: scaled down to fit, never up
-  const defs = document.createElementNS(NS, "defs");
-  for (const [id, cls] of [["arrow", "a-dim"], ["arrow-when", "a-when"], ["arrow-on", "a-on"]]){
-    const mk = document.createElementNS(NS, "marker"); mk.setAttribute("id", id); mk.setAttribute("viewBox", "0 0 10 10"); mk.setAttribute("refX", "9"); mk.setAttribute("refY", "5"); mk.setAttribute("markerWidth", "7"); mk.setAttribute("markerHeight", "7"); mk.setAttribute("orient", "auto-start-reverse");
-    const p = document.createElementNS(NS, "path"); p.setAttribute("d", "M 0 0 L 10 5 L 0 10 z"); p.setAttribute("class", cls); mk.appendChild(p); defs.appendChild(mk);
-  }
-  svg.appendChild(defs);
-  const editable = !inside && WS.open.source === "draft" && WS.open.kind === "graph";
-  L.edges.forEach((e, i) => {
-    const a = L.pos[String(e.from)], b = L.pos[String(e.to)]; if (!a || !b) return;
-    const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
-    const back = x2 <= x1;                      // a way out drawn backwards (a loop — the code's, or a half-made draft's) bows under
-    const twins = L.edges.filter(x => String(x.from) === String(e.from) && String(x.to) === String(e.to));   // two ways out to the same node bow apart
-    const bow = (twins.indexOf(e) - (twins.length - 1) / 2) * 48;
-    const P = back ? [[x1, y1], [x1 + 60, y1 + 90 + bow], [x2 - 60, y2 + 90 + bow], [x2, y2]]
-                   : [[x1, y1], [(x1 + x2) / 2, y1 + bow], [(x1 + x2) / 2, y2 + bow], [x2, y2]];
-    const d = `M ${P[0][0]} ${P[0][1]} C ${P[1][0]} ${P[1][1]}, ${P[2][0]} ${P[2][1]}, ${P[3][0]} ${P[3][1]}`;
-    const at = (t) => { const m = 1 - t; return [0, 1].map(i => m*m*m*P[0][i] + 3*m*m*t*P[1][i] + 3*m*t*t*P[2][i] + t*t*t*P[3][i]); };   // a point on the curve
-    const ia = viewLit.indexOf(String(e.from)), ib = viewLit.indexOf(String(e.to));
-    const walked = inside && ((ia >= 0 && ib === ia + 1) || (String(e.from) === "__start__" && ib === 0) || (String(e.to) === "__end__" && viewLit.length && ia === viewLit.length - 1));
-    const when = inside ? !!e.when : !!e.when;
-    const gE = document.createElementNS(NS, "g"); gE.setAttribute("class", "edge" + (when ? " when" : "") + (WS.selEdge === i ? " on" : "") + (walked ? " lit" : ""));
-    const hit = document.createElementNS(NS, "path"); hit.setAttribute("d", d); hit.setAttribute("class", "hit");
-    const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("marker-end", `url(#${WS.selEdge === i || walked ? "arrow-on" : when ? "arrow-when" : "arrow"})`);
-    gE.appendChild(hit); gE.appendChild(p);
-    if (!inside && (e.when || L.branching.has(String(e.from)))){
-      const [lx, ly] = at(0.4);                 // the words ride the curve itself, clear of both blocks
-      const t = document.createElementNS(NS, "text"); t.setAttribute("x", lx); t.setAttribute("y", ly - 6); t.setAttribute("text-anchor", "middle"); t.textContent = whenWords(e); gE.appendChild(t);
-    }
-    gE.onclick = (ev) => { ev.stopPropagation(); if (inside) return; WS.selEdge = i; WS.sel = null; drawWorkshop(); };
-    const title = document.createElementNS(NS, "title"); title.textContent = inside ? `${e.from} → ${e.to}${e.when ? " · a conditional way out (the code picks it as the run goes)" : ""}${walked ? " · taken by the last run" : ""}` : `${e.from} → ${e.to} · ${whenWords(e)}` + (editable ? " · click to set or clear its when" : ""); gE.appendChild(title);
-    svg.appendChild(gE);
+  if (WS.foldKey !== key){ WS.foldKey = key; WS.fold = new Map(); }  // the folds are kept per open thing
+  const root = hullGraph(gf.g), DECL = "hull:work";                  // THE NESTED DRAWING (canon 0011 §4c): the hull is the outer box, your graph sits in its work stage
+  const editable = WS.open.source === "draft" && WS.open.kind === "graph";
+  const g = gf.g;
+  const stage = document.createElement("div"); stage.className = "gstage"; box.appendChild(stage);
+  const order = [];                                                   // every lit hop as a path in THIS drawing: an import node at P with source S lights P:hop
+  const walkLit = (gg, prefix) => { for (const n of (gg.nodes || [])){ if (!n) continue; const p = prefix ? prefix + ":" + n.id : String(n.id);
+    if (n.kind === "import" && n.source) for (const h of (WS.lit[n.source] || [])) order.push(p + ":" + String((h && h.node) || h));
+    else if (n.graph && n.kind !== "import") walkLit(n.graph, p); } };
+  walkLit(root, "");
+  const ring = order.length ? ["hull:hear", "hull:recall", "hull:route", "hull:work"] : [];   // a run through the code ran the ring first
+  const R = drawGraph(stage, root, {
+    key, fold: (path, depth) => WS.fold.has(path) ? WS.fold.get(path) : (path === "hull" || path === DECL ? false : depth >= 3),
+    toggleFold: (path, now) => { if (path === "hull" || path === DECL) return; WS.fold.set(path, !now); drawCanvas(); },
+    lit: ring.concat(order), hops: order, sel: WS.sel != null ? DECL + ":" + WS.sel : null, selEdge: WS.selEdge != null ? {level: DECL, i: WS.selEdge} : null,
+    declLevel: DECL, entry: String(g.entry), badKinds: NODE_KINDS, editable,
+    onNode: (it) => { if (it.level !== DECL) return; WS.sel = it.id; WS.selEdge = null; drawWorkshop(); },
+    onEdge: (ed) => { if (ed.level !== DECL) return; WS.selEdge = ed.i; WS.sel = null; drawWorkshop(); },
+    onBlank: () => { if (WS.sel != null || WS.selEdge != null){ WS.sel = null; WS.selEdge = null; drawWorkshop(); } },
   });
-  for (const n of L.nodes){
-    const id = String(n.id), p = L.pos[id]; if (!p) continue;
-    const has = !!(n.graph && Array.isArray(n.graph.nodes) && n.graph.nodes.length), ghost = n.kind === "start" || n.kind === "end";
-    const isLit = inside ? litIn(id) : !!(n.source && (WS.lit[n.source] || []).length);
-    const known = (inside ? TRUE_KINDS : NODE_KINDS).includes(n.kind);
-    const gN = document.createElementNS(NS, "g"); gN.setAttribute("class", "node" + (id === String(g.entry) ? " entry" : "") + (WS.sel === id ? " on" : "") + (p.off ? " off" : "") + (known ? "" : " bad") + (has ? " has" : "") + (ghost ? " ghost" : "") + (isLit ? " lit" : ""));
-    gN.setAttribute("transform", `translate(${p.x},${p.y})`);
-    const r = document.createElementNS(NS, "rect"); r.setAttribute("width", p.w); r.setAttribute("height", p.h); r.setAttribute("rx", 10); gN.appendChild(r);
-    const t1 = document.createElementNS(NS, "text"); t1.setAttribute("x", 12); t1.setAttribute("y", 24); t1.textContent = (ghost ? n.kind : id) + (!inside && id === String(g.entry) ? "  · entry" : ""); gN.appendChild(t1);
-    const hop = inside ? hopAt(id) : -1;
-    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k");
-    t2.textContent = (KIND_WORDS[n.kind] || `${String(n.kind || "?").toUpperCase()} · not a kind the hull runs`) + (p.off ? " · unreached" : "") + (hop >= 0 ? ` · hop ${hop + 1}` : isLit && inside ? " · lit inside" : ""); gN.appendChild(t2);
-    const rf = has ? `${n.graph.nodes.length} node${n.graph.nodes.length === 1 ? "" : "s"} inside${n.source ? " · " + n.source : ""}` : (n.kind === "import" && n.source ? `${refsOf(n)} · its shape is read at the first run` : refsOf(n));
-    const t3 = document.createElementNS(NS, "text"); t3.setAttribute("x", 12); t3.setAttribute("y", 59); t3.setAttribute("class", "r"); t3.textContent = rf.length > 34 ? rf.slice(0, 33) + "…" : rf; gN.appendChild(t3);
-    if (has){
-      const o = document.createElementNS(NS, "text"); o.setAttribute("x", p.w - 52); o.setAttribute("y", 24); o.setAttribute("class", "open"); o.textContent = "open ▸";
-      o.onclick = (ev) => { ev.stopPropagation(); WS.into.path = WS.into.path.concat([id]); WS.sel = null; WS.selEdge = null; drawWorkshop(); };
-      gN.appendChild(o);
-    }
-    const title = document.createElementNS(NS, "title");
-    title.textContent = inside ? `${id} · ${n.kind} · read from the code, never drawn by hand${has ? " · open ▸ looks inside" : ""}${hop >= 0 ? ` · hop ${hop + 1} of the last run` : ""}`
-                               : `${id} · ${n.kind}${rf ? " · " + rf : ""}${n.words ? " — " + n.words : ""}` + (editable ? " · click to inspect and edit" : " · click to inspect") + (has ? " · open ▸ looks inside" : "");
-    gN.appendChild(title);
-    gN.onclick = (ev) => { ev.stopPropagation(); if (inside){ if (has){ WS.into.path = WS.into.path.concat([id]); drawWorkshop(); } return; } WS.sel = id; WS.selEdge = null; drawWorkshop(); };
-    svg.appendChild(gN);
-  }
-  svg.onclick = () => { if (inside) return; WS.sel = null; WS.selEdge = null; drawWorkshop(); };
-  box.appendChild(svg);
-  if (inside){
-    box.insertAdjacentHTML("beforeend", `<div class="ws-legend">${viewLit.length ? `the last run took ${viewLit.length} hop${viewLit.length === 1 ? "" : "s"} here: <b>${esc(viewLit.join(" → "))}</b> — lit above` : "ask the agent (in the chat, or from its bench) and the hops it takes light up here · a card's “replay case N” plays a recorded run"} · start and end are the graph's own · a conditional way out is dashed · a node with a graph inside opens with ▸ · read from the code, never drawn by hand</div>`);
-    return;
-  }
   const spine = defaultLine(g);
-  box.insertAdjacentHTML("beforeend", `<div class="ws-legend">entry ringed cyan · a plain arrow is the default way out (“otherwise”) · a violet arrow wears a <b>when</b> (the hull's edge · the ask's words · the last reply) · the default line: ${esc(spine.join(" → ") || "—")}${L.branching.size ? ` · branches at ${esc([...L.branching].join(", "))}` : ""} · forward only (a loop refuses at the cut)${root.nodes.some(n => n && n.graph) ? " · a node with a graph inside opens with ▸ — the code's own nodes, lit by the last run" : ""}</div>`);
+  const seen = []; for (const p of order){ const id = p.split(":").slice(3).join(":"); if (seen[seen.length - 1] !== id) seen.push(id); }
+  if (order.length) order.push("hull:reply");                                                   // the reply closes the ring
+  box.insertAdjacentHTML("beforeend", `<div class="ws-legend">THE HULL is the outer box — <b>hear → recall → route → work → the reply</b>, the kernel's ring every body runs; your graph is the box inside <b>work</b> · entry ringed cyan · a plain arrow is the default way out (“otherwise”) · a violet arrow wears a <b>when</b> (the hull's edge · the ask's words · the last reply) · the default line: ${esc(spine.join(" → ") || "—")}${[...R.branching].some(p => p.startsWith(DECL + ":")) ? ` · branches at ${esc([...R.branching].filter(p => p.startsWith(DECL + ":")).map(p => p.slice(DECL.length + 1)).join(", "))}` : ""} · forward only (a loop refuses at the cut) · a box with a graph inside folds by its header${seen.length ? ` · <b>the last run took ${seen.length} hop${seen.length === 1 ? "" : "s"}: ${esc(seen.join(" → "))}</b> — lit above` : " · ask the agent (in the chat, or from its bench) and the hops its code takes light up here; a card's “replay case N” plays a recorded run"} · drag to pan, wheel to zoom, fit on the right</div>`);
+  const legend = box.querySelector(".ws-legend"), banner = box.querySelector(".ws-banner");
+  stage.style.height = Math.max(240, box.clientHeight - (legend ? legend.offsetHeight : 0) - (banner ? banner.offsetHeight : 0) - 2) + "px";
+  if (!GV[key]){ const work = R.items.find(i => i.path === DECL); if (work) viewFocus(stage, work); }   // first sight: YOUR graph readable and centred, the ring peeking at both sides; fit shows the whole
+  viewApply(stage);
 }
 /* ---- sp9 THE TRUE GRAPH (canon 0011 §4, JB's lock 2026-10-13): LangGraph code is the agent's graph. The body reads the compiled graph's own shape
    when it runs an import node (`get_graph().to_json()` — the same JSON Studio draws) and records it on the source's row; the canvas draws it
@@ -3353,16 +3318,6 @@ function composeGraph(g){                     // sp9b THE GRAPH MODEL (canon 001
   });
   if (pending) shapeWatch();
   return Object.assign({}, g, {nodes});
-}
-function graphAt(root, path){                  // the graph the canvas shows: the root, or the graph inside the nodes the path names (an import node's true graph; a subgraph's)
-  let g = root, source = null, prefix = [], kind = null;
-  for (const id of path){
-    const n = (g.nodes || []).find(x => x && String(x.id) === String(id));
-    if (!n || !n.graph) return null;
-    if (n.kind === "import"){ source = n.source; prefix = []; kind = "import"; } else { prefix = prefix.concat([String(id)]); kind = n.kind; }
-    g = n.graph;
-  }
-  return {g, source, prefix, kind};
 }
 function playHops(source, hops){               // THE RUN OVERLAY: the hops light in order at their recorded pace (150 ms to 1.2 s a hop) — a reply's, a notice's, a recorded case's
   if (!source || !Array.isArray(hops) || !hops.length) return;
@@ -3412,6 +3367,229 @@ function litFromJourney(v){                   // sp9b: a reply's hops are the as
     const m = String(n).match(/ran the imported graph (\S+) at \S+ — entry \S+ · hops: (.+)$/);
     if (m) playHops(m[1], m[2].split(" → ").map(x => ({node: x.trim()})).filter(x => x.node));
   }
+}
+/* ---- THE NESTED DRAWING (canon 0011 §4c, JB's lock 2026-10-14: "would it be better to show the invoke container/wrapper as a box around the flow? …
+   If the graph is indeed nested, why not represent it"): ONE drawer for any graph of the model — boxes inside boxes. A node that contains a graph is
+   a GROUP: laid out inside first, its box a big node in its parent's layout; folded (one block, "N nodes inside") by a click on its header or by
+   depth. Layers are the longest road from the entry with back edges dropped (a loop is drawn, never layered); columns centre on the tallest. Every
+   item has an absolute place, so an edge may join any two blocks at any depth (the map's road, 1 → 7). The view pans by drag and zooms by wheel,
+   fitted on first sight and never scaled up (W143's law). The agent's canvas draws THE HULL as the outer box with the agent's graph in its work
+   stage (W144); the kernel's map draws the kernel the same way. ---- */
+const GD = {W: 190, WS: 150, H: 70, GX: 80, GY: 30, PX: 18, PT: 60, PB: 16};   // a block, the ring's narrower stage, the gaps, a group's padding (the top holds its header)
+function hullGraph(g){                          // the kernel's ring around the agent's graph — the code's own stages (resident.py: hear → recall → route → work), the reply at its end
+  return {entry: "hull", name: g.name, nodes: [{id: "hull", kind: "hull", words: "THE HULL — the ring every body runs; the kernel's laws live here, never in your nodes", graph: {entry: "hear", nodes: [
+    {id: "hear", kind: "stage", words: "the ask read whole, the session found"},
+    {id: "recall", kind: "stage", words: "what the body remembers of you, the canon it wears"},
+    {id: "route", kind: "stage", words: "the way picked: chat · work · event"},
+    {id: "work", kind: "work", words: "the template's graph — YOUR nodes", graph: composeGraph(g)},
+    {id: "reply", kind: "stage", words: "the reply — signed by the body, whole"}],
+    edges: [{from: "hear", to: "recall"}, {from: "recall", to: "route"}, {from: "route", to: "work", words: "chat · work · event"}, {from: "work", to: "reply"}]}}], edges: []};
+}
+function layoutNested(g, prefix, depth, folded){
+  const nodes = (Array.isArray(g.nodes) ? g.nodes : []).filter(n => n && n.id != null);
+  const edges = (Array.isArray(g.edges) ? g.edges : []).filter(e => e && e.from != null && e.to != null);
+  const ids = nodes.map(n => String(n.id));
+  const pathOf = id => prefix ? prefix + ":" + id : String(id);
+  const top = ref => { const s = String(ref); if (ids.includes(s)) return s; const h = s.split(":")[0]; return ids.includes(h) ? h : null; };   // an edge named by path lands on its top-level ancestor here
+  const size = {}, inner = {};
+  for (const n of nodes){
+    const id = String(n.id), has = !!(n.graph && Array.isArray(n.graph.nodes) && n.graph.nodes.length);
+    if (has && !folded(pathOf(id), depth)){ const L = layoutNested(n.graph, pathOf(id), depth + 1, folded); inner[id] = L; size[id] = {w: Math.max(GD.W, L.w + GD.PX * 2), h: L.h + GD.PT + GD.PB}; }
+    else size[id] = {w: ["stage", "start", "end"].includes(n.kind) ? GD.WS : GD.W, h: GD.H};
+  }
+  const out = {}; for (const id of ids) out[id] = [];
+  for (const e of edges){ const a = top(e.from), b = top(e.to); if (a && b && a !== b && !out[a].includes(b)) out[a].push(b); }
+  const state = {}, back = new Set(), order = [];
+  const visit = (id) => { state[id] = 1; for (const b of out[id]){ if (state[b] === 1) back.add(id + "→" + b); else if (!state[b]) visit(b); } state[id] = 2; order.push(id); };
+  const entry = ids.includes(String(g.entry)) ? String(g.entry) : ids[0];
+  if (entry) visit(entry); for (const id of ids) if (!state[id]) visit(id);
+  order.reverse();
+  const depthOf = {}; if (entry) depthOf[entry] = 0;
+  for (const id of order){ if (depthOf[id] == null) continue; for (const b of out[id]) if (!back.has(id + "→" + b)) depthOf[b] = Math.max(depthOf[b] || 0, depthOf[id] + 1); }
+  if (!edges.length) for (const id of ids) depthOf[id] = 0;                 // a graph with no ways out is a LIST: its blocks stack in one column (the map's regions)
+  const reached = new Set(Object.keys(depthOf));
+  for (const id of [...order].reverse()) if (depthOf[id] == null){ const ts = out[id].filter(b => depthOf[b] != null).map(b => depthOf[b]); if (ts.length) depthOf[id] = Math.max(0, Math.min(...ts) - 1); }
+  const maxD = Math.max(0, ...Object.values(depthOf));
+  const cols = {};
+  for (const id of ids){ const d = depthOf[id] != null ? depthOf[id] : maxD + 1; (cols[d] = cols[d] || []).push(id); }
+  const ds = Object.keys(cols).map(Number).sort((a, b) => a - b);
+  const colW = {}, colH = {};
+  for (const d of ds){ colW[d] = Math.max(...cols[d].map(id => size[id].w)); colH[d] = cols[d].reduce((a, id) => a + size[id].h, 0) + (cols[d].length - 1) * GD.GY; }
+  const H = Math.max(GD.H, ...ds.map(d => colH[d]));
+  let x = 0; const items = [];
+  for (const d of ds){
+    let y = (H - colH[d]) / 2;
+    for (const id of cols[d]){
+      const n = nodes.find(m => String(m.id) === id), s = size[id], has = !!(n.graph && Array.isArray(n.graph.nodes) && n.graph.nodes.length);
+      items.push({path: pathOf(id), id, node: n, x, y, w: s.w, h: s.h, depth, group: !!inner[id], folded: has && !inner[id], off: !reached.has(id), entry: id === entry, level: prefix});
+      if (inner[id]) for (const it of inner[id].items) items.push(Object.assign({}, it, {x: it.x + x + GD.PX, y: it.y + y + GD.PT}));
+      y += s.h + GD.GY;
+    }
+    x += colW[d] + GD.GX;
+  }
+  const all = edges.map((e, i) => ({from: String(e.from), to: String(e.to), e, i, level: prefix, back: back.has(top(e.from) + "→" + top(e.to))}));
+  for (const id in inner) for (const ed of inner[id].edges) all.push(ed);
+  const branching = new Set(edges.map(e => String(e.from)).filter((f, i, a) => a.indexOf(f) !== i).map(f => pathOf(f)));
+  return {w: Math.max(GD.W, x - GD.GX), h: H, items, edges: all, branching};
+}
+const GV = {};                                  // the view of each drawing — scale and offset — kept across redraws (a hop lighting never moves the picture)
+function wrapWords(s, n, lines){ const out = []; let cur = ""; for (const w of String(s || "").split(/\s+/)){ if ((cur + " " + w).trim().length > n && cur){ out.push(cur); cur = w; } else cur = (cur + " " + w).trim(); } if (cur) out.push(cur);
+  if (out.length > lines){ out.length = lines; out[lines - 1] = out[lines - 1].slice(0, n - 1) + "…"; } return out; }
+function drawGraph(stage, root, o){
+  const L = layoutNested(root, "", 0, o.fold);
+  const NS = "http://www.w3.org/2000/svg", byPath = {}; for (const it of L.items) byPath[it.path] = it;
+  const visible = (p) => { let q = p; while (q && !byPath[q]) q = q.includes(":") ? q.slice(0, q.lastIndexOf(":")) : ""; return q ? byPath[q] : null; };   // the deepest drawn block holding a path (a hop inside a fold lights the fold)
+  const lit = Array.isArray(o.lit) ? o.lit : [], litSet = new Set(lit);
+  const view = []; for (const p of lit){ const it = visible(p); if (it && view[view.length - 1] !== it.path) view.push(it.path); }
+  const hopAt = (p) => (o.hops || lit).indexOf(p);                                           // hop N counts the code's hops alone, not the ring lit around them
+  const litIn = (p) => litSet.has(p) || lit.some(h => h.startsWith(p + ":"));
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("class", "gdraw"); svg.setAttribute("xmlns", NS);
+  const defs = document.createElementNS(NS, "defs");
+  for (const [id, cls] of [["arrow", "a-dim"], ["arrow-when", "a-when"], ["arrow-on", "a-on"]]){
+    const mk = document.createElementNS(NS, "marker"); mk.setAttribute("id", id); mk.setAttribute("viewBox", "0 0 10 10"); mk.setAttribute("refX", "9"); mk.setAttribute("refY", "5"); mk.setAttribute("markerWidth", "7"); mk.setAttribute("markerHeight", "7"); mk.setAttribute("orient", "auto-start-reverse");
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", "M 0 0 L 10 5 L 0 10 z"); p.setAttribute("class", cls); mk.appendChild(p); defs.appendChild(mk);
+  }
+  svg.appendChild(defs);
+  const world = document.createElementNS(NS, "g"); world.setAttribute("class", "view"); svg.appendChild(world);
+  const T = (x, y, cls, text) => { const t = document.createElementNS(NS, "text"); t.setAttribute("x", x); t.setAttribute("y", y); if (cls) t.setAttribute("class", cls); t.textContent = text; return t; };
+  const declOf = (it) => o.declLevel != null && it.level === o.declLevel;
+  for (const it of L.items.filter(i => i.group).sort((a, b) => a.depth - b.depth)){      // the boxes first, outer before inner
+    const n = it.node, count = n.graph.nodes.length, isLit = litIn(it.path);
+    const gG = document.createElementNS(NS, "g"); gG.setAttribute("class", `group ${n.kind}${isLit ? " lit" : ""}${o.sel === it.path ? " on" : ""}`); gG.setAttribute("transform", `translate(${it.x},${it.y})`);
+    const r = document.createElementNS(NS, "rect"); r.setAttribute("width", it.w); r.setAttribute("height", it.h); r.setAttribute("rx", 14); gG.appendChild(r);
+    r.onclick = (ev) => { ev.stopPropagation(); if (dragged()) return; if (o.onNode) o.onNode(it, ev); };
+    const hd = document.createElementNS(NS, "g"); hd.setAttribute("class", "hd");
+    const hit = document.createElementNS(NS, "rect"); hit.setAttribute("width", it.w); hit.setAttribute("height", GD.PT - 4); hit.setAttribute("class", "hit"); hd.appendChild(hit);
+    const title = n.kind === "hull" ? "THE HULL" : n.kind === "work" ? "WORK · " + (root.name || "the agent's graph") : n.kind === "import" ? `${it.id} · IMPORT · ${n.source || ""}` : it.level === "" && n.kind === "graph" ? String(it.id).toUpperCase() : `${it.id} · ${n.kind === "graph" ? "a graph inside" : n.kind}`;
+    const capT = Math.floor((it.w - 28) / 6.6), t1 = title + (declOf(it) && it.entry ? "  · entry" : "");
+    hd.appendChild(T(14, 18, "t", t1.length > capT ? t1.slice(0, capT - 1) + "…" : t1));
+    const sub = (n.kind === "import" ? `${count} node${count === 1 ? "" : "s"} read from the code · ${n.words || ""}` : `${n.words || ""}`);
+    hd.appendChild(T(14, 33, "s", wrapWords(sub, Math.max(24, Math.floor((it.w - 28) / 5.6)), 1)[0] || ""));
+    const live = o.live ? o.live(n, it) : null;
+    const right = (live ? live + " · " : "") + (it.path === "hull" || it.path === o.declLevel ? `${count} node${count === 1 ? "" : "s"}` : `${count} node${count === 1 ? "" : "s"} · fold ▾`);
+    const rt = T(it.w - 14, 48, "live", right); rt.setAttribute("text-anchor", "end"); hd.appendChild(rt);
+    hd.onclick = (ev) => { ev.stopPropagation(); if (dragged()) return; if (o.toggleFold) o.toggleFold(it.path, false); };
+    const tt = document.createElementNS(NS, "title"); tt.textContent = `${title} — ${n.words || ""}${live ? " · " + live : ""} · ${count} nodes inside` + (it.path === "hull" || it.path === o.declLevel ? "" : " · click the header to fold it") + (declOf(it) ? " · click the box to inspect" : ""); hd.appendChild(tt);
+    gG.appendChild(hd); world.appendChild(gG);
+  }
+  for (const ed of L.edges){
+    const res = (ref, level) => visible(level ? level + ":" + ref : ref);
+    const a = res(ed.from, ed.level), b = res(ed.to, ed.level); if (!a || !b || a === b) continue;
+    const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2, backward = x2 <= x1 + 10;
+    const twins = L.edges.filter(x => x.level === ed.level && x.from === ed.from && x.to === ed.to);
+    const bow = (twins.indexOf(ed) - (twins.length - 1) / 2) * 48;
+    const P = backward ? [[x1, y1], [x1 + 70, y1 + 90 + bow], [x2 - 70, y2 + 90 + bow], [x2, y2]]
+                       : [[x1, y1], [(x1 + x2) / 2, y1 + bow], [(x1 + x2) / 2, y2 + bow], [x2, y2]];
+    const d = `M ${P[0][0]} ${P[0][1]} C ${P[1][0]} ${P[1][1]}, ${P[2][0]} ${P[2][1]}, ${P[3][0]} ${P[3][1]}`;
+    const at = (t) => { const m = 1 - t; return [0, 1].map(i => m*m*m*P[0][i] + 3*m*m*t*P[1][i] + 3*m*t*t*P[2][i] + t*t*t*P[3][i]); };
+    const ia = view.indexOf(a.path), ib = view.indexOf(b.path);
+    const walked = (ia >= 0 && ib === ia + 1) || (a.node.kind === "start" && ib === 0 && a.level === b.level && lit.length) || (b.node.kind === "end" && view.length && ia === view.length - 1 && a.level === b.level);
+    const when = !!ed.e.when, story = /^\d/.test(String(ed.e.words || "")), on = o.selEdge && o.selEdge.level === ed.level && o.selEdge.i === ed.i;
+    const gE = document.createElementNS(NS, "g"); gE.setAttribute("class", "edge" + (when ? " when" : "") + (story ? " story" : "") + (on ? " on" : "") + (walked ? " lit" : ""));
+    const hit = document.createElementNS(NS, "path"); hit.setAttribute("d", d); hit.setAttribute("class", "hit");
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("marker-end", `url(#${on || walked ? "arrow-on" : when ? "arrow-when" : "arrow"})`);
+    gE.appendChild(hit); gE.appendChild(p);
+    const decl = o.declLevel != null && ed.level === o.declLevel;
+    const label = ed.e.words ? String(ed.e.words) : (decl && (ed.e.when || L.branching.has(ed.level + ":" + ed.from)) ? whenWords(ed.e) : "");
+    if (label){ const [lx, ly] = at(ed.level === "" ? [0.28, 0.5, 0.72][ed.i % 3] : 0.45); const t = T(lx, ly - 6, "", label); t.setAttribute("text-anchor", "middle"); gE.appendChild(t); }   // the map's long roads carry their words at staggered places
+    gE.onclick = (ev) => { ev.stopPropagation(); if (dragged()) return; if (o.onEdge) o.onEdge(ed, ev); };
+    const tt = document.createElementNS(NS, "title"); tt.textContent = `${ed.from} → ${ed.to}` + (label ? ` · ${label}` : "") + (decl ? ` · ${whenWords(ed.e)}` + (o.editable ? " · click to set or clear its when" : "") : when ? " · a conditional way out (the code picks it as the run goes)" : "") + (walked ? " · taken by the last run" : ""); gE.appendChild(tt);
+    world.appendChild(gE);
+  }
+  for (const it of L.items.filter(i => !i.group)){
+    const n = it.node, ghost = n.kind === "start" || n.kind === "end", decl = declOf(it), isLit = litIn(it.path), hop = hopAt(it.path);
+    const known = !decl || !o.badKinds || o.badKinds.includes(n.kind);
+    const gN = document.createElementNS(NS, "g"); gN.setAttribute("class", "node" + (decl && it.entry ? " entry" : "") + (o.sel === it.path ? " on" : "") + (it.off && decl ? " off" : "") + (known ? "" : " bad") + (it.folded ? " has" : "") + (ghost ? " ghost" : "") + (isLit ? " lit" : "") + (n.kind === "stage" ? " stage" : ""));
+    gN.setAttribute("transform", `translate(${it.x},${it.y})`);
+    const r = document.createElementNS(NS, "rect"); r.setAttribute("width", it.w); r.setAttribute("height", it.h); r.setAttribute("rx", 10); gN.appendChild(r);
+    gN.appendChild(T(12, 24, "", (ghost ? (n.words || n.kind) : it.id) + (decl && it.entry ? "  · entry" : "")));
+    let l2, l3;
+    if (it.folded){ const c = n.graph.nodes.length; l2 = (KIND_WORDS[n.kind] || (n.kind === "graph" ? "GRAPH · a graph inside" : String(n.kind).toUpperCase())) + (hop >= 0 ? ` · hop ${hop + 1}` : isLit ? " · lit inside" : ""); l3 = `${c} node${c === 1 ? "" : "s"} inside${n.source ? " · " + n.source : ""} · open ▸`; }
+    else if (n.kind === "part" || n.kind === "stage"){ const w = wrapWords(n.words, Math.floor((it.w - 20) / 5.6), 2); l2 = w[0] || ""; l3 = w[1] || ""; const lv = n.live && o.live ? o.live(n, it) : null; if (lv) l3 = lv; if (isLit && n.kind === "stage") l2 = "the ring, taken · " + l2; }
+    else if (ghost){ l2 = n.kind === "start" ? "START · the graph's own start" : "END · the graph's own end"; l3 = ""; }
+    else { l2 = (KIND_WORDS[n.kind] || `${String(n.kind || "?").toUpperCase()} · not a kind the hull runs`) + (it.off && decl ? " · unreached" : "") + (hop >= 0 ? ` · hop ${hop + 1}` : ""); l3 = decl ? (n.kind === "import" && n.source ? `${refsOf(n)} · its shape is read at the first run` : refsOf(n)) : (n.words || ""); }
+    const cap = Math.floor((it.w - 20) / 5.3);
+    gN.appendChild(T(12, 42, "k", l2.length > cap ? l2.slice(0, cap - 1) + "…" : l2));
+    gN.appendChild(T(12, 59, "r", l3.length > cap ? l3.slice(0, cap - 1) + "…" : l3));
+    const tt = document.createElementNS(NS, "title");
+    tt.textContent = `${it.id} · ${n.kind}${n.words ? " — " + n.words : ""}${decl ? (refsOf(n) ? " · " + refsOf(n) : "") + (o.editable ? " · click to inspect and edit" : " · click to inspect") : ""}${it.folded ? " · click to open" : ""}${hop >= 0 ? ` · hop ${hop + 1} of the last run` : ""}`;
+    gN.appendChild(tt);
+    gN.onclick = (ev) => { ev.stopPropagation(); if (dragged()) return; if (it.folded && o.toggleFold){ o.toggleFold(it.path, true); return; } if (o.onNode) o.onNode(it, ev); };
+    world.appendChild(gN);
+  }
+  svg.onclick = () => { if (dragged()) return; if (o.onBlank) o.onBlank(); };
+  stage.innerHTML = ""; stage.appendChild(svg);
+  stage.dataset.key = o.key; stage.dataset.w = L.w; stage.dataset.h = L.h;
+  const tools = document.createElement("div"); tools.className = "gtools";
+  tools.innerHTML = `<button data-fit title="fit the whole drawing in view">fit</button><button data-one title="one to one">1:1</button><span class="pct"></span>`;
+  tools.querySelector("[data-fit]").onclick = (ev) => { ev.stopPropagation(); viewFit(stage); };
+  tools.querySelector("[data-one]").onclick = (ev) => { ev.stopPropagation(); const v = GV[o.key] = {k: 1, tx: 24, ty: 24, auto: false}; viewApply(stage); };
+  stage.appendChild(tools);
+  viewWire(stage); viewApply(stage);
+  return L;
+}
+let GDRAG = null;
+function dragged(){ return !!(GDRAG && GDRAG.moved); }
+function viewFit(stage){ const key = stage.dataset.key; if (!key) return; GV[key] = {auto: true}; viewApply(stage); }
+function viewFocus(stage, it){                 // the view centred on one block (a group's box), scaled down to fit it, never up
+  const key = stage.dataset.key; if (!key) return; const sw = stage.clientWidth || 1, sh = stage.clientHeight || 1;
+  const k = Math.min(1, (sw - 60) / it.w, (sh - 60) / it.h);
+  GV[key] = {k, tx: (sw - it.w * k) / 2 - it.x * k, ty: (sh - it.h * k) / 2 - it.y * k, auto: false}; viewApply(stage);
+}
+function viewApply(stage){
+  const key = stage.dataset.key; if (!key) return;
+  if (!GV[key] || GV[key].auto){                                               // fitted: scaled down to fit, never up (W143's law), centred
+    const w = Number(stage.dataset.w) || 1, h = Number(stage.dataset.h) || 1, sw = stage.clientWidth || 1, sh = stage.clientHeight || 1;
+    const k = Math.min(1, (sw - 40) / w, (sh - 40) / h);
+    GV[key] = {k, tx: Math.max(20, (sw - w * k) / 2), ty: Math.max(20, (sh - h * k) / 2), auto: true};
+  }
+  const v = GV[key], world = stage.querySelector("svg .view"); if (!world) return;
+  world.setAttribute("transform", `translate(${v.tx},${v.ty}) scale(${v.k})`);
+  const pct = stage.querySelector(".gtools .pct"); if (pct) pct.textContent = Math.round(v.k * 100) + "%";
+}
+function viewWire(stage){
+  if (stage.dataset.wired) return; stage.dataset.wired = "1";
+  stage.addEventListener("wheel", (ev) => {
+    ev.preventDefault(); const key = stage.dataset.key, v = GV[key]; if (!v) return;
+    const r = stage.getBoundingClientRect(), mx = ev.clientX - r.left, my = ev.clientY - r.top;
+    const k = Math.max(0.15, Math.min(3, v.k * Math.exp(-ev.deltaY * 0.0015)));
+    GV[key] = {k, tx: mx - (mx - v.tx) * k / v.k, ty: my - (my - v.ty) * k / v.k, auto: false}; viewApply(stage);
+  }, {passive: false});
+  stage.addEventListener("mousedown", (ev) => { if (ev.button !== 0) return; const v = GV[stage.dataset.key]; if (!v) return; GDRAG = {stage, x: ev.clientX, y: ev.clientY, tx: v.tx, ty: v.ty, moved: false}; });
+  stage.addEventListener("dblclick", (ev) => { if (ev.target.closest(".node, .group, .edge, .gtools")) return; viewFit(stage); });
+}
+addEventListener("mousemove", (ev) => { if (!GDRAG) return; const dx = ev.clientX - GDRAG.x, dy = ev.clientY - GDRAG.y; if (!GDRAG.moved && Math.hypot(dx, dy) < 4) return;
+  GDRAG.moved = true; GDRAG.stage.classList.add("drag"); const v = GV[GDRAG.stage.dataset.key]; if (!v) return; GV[GDRAG.stage.dataset.key] = {k: v.k, tx: GDRAG.tx + dx, ty: GDRAG.ty + dy, auto: false}; viewApply(GDRAG.stage); });
+addEventListener("mouseup", () => { if (!GDRAG) return; const d = GDRAG; d.stage.classList.remove("drag"); setTimeout(() => { if (GDRAG === d) GDRAG = null; }, 0); });
+addEventListener("resize", () => { for (const st of document.querySelectorAll(".gstage[data-key]")) if (GV[st.dataset.key] && GV[st.dataset.key].auto) viewApply(st); });
+/* ---- HOW THE KERNEL WORKS (canon 0011 §4c, JB 2026-10-14: "Orreth as a kernel needs one of these that we can manage and adjust as kernel does … a sexy
+   graph that loads into a nice window/modal when user enters 'how kernel works' in chat and maybe a supporting human link somewhere at top of Panel"):
+   the kernel's own map is a DECLARATION both kernels serve at GET /map, in the one graph model, drawn here by the same drawer and lit by the kernel's
+   live numbers (which kernel, its version and schema, how many doors, the feed's topics, the ground's tables; the residents seated now from the crew). ---- */
+let KMAP = null; const MAPFOLD = new Map();
+function mapIsOpen(){ const b = document.getElementById("kmap"); return !!(b && b.classList.contains("open")); }
+async function mapOpen(){
+  const box = document.getElementById("kmap"); if (!box) return; box.classList.add("open");
+  const sub = document.getElementById("kmap-sub");
+  if (!KMAP){ sub.textContent = "reading the map from the kernel…";
+    const m = await fetch("/map").then(x => x.ok ? x.json() : null).catch(() => null);
+    if (!m){ sub.textContent = "the map did not come — the kernel serves it at /map to a seated person; a photograph of a kernel carries none"; return; }
+    KMAP = m; }
+  mapDraw();
+}
+function mapClose(){ const b = document.getElementById("kmap"); if (b) b.classList.remove("open"); }
+function mapDraw(){
+  const m = KMAP; if (!m || !mapIsOpen()) return;
+  const live = m.live || {}, seated = (typeof ROSTER !== "undefined" ? ROSTER : []).filter(r => r && r.alive).length;
+  const liveWords = (n) => ({doors: `${live.doors} doors`, topics: `${live.topics} topics`, tables: `${live.tables} tables · schema ${live.schema}`,
+                             residents: `${seated} resident${seated === 1 ? "" : "s"} seated now`})[n.live] || null;
+  document.getElementById("kmap-sub").textContent = `${m.title} · this kernel: ${live.kernel} ${live.version} · schema ${live.schema} · the numbers on the boxes are its own, read when this window opened`;
+  document.getElementById("kmap-words").textContent = m.words || "";
+  const stage = document.getElementById("kmap-stage"), read = document.getElementById("kmap-read");
+  drawGraph(stage, m, {key: "kmap", fold: (path) => MAPFOLD.has(path) ? MAPFOLD.get(path) : false,
+    toggleFold: (path, now) => { MAPFOLD.set(path, !now); mapDraw(); }, live: liveWords, lit: [],
+    onNode: (it) => { read.innerHTML = `<b>${esc(String(it.id))}</b> · ${esc(it.node.words || "")}`; },
+    onBlank: () => { read.innerHTML = ""; }});
 }
 function defaultLine(g){
   const outs = {}; for (const e of (g.edges || [])) if (e && !e.when && outs[String(e.from)] == null) outs[String(e.from)] = String(e.to);

@@ -199,6 +199,57 @@ would get worse at twenty nodes and ten subgraphs. The lock:
   the run is still going (a second line for the watch) is a later line;
   time travel and forks (Studio's) stay named.
 
+### 4c. The nested drawing and the kernel map (JB's lock, 2026-10-14: "would it be better to show the invoke container/wrapper as a box around the flow? … If the graph is indeed nested, why not represent it … Orreth as a kernel needs one of these that we can manage and adjust as kernel does")
+
+Spoonful 9b gave the model and the record but drew a graph that contains a
+graph as one folded block with a tiny "open ▸", opening into a separate
+view under a breadcrumb. JB's walk of step 9 (W144): the one thing the
+Workshop exists to make clear — the kernel invokes your graph inside its
+own ring — was hidden behind that block; "until you told me how it worked,
+I didn't actually understand that the kernel was invoking the graph from a
+shipping/invoke single node graph". The lock, through the question door
+(boxes inside boxes · a declaration both kernels serve, lit live · spoonful
+9c now, before 10):
+
+- **Boxes inside boxes.** One drawer draws any graph of the model as nested
+  boxes: a node that contains a graph is a GROUP — laid out inside first,
+  its box a big node in its parent's layout — folded to one block ("N
+  nodes inside · open ▸") by a click on its header or by depth (deeper than
+  the code's own nodes starts folded, so twenty nodes and ten subgraphs
+  stay readable). Layers are the longest road from the entry with back
+  edges dropped (a loop is drawn, never layered); a graph with no ways out
+  is a list, its blocks stacked. Every block has an absolute place, so an
+  edge may join any two blocks at any depth. The view pans by drag and
+  zooms by wheel; "fit" shows the whole, scaled down never up (W143's law).
+  The breadcrumb drill-in is retired.
+- **The hull is the outer box.** The agent's canvas draws THE HULL as the
+  outermost box with the kernel's own stages as blocks — hear → recall →
+  route → work → the reply, the ring every body runs (`resident.py`'s
+  graph) — and the agent's declared graph as the box inside its work
+  stage; an import node is a box inside that, holding the code's own
+  graph. The drawing IS the architecture: the kernel's laws live in the
+  ring, never in your nodes. First sight centres your graph, readable, the
+  ring peeking at both sides. A run lights the hops it took wherever they
+  are nested, the ring lit with them, the reply closing it.
+- **The kernel map.** The kernel has one of these of itself: HOW THE
+  KERNEL WORKS is a DECLARATION in the one graph model —
+  `spine/guide/kernel-map.v0.json`, `orreth-map/1`, kept beside the guide
+  and turned with every spoonful that changes a part named on it — served
+  by both kernels at `GET /map` (a seated read; law for law), each kernel
+  adding its LIVE numbers: which kernel, its version and schema, how many
+  doors it answers, how many topics the feed carries, how many tables the
+  ground holds; the glass adds the residents seated now from the crew. The
+  regions are boxes (YOU AND YOUR SEAT · THE DOORS · THE HULL · THE MINDS ·
+  THE HOUSE · THE GROUND · THE WATCHES) and one ask's road is numbered
+  across them, 1 → 7. It opens in a window over the Panel on "how the
+  kernel works" in the chat and from HOW IT WORKS on the sill, drawn by the
+  same drawer, so the kernel's picture of itself and the picture of an
+  agent cannot drift apart. A static picture would lie within a week; this
+  one is lit by the kernel it is drawn on.
+- **Named, not built:** the map's road played as a run (the story's edges
+  lit in order); a block on the map opening the organ's inspector; the
+  spectator's photograph carrying a map.
+
 ### 5. One word to work — the ladder folded (recommended)
 
 - **"put <name> to work"** on the bench (a button and the chat's word, one
@@ -344,6 +395,17 @@ golden set, a Yes, joined. No walk of 2026-10-12/13 is wasted.
    that open with a breadcrumb, the run overlay that plays hops at their
    recorded pace from the feed, the ask view and the card's "replay case
    N". W143 (the true graph off the right edge) is cured by the fit.
+2c. **THE NESTED DRAWING AND THE KERNEL MAP (§4c) — JB's lock 2026-10-14,
+   built the same day, before spoonful 10.** The glass: one drawer for the
+   model as boxes inside boxes (`layoutNested` · `drawGraph` · the view that
+   pans, zooms, fits and focuses), THE HULL as the agent's outer box
+   (`hullGraph`), folds by header and by depth, the run lit through the
+   boxes; the breadcrumb retired (W144). The kernel map as a declaration
+   (`spine/guide/kernel-map.v0.json`) served at `GET /map` by both kernels
+   with their live numbers (`map_view` · `map_door`; `map` a known door,
+   fixture doors-v0), drawn in a window over the Panel on "how the kernel
+   works" and from HOW IT WORKS on the sill; the guide 0.14.0;
+   `test_map.py`. No schema change.
 3. **ONE WORD TO WORK.** `POST /benches/<name>/work` (ONE hold at L2, JB's
    lock): cuts in order, skips what stands, opens the experiment; the
    card's lines for every refusal. The chat's word and the bench's button,

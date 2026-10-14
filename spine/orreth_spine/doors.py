@@ -39,6 +39,7 @@ KNOWN = frozenset((
     "drafts", "wear",   # Phase 8 sp2: the draft shelf under the person · the wear table
     "benches",          # Phase 8 sp8: THE BENCH — one effort, one place (canon 0011)
     "hops",             # Phase 8 sp9b: THE REPLAY — the hops a compiled graph took (canon 0011 §4b)
+    "map",              # THE STUDIO sp9c: HOW THE KERNEL WORKS — the kernel's own map (canon 0011 §4c)
 ))
 _ID_AFTER = frozenset(("ask", "fact", "session", "digest", "join", "benches"))
 

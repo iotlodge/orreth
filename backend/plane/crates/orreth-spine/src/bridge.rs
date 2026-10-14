@@ -977,6 +977,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/digest/:id", get(digest_door))
         .route("/digest", post(digest_post))
         .route("/guide", get(guide_door))
+        .route("/map", get(map_door))
         .route("/proof", get(proof_door))
         .route("/analyzer", get(analyzer_door))
         .route("/services", get(services_door).post(services_post))
@@ -1661,6 +1662,40 @@ async fn guide_door(State(app): State<Arc<App>>) -> Response {
         None => answer(
             500,
             json!({"error": format!("the guide is not at {}", path.map(|p| p.display().to_string()).unwrap_or_default())}),
+        ),
+    }
+}
+
+/// HOW THE KERNEL WORKS (canon 0011 §4c, JB 2026-10-14: "Orreth as a kernel needs one of these
+/// that we can manage and adjust as kernel does"): the kernel's own map — a DECLARATION kept beside
+/// the guide and served the same on every door, in the one graph model (a node may contain a graph;
+/// a top-level edge names a node by its path, region:part). This kernel adds its LIVE numbers —
+/// which kernel, its version and schema, how many doors it answers, how many topics the feed
+/// carries, how many tables the ground holds — so the drawing is lit by the kernel it is drawn on,
+/// never a static picture. Law for law with the Python reference's `map_view`.
+async fn map_door(State(app): State<Arc<App>>) -> Response {
+    let path = app
+        .cfg
+        .glass
+        .parent()
+        .and_then(|p| p.parent())
+        .map(|p| p.join("guide").join("kernel-map.v0.json"));
+    let read = path
+        .as_ref()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok());
+    match read {
+        Some(mut v) => {
+            v["live"] = json!({
+                "kernel": "rust", "version": env!("CARGO_PKG_VERSION"), "schema": crate::schema::SCHEMA_VERSION,
+                "doors": crate::doors::KNOWN.len(), "topics": crate::asks::FEED_TOPICS.len(),
+                "tables": crate::schema::tables().len(),
+            });
+            answer(200, v)
+        }
+        None => answer(
+            500,
+            json!({"error": format!("the map is not at {}", path.map(|p| p.display().to_string()).unwrap_or_default())}),
         ),
     }
 }

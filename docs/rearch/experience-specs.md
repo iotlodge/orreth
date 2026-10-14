@@ -431,16 +431,30 @@ The measure is JB's: *"how well Orreth can do it vs YOU"*. Part A is by hand on 
    the conditional way out dashed — read by the trial run. PROMOTE, Yes, JOINED. In the JOINED step's
    box, ask `hello`. PASS: the reply `HI HELLO` lands in the chat; greet and shout light on the true
    graph with "the last run took 2 hops: greet → shout". Ask `yo`. PASS: `hi yo`, one hop lit.
-9. **The graph model and the replay (sp9b).** Open the `lang1` bench (or the `lang1.v0` graph under
-   graphs). PASS: ONE drawing, fitted to the canvas with no scrollbar: the import node `run` reads
-   "4 nodes inside · lang-src" with **open ▸**. Click open ▸. PASS: the canvas shows the code's own
-   graph — start · greet · shout · end, the conditional way out dashed — under a breadcrumb
-   `lang1.v0 › run` that says the hull's ring once; the breadcrumb's first word goes back up. Say
-   `lang1, hello` in the chat. PASS: when the reply lands, greet then shout light in turn ("hop 1",
-   "hop 2"), the edges between them amber. On the bench's card at THE CARD (a fresh agent `lang2`
-   through the wizard, same source), PASS: the card lists "replay case 1 · “hello”"; clicking it
-   plays the trial run's hops on the canvas from the room's record. Say `lang1, yo`. PASS: greet
-   alone lights, the way to end dashed and taken.
+9. **The nested drawing (sp9b + sp9c).** Open the `lang1` bench (or the `lang1.v0` graph under
+   graphs). PASS: ONE drawing, boxes inside boxes — THE HULL the outer box (violet) with its stages
+   `hear → recall → route → work → reply`; inside **work** (amber) your graph; inside the import
+   block `run · IMPORT · lang-src` (cyan) the code's own graph — start · greet · shout · end, a
+   conditional way out dashed. First sight is centred on your graph, readable, the ring peeking at
+   both sides; **fit** (top right) shows the whole; drag pans, the wheel zooms. Click the `run`
+   header. PASS: it folds to one block "4 nodes inside · lang-src · open ▸"; click it, it opens.
+   Click the `run` box itself. PASS: the inspector reads the node. Say `lang1, hello` in the chat.
+   PASS: when the reply lands, hear · recall · route · work light "the ring, taken", then greet and
+   shout light in turn ("hop 1", "hop 2"), the edges between them amber, then reply; the legend
+   reads "the last run took 2 hops: greet → shout". On the bench's card at THE CARD (a fresh agent
+   `lang2` through the wizard, same source), PASS: the card lists "replay case 1 · “hello”";
+   clicking it plays the trial run's hops through the boxes. Say `lang1, yo`. PASS: greet alone
+   lights, the way to end dashed and taken.
+10. **How the kernel works (sp9c).** Close the Workshop. Say `how the kernel works` in the chat.
+   PASS: a window opens over the Panel, HOW THE KERNEL WORKS, its line naming THIS kernel (rust ·
+   its version · schema 12); the map draws seven boxes — YOU AND YOUR SEAT · THE DOORS (45 doors)
+   · THE HULL (hear → recall → route → work → the reply) · THE MINDS · THE HOUSE (N residents
+   seated now) · THE GROUND (52 tables · schema 12) · THE WATCHES — with one ask's road numbered
+   1 → 7 across them in amber. Click THE DOORS' header. PASS: it folds to "5 nodes inside"; click
+   it, it opens. Click the `gateway` block. PASS: its words read under the drawing. Press Esc.
+   PASS: the window closes and nothing else does. Click HOW IT WORKS on the sill. PASS: the same
+   window opens. Reload the page on :4601 (the Python reference) and say it again. PASS: the same
+   map, the line naming `reference` — the declaration is one, served by both.
 
 ## Walk records
 
