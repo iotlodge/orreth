@@ -78,6 +78,7 @@ const KNOWN: &[&str] = &[
     "drafts", // Phase 8 sp2: the draft shelf under the person
     "wear",   // Phase 8 sp2: the wear table
     "benches", // Phase 8 sp8: THE BENCH — one effort, one place (canon 0011)
+    "hops",    // Phase 8 sp9b: THE REPLAY — the hops a compiled graph took (canon 0011 §4b)
 ];
 
 /// A door's name: `METHOD /route` as the router spells it. The second

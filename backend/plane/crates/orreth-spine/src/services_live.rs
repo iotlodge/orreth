@@ -84,7 +84,8 @@ pub fn service_did(name: &str) -> Result<String, RoadError> {
     Ok(me.did())
 }
 
-const COLS: &str = "name, scope, kind, did, manifest, manifest_hash, version, placement, secrets_with, \
+/// The record's columns — ONE list for every door that reads a service row (W142: the listing kept its own and lost `shape`).
+pub const COLS: &str = "name, scope, kind, did, manifest, manifest_hash, version, placement, secrets_with, \
                     state, by_did, since, registered_at, last_ok, last_detail, last_checked_at, marker, root_marker, shape";
 
 /// `services._row`: the record as the reference shapes it.

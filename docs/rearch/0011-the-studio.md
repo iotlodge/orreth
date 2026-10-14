@@ -157,6 +157,48 @@ hosts; the kernel is their hull, their gate, their record and their Studio.
 - **Python body first, Rust parity after**, as every operating-state piece
   went; the fixture carries a graph with a shape.
 
+### 4b. The graph model and the replay (JB's lock, 2026-10-13: "How do we make it fluid … 20 node flows linking 10 sub graphs, advanced recursion, routing … a graph model that can be linked and used in ui and in kernel … watch experiment graph")
+
+Spoonful 9 drew two pictures and parsed a sentence: the declared graph
+(orreth-graph/1, forward only, no nesting) above, the true graph (a flat
+reading of LangGraph's JSON) below, and a reply's hops read back out of the
+journey's words by a pattern. That is why it was not fluid, and why it
+would get worse at twenty nodes and ten subgraphs. The lock:
+
+- **One model.** A graph is `{entry, nodes: [{id, kind, words?, graph?}],
+  edges: [{from, to, when?}]}` on both kernels and in the glass. A node may
+  CONTAIN a graph. The declared graph keeps its format on the shelf
+  (orreth-graph/1 is not reopened: forward only at the cut stays a rule on
+  the craft); the true graph is read in the same vocabulary, so an import
+  node contains its true graph and a LangGraph subgraph is a node of kind
+  `graph` with its own graph inside (`get_graph(xray=True)` names nested
+  nodes `parent:child`; the reading folds them). A loop in the code is a
+  loop in the reading — the true graph may cycle; the drawer bounds it.
+- **A hop is a record, not a sentence.** Every hop a compiled graph takes
+  lands as a row — `spine_hops`: the ask it served (or the harness run and
+  its case), the agent, the source, the node's full path, its namespace, its
+  step, when it started, how long it took, whether it ended well, and a hash
+  of what went in and out (LangGraph's debug stream gives every one). The
+  body writes them as it writes its wear rows and the shape; both kernels
+  read them. One fact per run, `orreth.hops.v1`, is the feed's pointer.
+  `GET /hops?ask=…` and `GET /hops?run=…&case=…` serve the record; the ask
+  view carries `hops`. The journey keeps its plain words for people. The
+  experiment room's record is now a real replay: every case's hops.
+- **One drawer.** The glass draws any graph of the model with one drawer:
+  the layout fits the canvas (no scrollbar for the ordinary case); a node
+  that contains a graph is drawn FOLDED ("N nodes inside · open") until
+  opened, in place of the canvas, with a breadcrumb (lang1.v0 › run); the
+  hull's ring is said once, where the agent's own nodes begin. A run
+  overlay PLAYS the hops in order at their recorded pace — a reply's hops as
+  they arrive, the chat's replies too, and any recorded run from the card
+  ("replay case 1"), so "watch the experiment" is the trial's hops lighting
+  on the bench's card. Twenty nodes and ten subgraphs stay twenty nodes
+  until you look inside one.
+- **Named, not built:** the hops publish WITH the reply (the body serves in
+  one transaction) and play at their recorded pace — a hop published while
+  the run is still going (a second line for the watch) is a later line;
+  time travel and forks (Studio's) stay named.
+
 ### 5. One word to work — the ladder folded (recommended)
 
 - **"put <name> to work"** on the bench (a button and the chat's word, one
@@ -290,6 +332,18 @@ golden set, a Yes, joined. No walk of 2026-10-12/13 is wasted.
    registration (the kernel runs no code of the repository; the trial run or
    the first ask reads it); time travel and forks; Rust reads and records,
    the Python body alone runs the code (the body is Python by design).
+2b. **THE GRAPH MODEL AND THE REPLAY (§4b) — JB's lock 2026-10-13, built
+   before spoonful 10.** Schema 12 on both kernels: `spine_hops`. Laws on
+   both kernels: `shape_of` folds subgraphs into nodes that contain a graph;
+   fixture operating-v0 grows a subgraph case. The Python body streams
+   LangGraph's debug stream with subgraphs, records every hop and one
+   `orreth.hops.v1` fact per run; the harness names its run and case on the
+   body so a trial's hops are the room's replay. Doors on both kernels:
+   `GET /hops` (by ask, or by run and case) and `hops` on the ask view. The
+   glass: one drawer for the one model — fit to the canvas, folded nodes
+   that open with a breadcrumb, the run overlay that plays hops at their
+   recorded pace from the feed, the ask view and the card's "replay case
+   N". W143 (the true graph off the right edge) is cured by the fit.
 3. **ONE WORD TO WORK.** `POST /benches/<name>/work` (ONE hold at L2, JB's
    lock): cuts in order, skips what stands, opens the experiment; the
    card's lines for every refusal. The chat's word and the bench's button,

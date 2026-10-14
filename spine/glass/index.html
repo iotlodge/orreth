@@ -466,7 +466,7 @@
   #ws-center>*{min-width:0}
   #ws-center.declmax{grid-template-rows:0 0 minmax(0,1fr)} #ws-center.declmax #ws-canvas-card,#ws-center.declmax #ws-split-decl{display:none}
   #ws-canvas{position:relative;overflow:auto;min-height:0;flex:1}
-  #ws-canvas svg{display:block}
+  #ws-canvas svg{display:block;width:100%;height:auto}   /* sp9b · W143: the drawing fits the canvas, never past its right edge */
   #ws-insp{grid-column:5;overflow:hidden} #ws-insp .ws-scroll{overflow-y:auto;padding:4px 14px 16px;font-size:12px;color:var(--ink);min-height:0;flex:1}
   #ws-decl .ws-pane-h{flex-wrap:wrap;height:auto;white-space:normal;row-gap:6px} #ws-decl .ws-pane-h .acts{margin:0 0 0 auto;gap:5px;flex-wrap:wrap;min-width:0}
   #ws-decl .ws-pane-h .acts .ws-btn{white-space:nowrap}
@@ -504,6 +504,8 @@
   #ws-canvas .node.ghost rect{stroke-dasharray:4 3;fill:transparent} #ws-canvas .node.ghost text{fill:var(--dim)}
   #ws-canvas .node.lit rect{stroke:var(--amber);stroke-width:2;fill:var(--amber-dim)} #ws-canvas .edge.lit path:not(.hit){stroke:var(--amber);stroke-width:2}
   #ws-canvas .edge.when path:not(.hit){stroke-dasharray:5 4}
+  #ws-canvas .node.has rect{stroke-width:2;stroke:var(--cyan)} #ws-canvas .node .open{fill:var(--cyan);font-size:10px;letter-spacing:.08em;cursor:pointer;pointer-events:auto}
+  #ws-canvas .ws-crumb{margin:8px 14px 0;font-size:11px;color:var(--dim)} #ws-canvas .ws-crumb [data-up]{color:var(--cyan);cursor:pointer} #ws-canvas .ws-crumb [data-up]:last-of-type{color:var(--ink)} #ws-canvas .ws-crumb .hull b{color:var(--ink)}
   #ws-canvas .a-dim{fill:var(--dim)} #ws-canvas .a-when{fill:var(--violet)} #ws-canvas .a-on{fill:var(--amber)}
   /* THE WIZARD (JB's lock 2026-10-12): the steps strip, a golden case's row, the card inline, the first screen's door */
   .wz-steps{display:flex;flex-wrap:wrap;gap:4px 6px;margin:8px 0 6px;font-size:10px;letter-spacing:.14em;color:var(--dim)}
@@ -1689,6 +1691,7 @@ async function send(given, label, toOverride, parent){
 async function onNotice(n){
   panelNotice(n).catch(()=>{});                   // row 4: THE PANEL lights first — the chat's own reading follows
   if (n.kind === "orreth.body.joined.v1" && typeof wizJoined === "function") wizJoined(n.ref);   // THE WIZARD's last step: "<name> joined"
+  if (n.kind === "orreth.hops.v1" && typeof hopsNotice === "function") hopsNotice(n);           // sp9b THE REPLAY: a run's hops play on the open graph
   if (n.kind === "orreth.session.opened.v1"){      // W51 (walk #13): a roll on ANY door — this door's sessions list follows
     if (SESSIONS_SHOWN) listSessions();            // the list was shown here: it follows
     return;
@@ -3009,7 +3012,9 @@ var workshopPull = document.getElementById("workshop");   // `var`: a pull toggl
 const WS = {drafts: [], shelf: [], tools: [], sources: [], minds: null, open: null, decl: null, dirty: false, sel: null, selEdge: null, filter: "", stands: {}, retired: false, xp: null,
             benches: [], fold: {}, lit: {}};   // W136 retired folded · W135 the open draft's experiment · sp8 THE BENCH: the person's benches; the rail's folds (kind → open) · sp9: the hops a run lit, by source
 const NODE_KINDS = ["think", "echo", "import"], WHEN_KINDS = ["otherwise", "edge", "ask", "reply"], HULL_EDGES = ["chat", "work", "event"];   // THE WIZARD (2026-10-12): import a kind the inspector offers — both kernels run it (sp5); before, the canvas called it "not a kind the hull runs"
-const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words back", import: "IMPORT · a repository's code"};
+const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words back", import: "IMPORT · a repository's code",
+                    start: "the graph's own start", end: "the graph's own end", node: "a node of the code", callable: "a plain callable — the words in, the words out", graph: "A GRAPH INSIDE · a subgraph of the code"};   // sp9b THE GRAPH MODEL: one drawer, the code's kinds too
+const TRUE_KINDS = ["start", "end", "node", "callable", "graph"];
 var WZ = null;   // THE WIZARD's state — one agent in flight, kept while the human looks at other drafts and resumed from "+ new agent"
 function workshopFocus(){ return {kind: "workspace", id: "ws_workshop", name: "workshop", window: null,
                label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"}; }
@@ -3248,110 +3253,165 @@ function drawCanvas(){
   }
   if (gf.via) box.insertAdjacentHTML("beforeend", `<div class="ws-banner">${gf.via}</div>`);
   if (!gf.g) return;
-  const g = gf.g, L = layoutGraph(g), NS = "http://www.w3.org/2000/svg";
+  const key = `${WS.open.source}:${WS.open.name}:${WS.open.kind}`;
+  if (!WS.into || WS.into.key !== key) WS.into = {key, path: []};        // sp9b THE GRAPH MODEL: the way into a node's graph, kept per open thing
+  const root = composeGraph(gf.g), walk = graphAt(root, WS.into.path);
+  if (!walk){ WS.into.path = []; drawCanvas(); return; }
+  const g = walk.g, inside = WS.into.path.length > 0, prefix = walk.prefix, lit = walk.source ? (WS.lit[walk.source] || []) : [];
+  if (inside){
+    const crumbs = [`<span data-up="0">${esc(gf.g.name || WS.open.name)}</span>`].concat(WS.into.path.map((id, i) => `<span data-up="${i + 1}">${esc(String(id))}</span>`)).join(" › ");
+    box.insertAdjacentHTML("beforeend", `<div class="ws-crumb">${crumbs}${walk.kind === "import" ? ` <span class="hull">· inside the hull's ring: hear → recall → route → <b>[ this graph ]</b> → the reply — the kernel's laws live in the hull, never in the agent's nodes</span>` : " · a graph inside the code"}</div>`);
+    box.querySelectorAll(".ws-crumb [data-up]").forEach(c => c.onclick = () => { WS.into.path = WS.into.path.slice(0, Number(c.dataset.up)); WS.sel = null; WS.selEdge = null; drawWorkshop(); });
+  }
+  const pathOf = (id) => prefix.concat([String(id)]).join(":");
+  const hopAt = (id) => lit.indexOf(pathOf(id));                                            // this node's place in the last run (−1: not taken)
+  const litIn = (id) => lit.some(h => h === pathOf(id) || h.startsWith(pathOf(id) + ":"));  // a node that contains a graph lights when any hop inside it did
+  const viewLit = [];                                                                       // the run's order as THIS view sees it (hops inside a folded node fold to it)
+  for (const h of lit){ const parts = h.split(":"); if (parts.length > prefix.length && prefix.every((p, i) => parts[i] === p)){ const id = parts[prefix.length]; if (viewLit[viewLit.length - 1] !== id) viewLit.push(id); } }
+  const L = layoutGraph(g), NS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(NS, "svg"); svg.setAttribute("width", L.width); svg.setAttribute("height", L.height); svg.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
+  svg.setAttribute("preserveAspectRatio", "xMinYMin meet"); svg.style.maxWidth = L.width + "px";   // W143: scaled down to fit, never up
   const defs = document.createElementNS(NS, "defs");
   for (const [id, cls] of [["arrow", "a-dim"], ["arrow-when", "a-when"], ["arrow-on", "a-on"]]){
     const mk = document.createElementNS(NS, "marker"); mk.setAttribute("id", id); mk.setAttribute("viewBox", "0 0 10 10"); mk.setAttribute("refX", "9"); mk.setAttribute("refY", "5"); mk.setAttribute("markerWidth", "7"); mk.setAttribute("markerHeight", "7"); mk.setAttribute("orient", "auto-start-reverse");
     const p = document.createElementNS(NS, "path"); p.setAttribute("d", "M 0 0 L 10 5 L 0 10 z"); p.setAttribute("class", cls); mk.appendChild(p); defs.appendChild(mk);
   }
   svg.appendChild(defs);
-  const editable = WS.open.source === "draft" && WS.open.kind === "graph";
+  const editable = !inside && WS.open.source === "draft" && WS.open.kind === "graph";
   L.edges.forEach((e, i) => {
     const a = L.pos[String(e.from)], b = L.pos[String(e.to)]; if (!a || !b) return;
     const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
-    const back = x2 <= x1;                      // a way out drawn backwards (a loop in a half-made draft) bows under
+    const back = x2 <= x1;                      // a way out drawn backwards (a loop — the code's, or a half-made draft's) bows under
     const twins = L.edges.filter(x => String(x.from) === String(e.from) && String(x.to) === String(e.to));   // two ways out to the same node bow apart
     const bow = (twins.indexOf(e) - (twins.length - 1) / 2) * 48;
     const P = back ? [[x1, y1], [x1 + 60, y1 + 90 + bow], [x2 - 60, y2 + 90 + bow], [x2, y2]]
                    : [[x1, y1], [(x1 + x2) / 2, y1 + bow], [(x1 + x2) / 2, y2 + bow], [x2, y2]];
     const d = `M ${P[0][0]} ${P[0][1]} C ${P[1][0]} ${P[1][1]}, ${P[2][0]} ${P[2][1]}, ${P[3][0]} ${P[3][1]}`;
     const at = (t) => { const m = 1 - t; return [0, 1].map(i => m*m*m*P[0][i] + 3*m*m*t*P[1][i] + 3*m*t*t*P[2][i] + t*t*t*P[3][i]); };   // a point on the curve
-    const gE = document.createElementNS(NS, "g"); gE.setAttribute("class", "edge" + (e.when ? " when" : "") + (WS.selEdge === i ? " on" : ""));
+    const ia = viewLit.indexOf(String(e.from)), ib = viewLit.indexOf(String(e.to));
+    const walked = inside && ((ia >= 0 && ib === ia + 1) || (String(e.from) === "__start__" && ib === 0) || (String(e.to) === "__end__" && viewLit.length && ia === viewLit.length - 1));
+    const when = inside ? !!e.when : !!e.when;
+    const gE = document.createElementNS(NS, "g"); gE.setAttribute("class", "edge" + (when ? " when" : "") + (WS.selEdge === i ? " on" : "") + (walked ? " lit" : ""));
     const hit = document.createElementNS(NS, "path"); hit.setAttribute("d", d); hit.setAttribute("class", "hit");
-    const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("marker-end", `url(#${WS.selEdge === i ? "arrow-on" : e.when ? "arrow-when" : "arrow"})`);
+    const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("marker-end", `url(#${WS.selEdge === i || walked ? "arrow-on" : when ? "arrow-when" : "arrow"})`);
     gE.appendChild(hit); gE.appendChild(p);
-    if (e.when || L.branching.has(String(e.from))){
+    if (!inside && (e.when || L.branching.has(String(e.from)))){
       const [lx, ly] = at(0.4);                 // the words ride the curve itself, clear of both blocks
       const t = document.createElementNS(NS, "text"); t.setAttribute("x", lx); t.setAttribute("y", ly - 6); t.setAttribute("text-anchor", "middle"); t.textContent = whenWords(e); gE.appendChild(t);
     }
-    gE.onclick = (ev) => { ev.stopPropagation(); WS.selEdge = i; WS.sel = null; drawWorkshop(); };
-    const title = document.createElementNS(NS, "title"); title.textContent = `${e.from} → ${e.to} · ${whenWords(e)}` + (editable ? " · click to set or clear its when" : ""); gE.appendChild(title);
+    gE.onclick = (ev) => { ev.stopPropagation(); if (inside) return; WS.selEdge = i; WS.sel = null; drawWorkshop(); };
+    const title = document.createElementNS(NS, "title"); title.textContent = inside ? `${e.from} → ${e.to}${e.when ? " · a conditional way out (the code picks it as the run goes)" : ""}${walked ? " · taken by the last run" : ""}` : `${e.from} → ${e.to} · ${whenWords(e)}` + (editable ? " · click to set or clear its when" : ""); gE.appendChild(title);
     svg.appendChild(gE);
   });
   for (const n of L.nodes){
     const id = String(n.id), p = L.pos[id]; if (!p) continue;
-    const gN = document.createElementNS(NS, "g"); gN.setAttribute("class", "node" + (id === String(g.entry) ? " entry" : "") + (WS.sel === id ? " on" : "") + (p.off ? " off" : "") + (NODE_KINDS.includes(n.kind) ? "" : " bad"));
+    const has = !!(n.graph && Array.isArray(n.graph.nodes) && n.graph.nodes.length), ghost = n.kind === "start" || n.kind === "end";
+    const isLit = inside ? litIn(id) : !!(n.source && (WS.lit[n.source] || []).length);
+    const known = (inside ? TRUE_KINDS : NODE_KINDS).includes(n.kind);
+    const gN = document.createElementNS(NS, "g"); gN.setAttribute("class", "node" + (id === String(g.entry) ? " entry" : "") + (WS.sel === id ? " on" : "") + (p.off ? " off" : "") + (known ? "" : " bad") + (has ? " has" : "") + (ghost ? " ghost" : "") + (isLit ? " lit" : ""));
     gN.setAttribute("transform", `translate(${p.x},${p.y})`);
     const r = document.createElementNS(NS, "rect"); r.setAttribute("width", p.w); r.setAttribute("height", p.h); r.setAttribute("rx", 10); gN.appendChild(r);
-    const t1 = document.createElementNS(NS, "text"); t1.setAttribute("x", 12); t1.setAttribute("y", 24); t1.textContent = id + (id === String(g.entry) ? "  · entry" : ""); gN.appendChild(t1);
-    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k"); t2.textContent = (KIND_WORDS[n.kind] || `${String(n.kind || "?").toUpperCase()} · not a kind the hull runs`) + (p.off ? " · unreached" : ""); gN.appendChild(t2);
-    const t3 = document.createElementNS(NS, "text"); t3.setAttribute("x", 12); t3.setAttribute("y", 59); t3.setAttribute("class", "r"); const rf = refsOf(n); t3.textContent = rf.length > 34 ? rf.slice(0, 33) + "…" : rf; gN.appendChild(t3);
-    const title = document.createElementNS(NS, "title"); title.textContent = `${id} · ${n.kind}${rf ? " · " + rf : ""}${n.words ? " — " + n.words : ""}` + (editable ? " · click to inspect and edit" : " · click to inspect"); gN.appendChild(title);
-    gN.onclick = (ev) => { ev.stopPropagation(); WS.sel = id; WS.selEdge = null; drawWorkshop(); };
+    const t1 = document.createElementNS(NS, "text"); t1.setAttribute("x", 12); t1.setAttribute("y", 24); t1.textContent = (ghost ? n.kind : id) + (!inside && id === String(g.entry) ? "  · entry" : ""); gN.appendChild(t1);
+    const hop = inside ? hopAt(id) : -1;
+    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k");
+    t2.textContent = (KIND_WORDS[n.kind] || `${String(n.kind || "?").toUpperCase()} · not a kind the hull runs`) + (p.off ? " · unreached" : "") + (hop >= 0 ? ` · hop ${hop + 1}` : isLit && inside ? " · lit inside" : ""); gN.appendChild(t2);
+    const rf = has ? `${n.graph.nodes.length} node${n.graph.nodes.length === 1 ? "" : "s"} inside${n.source ? " · " + n.source : ""}` : (n.kind === "import" && n.source ? `${refsOf(n)} · its shape is read at the first run` : refsOf(n));
+    const t3 = document.createElementNS(NS, "text"); t3.setAttribute("x", 12); t3.setAttribute("y", 59); t3.setAttribute("class", "r"); t3.textContent = rf.length > 34 ? rf.slice(0, 33) + "…" : rf; gN.appendChild(t3);
+    if (has){
+      const o = document.createElementNS(NS, "text"); o.setAttribute("x", p.w - 52); o.setAttribute("y", 24); o.setAttribute("class", "open"); o.textContent = "open ▸";
+      o.onclick = (ev) => { ev.stopPropagation(); WS.into.path = WS.into.path.concat([id]); WS.sel = null; WS.selEdge = null; drawWorkshop(); };
+      gN.appendChild(o);
+    }
+    const title = document.createElementNS(NS, "title");
+    title.textContent = inside ? `${id} · ${n.kind} · read from the code, never drawn by hand${has ? " · open ▸ looks inside" : ""}${hop >= 0 ? ` · hop ${hop + 1} of the last run` : ""}`
+                               : `${id} · ${n.kind}${rf ? " · " + rf : ""}${n.words ? " — " + n.words : ""}` + (editable ? " · click to inspect and edit" : " · click to inspect") + (has ? " · open ▸ looks inside" : "");
+    gN.appendChild(title);
+    gN.onclick = (ev) => { ev.stopPropagation(); if (inside){ if (has){ WS.into.path = WS.into.path.concat([id]); drawWorkshop(); } return; } WS.sel = id; WS.selEdge = null; drawWorkshop(); };
     svg.appendChild(gN);
   }
-  svg.onclick = () => { WS.sel = null; WS.selEdge = null; drawWorkshop(); };
+  svg.onclick = () => { if (inside) return; WS.sel = null; WS.selEdge = null; drawWorkshop(); };
   box.appendChild(svg);
-  for (const n of (g.nodes || [])) if (n && n.kind === "import" && n.source) drawTrueGraph(box, g, n);   // sp9 THE TRUE GRAPH
+  if (inside){
+    box.insertAdjacentHTML("beforeend", `<div class="ws-legend">${viewLit.length ? `the last run took ${viewLit.length} hop${viewLit.length === 1 ? "" : "s"} here: <b>${esc(viewLit.join(" → "))}</b> — lit above` : "ask the agent (in the chat, or from its bench) and the hops it takes light up here · a card's “replay case N” plays a recorded run"} · start and end are the graph's own · a conditional way out is dashed · a node with a graph inside opens with ▸ · read from the code, never drawn by hand</div>`);
+    return;
+  }
   const spine = defaultLine(g);
-  box.insertAdjacentHTML("beforeend", `<div class="ws-legend">entry ringed cyan · a plain arrow is the default way out (“otherwise”) · a violet arrow wears a <b>when</b> (the hull's edge · the ask's words · the last reply) · the default line: ${esc(spine.join(" → ") || "—")}${L.branching.size ? ` · branches at ${esc([...L.branching].join(", "))}` : ""} · forward only (a loop refuses at the cut)</div>`);
+  box.insertAdjacentHTML("beforeend", `<div class="ws-legend">entry ringed cyan · a plain arrow is the default way out (“otherwise”) · a violet arrow wears a <b>when</b> (the hull's edge · the ask's words · the last reply) · the default line: ${esc(spine.join(" → ") || "—")}${L.branching.size ? ` · branches at ${esc([...L.branching].join(", "))}` : ""} · forward only (a loop refuses at the cut)${root.nodes.some(n => n && n.graph) ? " · a node with a graph inside opens with ▸ — the code's own nodes, lit by the last run" : ""}</div>`);
 }
 /* ---- sp9 THE TRUE GRAPH (canon 0011 §4, JB's lock 2026-10-13): LangGraph code is the agent's graph. The body reads the compiled graph's own shape
    when it runs an import node (`get_graph().to_json()` — the same JSON Studio draws) and records it on the source's row; the canvas draws it
    here INSIDE THE HULL'S RING — hear → recall → route → [this graph] → the reply — and a run lights the hops the graph took (the reply's
    journey names them: "hops: greet → shout"). Nothing the kernel does hides behind the agent's nodes (0010 §6's law). ---- */
-function drawTrueGraph(box, g, node){
-  const src = (WS.sources || []).find(s => s.name === node.source);
-  const m = (src && src.manifest) || {}, shape = src && src.shape, lit = WS.lit[node.source] || [];
-  const wrap = document.createElement("div"); wrap.className = "true";
-  const head = `<div class="ws-h">THE TRUE GRAPH · ${esc(node.source)}${m.commit ? " @ " + esc(String(m.commit).slice(0, 12)) : ""}${m.entry ? " · " + esc(String(m.entry)) : ""} — the node <b>${esc(String(node.id))}</b> runs it</div>` +
-               `<div class="hull">inside the hull's ring: hear → recall → route → <b>[ this graph ]</b> → the reply — the kernel's laws live in the hull, never in the agent's nodes</div>`;
-  if (!src){ wrap.innerHTML = head + `<div class="meta">no source named ${esc(node.source)} stands on the shelf</div>`; box.appendChild(wrap); return; }
-  if (!shape || !Array.isArray(shape.nodes) || !shape.nodes.length){
-    wrap.innerHTML = head + `<div class="meta">its shape is not read yet — the body reads the compiled graph the first time it runs this node (an experiment's trial run, or an ask); the canvas draws it then</div>`;
-    box.appendChild(wrap); return;
-  }
-  const sg = {entry: "__start__", nodes: shape.nodes, edges: (shape.edges || []).map(e => ({from: e.from, to: e.to, when: !!e.when}))};
-  const L = layoutGraph(sg), NS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("width", L.width); svg.setAttribute("height", L.height); svg.setAttribute("viewBox", `0 0 ${L.width} ${L.height}`);
-  const litSet = new Set(lit);
-  L.edges.forEach(e => {
-    const a = L.pos[String(e.from)], b = L.pos[String(e.to)]; if (!a || !b) return;
-    const x1 = a.x + a.w, y1 = a.y + a.h / 2, x2 = b.x, y2 = b.y + b.h / 2;
-    const twins = L.edges.filter(x => String(x.from) === String(e.from) && String(x.to) === String(e.to)); const bow = (twins.indexOf(e) - (twins.length - 1) / 2) * 48;
-    const d = `M ${x1} ${y1} C ${(x1 + x2) / 2} ${y1 + bow}, ${(x1 + x2) / 2} ${y2 + bow}, ${x2} ${y2}`;
-    const ia = lit.indexOf(String(e.from)), ib = lit.indexOf(String(e.to));
-    const walked = (ia >= 0 && ib === ia + 1) || (String(e.from) === "__start__" && ib === 0) || (String(e.to) === "__end__" && ia === lit.length - 1 && lit.length);
-    const gE = document.createElementNS(NS, "g"); gE.setAttribute("class", "edge" + (e.when ? " when" : "") + (walked ? " lit" : ""));
-    const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); p.setAttribute("marker-end", `url(#${walked ? "arrow-on" : e.when ? "arrow-when" : "arrow"})`); gE.appendChild(p);
-    const t = document.createElementNS(NS, "title"); t.textContent = `${e.from} → ${e.to}${e.when ? " · a conditional way out (the code picks it as the run goes)" : ""}`; gE.appendChild(t);
-    svg.appendChild(gE);
+function composeGraph(g){                     // sp9b THE GRAPH MODEL (canon 0011 §4b): ONE graph — an import node CONTAINS its true graph (the source's shape, read by the body at the first run); a subgraph is a node of kind graph with a graph inside
+  let pending = false;
+  const nodes = (g.nodes || []).map(n => {
+    if (!n || n.kind !== "import" || !n.source) return n;
+    const s = (WS.sources || []).find(x => x.name === n.source), shape = s && s.shape;
+    if (shape && Array.isArray(shape.nodes) && shape.nodes.length) return Object.assign({}, n, {graph: Object.assign({entry: "__start__"}, shape)});
+    if (s) pending = true;                      // the shape not read yet — the pending state re-reads its own door (W133's law, W142)
+    return n;
   });
-  for (const n of L.nodes){
-    const id = String(n.id), p = L.pos[id]; if (!p) continue;
-    const ghost = n.kind === "start" || n.kind === "end";
-    const gN = document.createElementNS(NS, "g"); gN.setAttribute("class", "node" + (ghost ? " ghost" : "") + (litSet.has(id) ? " lit" : "")); gN.setAttribute("transform", `translate(${p.x},${p.y})`);
-    const r = document.createElementNS(NS, "rect"); r.setAttribute("width", p.w); r.setAttribute("height", p.h); r.setAttribute("rx", 10); gN.appendChild(r);
-    const t1 = document.createElementNS(NS, "text"); t1.setAttribute("x", 12); t1.setAttribute("y", 24); t1.textContent = ghost ? (n.kind === "start" ? "start" : "end") : id; gN.appendChild(t1);
-    const t2 = document.createElementNS(NS, "text"); t2.setAttribute("x", 12); t2.setAttribute("y", 42); t2.setAttribute("class", "k");
-    t2.textContent = ghost ? "the graph's own " + n.kind : n.kind === "callable" ? "a plain callable — the words in, the words out" : litSet.has(id) ? `a node of the code · lit by the last run (hop ${lit.indexOf(id) + 1})` : "a node of the code";
-    gN.appendChild(t2);
-    const title = document.createElementNS(NS, "title"); title.textContent = `${id} · read from the compiled graph at ${m.commit ? String(m.commit).slice(0, 12) : "?"}`; gN.appendChild(title);
-    svg.appendChild(gN);
-  }
-  const defs = box.querySelector("svg defs"); if (defs) svg.insertBefore(defs.cloneNode(true), svg.firstChild);
-  wrap.innerHTML = head; wrap.appendChild(svg);
-  wrap.insertAdjacentHTML("beforeend", `<div class="meta">${lit.length ? `the last run took ${lit.length} hop${lit.length === 1 ? "" : "s"}: <b>${esc(lit.join(" → "))}</b> — lit above` : "ask the agent (in the chat, or from its bench) and the hops it takes light up here"} · read from the code, never drawn by hand; a conditional way out is dashed</div>`);
-  box.appendChild(wrap);
+  if (pending) shapeWatch();
+  return Object.assign({}, g, {nodes});
 }
-function litFromJourney(v){                   // sp9: a reply's journey names the hops an import node took — the open graph's true graph lights
-  let hit = false;
+function graphAt(root, path){                  // the graph the canvas shows: the root, or the graph inside the nodes the path names (an import node's true graph; a subgraph's)
+  let g = root, source = null, prefix = [], kind = null;
+  for (const id of path){
+    const n = (g.nodes || []).find(x => x && String(x.id) === String(id));
+    if (!n || !n.graph) return null;
+    if (n.kind === "import"){ source = n.source; prefix = []; kind = "import"; } else { prefix = prefix.concat([String(id)]); kind = n.kind; }
+    g = n.graph;
+  }
+  return {g, source, prefix, kind};
+}
+function playHops(source, hops){               // THE RUN OVERLAY: the hops light in order at their recorded pace (150 ms to 1.2 s a hop) — a reply's, a notice's, a recorded case's
+  if (!source || !Array.isArray(hops) || !hops.length) return;
+  const names = hops.map(h => String((h && h.node) || h));
+  if (WS.play && WS.play.timer) clearTimeout(WS.play.timer);
+  const shown = workshopPull && workshopPull.classList.contains("open");
+  if (!shown){ WS.lit[source] = names; return; }
+  if (!((WS.sources || []).find(s => s.name === source) || {}).shape) loadWorkshop().then(drawCanvas);   // the shape landed with this run: the shelf re-read once
+  WS.lit[source] = []; WS.play = {source, i: 0, timer: null};
+  const step = () => {
+    if (!WS.play || WS.play.source !== source) return;
+    WS.lit[source] = names.slice(0, WS.play.i + 1); drawCanvas(); WS.play.i += 1;
+    if (WS.play.i < names.length){ const ms = Number((hops[WS.play.i - 1] || {}).took_ms); WS.play.timer = setTimeout(step, Math.max(150, Math.min(1200, isFinite(ms) && ms > 0 ? ms : 300))); }
+  };
+  step();
+}
+async function replayCase(run, c){            // the card's "replay case N": the room's record through the hops door
+  const r = await fetch(`/hops?run=${encodeURIComponent(run)}&case=${encodeURIComponent(c)}`).then(x=>x.json()).catch(()=>null);
+  const hops = (r && r.hops) || [];
+  if (!hops.length){ sysline(`no hops recorded for case ${esc(String(c))} of ${esc(String(run))} — the trial ran before THE REPLAY was built, or its graph runs no code`); return; }
+  const by = {}; for (const h of hops) (by[h.source] = by[h.source] || []).push(h);
+  for (const s in by) playHops(s, by[s]);
+}
+function hopsNotice(n){                        // orreth.hops.v1 on the feed: a run's hops, one fact — played on the open graph (the trial life's cases light the bench's card as they run)
+  factOf(n).then(f => { const p = f && (f.payload || (f.fact && f.fact.payload) || (f.envelope && f.envelope.payload)); if (p && p.source && Array.isArray(p.hops)) playHops(p.source, p.hops); });
+}
+var shapeTimer = null;
+function shapeWatch(){                        // W142 (JB, 2026-10-13: "it's saying its shape not yet read???"): the shape landed on the ground at the trial run and the shelf in this
+  if (shapeTimer) return;                     // browser was never re-read — the pending state re-reads the shelf's door every 3 s until the shape lands, then stops
+  shapeTimer = setInterval(async () => {
+    const on = workshopPull && workshopPull.classList.contains("open") && WS.open;
+    const g = on ? graphOf() : null;
+    const want = g ? (g.nodes || []).filter(n => n && n.kind === "import" && n.source).map(n => n.source) : [];
+    const missing = want.filter(n => { const s = WS.sources.find(x => x.name === n); return s && !(s.shape && Array.isArray(s.shape.nodes) && s.shape.nodes.length); });
+    if (!missing.length){ clearInterval(shapeTimer); shapeTimer = null; return; }
+    const sv = await fetch("/services?kind=source").then(x=>x.json()).catch(()=>null);
+    if (!sv) return;
+    let landed = false;
+    for (const s of (sv.services || [])){ const w = WS.sources.find(x => x.name === s.name); if (w && s.shape && !w.shape){ w.shape = s.shape; landed = true; } }
+    if (landed) drawCanvas();
+  }, 3000);
+}
+function litFromJourney(v){                   // sp9b: a reply's hops are the ask view's record — played on the open graph; an older ask's journey read by its words
+  const hops = Array.isArray(v && v.hops) ? v.hops : [];
+  if (hops.length){ const by = {}; for (const h of hops) (by[h.source] = by[h.source] || []).push(h); for (const s in by) playHops(s, by[s]); return; }
   for (const n of (v && v.journey) || []){
     const m = String(n).match(/ran the imported graph (\S+) at \S+ — entry \S+ · hops: (.+)$/);
-    if (m){ WS.lit[m[1]] = m[2].split(" → ").map(x => x.trim()).filter(Boolean); hit = true; }
+    if (m) playHops(m[1], m[2].split(" → ").map(x => ({node: x.trim()})).filter(x => x.node));
   }
-  if (hit && workshopPull && workshopPull.classList.contains("open")){ if (!WS.sources.some(s => s.shape && WS.lit[s.name])) loadWorkshop().then(drawCanvas); else drawCanvas(); }
 }
 function defaultLine(g){
   const outs = {}; for (const e of (g.edges || [])) if (e && !e.when && outs[String(e.from)] == null) outs[String(e.from)] = String(e.to);
@@ -3885,6 +3945,8 @@ function wizInspector(box){
       const cand = (x.arms || {}).candidate, fails = cand && Array.isArray(cand.details) ? cand.details.filter(c => !c.ok) : [];   // W131 (JB, 2026-10-13): the arms' result in plain words, the way back when a golden case failed
       if (cand && cand.passed !== null && cand.passed !== undefined)
         h += `<div class="meta"><b>the candidate: ${cand.passed} passed, ${cand.failed} failed</b>${fails.length ? " — " + fails.map(c => `asked “${esc(c.ask)}”, expected ${esc((c.expect || []).join(", "))}, the reply was “${esc(c.reply || "")}”`).join("; ") + ". A candidate that fails its own evidence is not for the shelf: fix the case (the reply must CONTAIN the expected words) or the graph, then SAVE and CUT again — what stands unchanged is skipped, the golden set lands as its next version, the agent's cut opens a new experiment." : ""}</div>`;
+      const dets = cand && Array.isArray(cand.details) ? cand.details : [];   // sp9b THE REPLAY: the trial's record, a case at a time, played on the canvas
+      if (dets.length && cand.run_id) h += `<div class="meta">the trial's record — replay a case and its hops light on the canvas: ${dets.map((c, i) => `<button class="ws-btn" data-replay="${esc(String(c.case || i + 1))}" data-run="${esc(String(cand.run_id))}">replay case ${esc(String(c.case || i + 1))} · “${esc(String(c.ask || ""))}”</button>`).join(" ")}</div>`;
       h += `<div class="wz-card" id="wz-card"></div>` +
            `<label>where the next life stands · the promotion's one field</label><select id="wz-at">${[[u, "the universe itself"], ...floors].map(([v, w]) => `<option value="${esc(v)}" ${v === WZ.at ? "selected" : ""}>${esc(w)}</option>`).join("")}</select>` +
            `<div class="acts">${fails.length ? `<button class="ws-btn p" id="wz-fix">fix the golden cases — declines this experiment, back to GOLDEN CASES</button>` : ""}<button class="ws-btn ${fails.length ? "" : "p"}" id="wz-promote">PROMOTE ${esc(WZ.name)} → the interlock</button><button class="ws-btn" id="wz-decline">decline</button></div>` +
@@ -3893,6 +3955,7 @@ function wizInspector(box){
     h += `<div class="acts">${leave}</div>`;
     box.innerHTML = h;
     if (x && x.state === "proposed"){ experimentCard(x.experiment_id, x, q("wz-card"), true); }
+    box.querySelectorAll("[data-replay]").forEach(b => { b.onclick = () => replayCase(b.dataset.run, b.dataset.replay); });   // sp9b
     if (q("wz-at")) q("wz-at").onchange = () => { WZ.at = q("wz-at").value; };
     if (q("wz-promote")) q("wz-promote").onclick = () => wizPromote(false);
     if (q("wz-decline")) q("wz-decline").onclick = () => wizPromote(true);

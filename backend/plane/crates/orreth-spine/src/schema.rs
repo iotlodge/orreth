@@ -36,7 +36,7 @@ use std::sync::LazyLock;
 /// (or past) its number runs no DDL at all — it VERIFIES that every table it declares
 /// stands, and refuses to light on a ground that lies. A kernel lighting beside a
 /// migrating one WAITS at the lock and then verifies (`Ground::ensure_all`).
-pub const SCHEMA_VERSION: i32 = 11; // 11: THE TRUE GRAPH — spine_services.shape, a source's compiled shape read by the body that ran it (Phase 8 sp9, canon 0011 §4, 2026-10-13) · 10: THE BENCH — spine_benches, one effort one row, the wizard's place on the ground; spine_drafts.bench (Phase 8 sp8 THE STUDIO, canon 0011, 2026-10-13) · 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row (Phase 8 sp6, 2026-10-09) · 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
+pub const SCHEMA_VERSION: i32 = 12; // 12: THE REPLAY — spine_hops, every hop a compiled graph took, by the ask or by the run and its case (Phase 8 sp9b, canon 0011 §4b, 2026-10-13) · 11: THE TRUE GRAPH — spine_services.shape, a source's compiled shape read by the body that ran it (Phase 8 sp9, canon 0011 §4, 2026-10-13) · 10: THE BENCH — spine_benches, one effort one row, the wizard's place on the ground; spine_drafts.bench (Phase 8 sp8 THE STUDIO, canon 0011, 2026-10-13) · 9: THE TWO CHIPS — spine_keychecks, the standing key-check's record; the chips' evidence on an experiment's row (Phase 8 sp6, 2026-10-09) · 8: THE OPERATING STATE — spine_feedback · spine_includes · spine_grading, the meter's ask, a verdict on a live reply, an intention's watches (Phase 8 sp5, 2026-10-08) · 7: the experiments, the verdicts and the body seats — spine_experiments · spine_verdicts · spine_body_seats (THE EXPERIMENT AND THE CUT, Phase 8 sp4, 2026-10-07) · 2: the indexes (the perf cure, 2026-09-29) · 3: a watch's rest, a peer's forgetting (the honest glass sp2, 2026-09-29) · 4: an ask's resent_at (W91 THE BENCH SWEEP, 2026-10-02) · 5: the levels — spine_levels (THE PATH, Phase 8 sp1, 2026-10-05) · 6: the wear table and the draft shelf — spine_wear · spine_drafts (THE SHELF WIDENED, Phase 8 sp2, 2026-10-05)
 
 /// The version table itself — created before the version is read, under the same lock.
 pub const SCHEMA_DDL: &[&str] = &[
@@ -485,6 +485,13 @@ pub const OPERATING_DDL: &[&str] = &[
     "ALTER TABLE spine_verdicts ADD COLUMN IF NOT EXISTS on_ask text",
     "CREATE INDEX IF NOT EXISTS spine_verdicts_on_ask ON spine_verdicts (scope, on_ask)",
     "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS watches text",
+    // Phase 8 sp9b THE REPLAY (canon 0011 §4b, schema 12): every hop a compiled graph took — by the ask it served,
+    // or by the harness run and its case; the body writes them, both kernels read them
+    "CREATE TABLE IF NOT EXISTS spine_hops ( hop_id bigserial PRIMARY KEY, scope text NOT NULL, ref text, run_id text, \
+     case_no int, agent text, source text NOT NULL, node text NOT NULL, ns text, step int, at timestamptz, took_ms int, \
+     ok boolean, in_hash text, out_hash text, landed_at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_hops_ref ON spine_hops (scope, ref, hop_id)",
+    "CREATE INDEX IF NOT EXISTS spine_hops_run ON spine_hops (scope, run_id, case_no, hop_id)",
 ];
 
 /// Phase 8 sp6, THE TWO CHIPS (`chips_live`): the standing key-check's record — a challenge the kernel issued

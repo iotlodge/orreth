@@ -120,13 +120,19 @@ def run(conn, body, cases: list[dict] | None = None,
 
 def _run(conn, body, cases, parent_marker, arm, run_id=None):
     replies = []
-    for c in cases:
-        out = body._graph.invoke({"text": c["ask"], "reply": "", "steps": [],
-                                  "notes": [], "hold": None, "read": []})
+    rid = run_id or ("run_" + secrets.token_hex(5))
+    for i, c in enumerate(cases, 1):
+        body._current_run, body._current_case = rid, i      # sp9b THE REPLAY: a trial's hops are the room's record, by run and case
+        try:
+            out = body._graph.invoke({"text": c["ask"], "reply": "", "steps": [],
+                                      "notes": [], "hold": None, "read": []})
+        finally:
+            body._current_run = body._current_case = None
         replies.append(out.get("reply") or "")
     v = verdict(cases, replies)
     passed, failed, details = v["passed"], v["failed"], v["details"]
-    rid = run_id or ("run_" + secrets.token_hex(5))
+    for i, d in enumerate(details, 1):
+        d["case"] = i
     version = body.template.get("version", "?")
     from . import markers
     markers.ensure_schema(conn)

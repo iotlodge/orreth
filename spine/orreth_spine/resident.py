@@ -852,7 +852,10 @@ class Resident:
                                                             f"({self.template.get('persona') or 'a plain-spoken echo'})"]}
                 elif n["kind"] == "import":              # Phase 8 sp5: a repo'd graph run inside the hull (dev universes only)
                     from . import operating as _op
-                    reply, said = _op.run_import(self._serve_conn, n, cur_state["text"])
+                    reply, said = _op.run_import(self._serve_conn, n, cur_state["text"],
+                                                 {"ask": self._current_ask, "run": getattr(self, "_current_run", None),   # sp9b: the hops' record names the ask, or the run and its case
+                                                  "case": getattr(self, "_current_case", None), "agent": self.name, "scope": self.scope,
+                                                  "chain": list(getattr(self, "_current_chain", None) or [])})
                     part = {"reply": reply, "steps": cur_state["steps"] + [said]}
                 else:
                     part = think(cur_state, n)

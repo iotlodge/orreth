@@ -362,6 +362,37 @@ pub async fn grade_beat(g: &mut Ground, w: &World) -> Result<Vec<String>, RoadEr
 }
 
 /// The verdicts on a live reply, for the door.
+/// sp9b THE REPLAY (canon 0011 §4b): the hops door's reading — by the ask it served, or by the harness run and
+/// its case — in the order the hops began. `operating.hops_for`, law for law.
+pub async fn hops_for<C: GenericClient>(c: &C, scope: &str, ask: Option<&str>, run: Option<&str>, case: Option<i32>) -> Result<Vec<Value>, RoadError> {
+    const COLS: &str = "ref, run_id, case_no, agent, source, node, ns, step, at, took_ms, ok, in_hash, out_hash";
+    let rows = if let Some(a) = ask.filter(|a| !a.is_empty()) {
+        c.query(&format!("SELECT {COLS} FROM spine_hops WHERE scope = $1 AND ref = $2 ORDER BY hop_id"), &[&scope, &a]).await?
+    } else if let Some(r) = run.filter(|r| !r.is_empty()) {
+        c.query(
+            &format!("SELECT {COLS} FROM spine_hops WHERE scope = $1 AND run_id = $2 AND ($3::int IS NULL OR case_no = $3) ORDER BY hop_id"),
+            &[&scope, &r, &case],
+        )
+        .await?
+    } else {
+        return Ok(vec![]);
+    };
+    Ok(rows
+        .iter()
+        .map(|r| {
+            let ns: Option<String> = r.get(6);
+            let at: Option<SystemTime> = r.get(8);
+            json!({
+                "ref": r.get::<_, Option<String>>(0), "run": r.get::<_, Option<String>>(1), "case": r.get::<_, Option<i32>>(2),
+                "agent": r.get::<_, Option<String>>(3), "source": r.get::<_, String>(4), "node": r.get::<_, String>(5),
+                "ns": ns.filter(|s| !s.is_empty()).map(|s| s.split(':').map(String::from).collect::<Vec<_>>()).unwrap_or_default(),
+                "step": r.get::<_, Option<i32>>(7), "at": at.map(isoformat), "took_ms": r.get::<_, Option<i32>>(9),
+                "ok": r.get::<_, Option<bool>>(10), "in_hash": r.get::<_, Option<String>>(11), "out_hash": r.get::<_, Option<String>>(12),
+            })
+        })
+        .collect())
+}
+
 pub async fn live_verdicts<C: GenericClient>(c: &C, ask_id: &str) -> Result<Vec<Value>, RoadError> {
     Ok(c
         .query("SELECT verdict_id, by_name, verdict, words, sig, at FROM spine_verdicts WHERE on_ask = $1 ORDER BY at", &[&ask_id])

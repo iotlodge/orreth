@@ -38,6 +38,7 @@ KNOWN = frozenset((
     "levels",           # Phase 8 sp1: THE PATH (named here in sp2 — the sp1 doors folded to `other`)
     "drafts", "wear",   # Phase 8 sp2: the draft shelf under the person · the wear table
     "benches",          # Phase 8 sp8: THE BENCH — one effort, one place (canon 0011)
+    "hops",             # Phase 8 sp9b: THE REPLAY — the hops a compiled graph took (canon 0011 §4b)
 ))
 _ID_AFTER = frozenset(("ask", "fact", "session", "digest", "join", "benches"))
 

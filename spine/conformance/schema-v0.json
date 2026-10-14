@@ -9,11 +9,11 @@
    "kind": "schema_version",
    "input": {},
    "expect": {
-    "version": 11
+    "version": 12
    }
   },
   {
-   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 51 tables at schema 11 (no table joins at sp9 - a column on spine_services; spine_benches joined at sp8)",
+   "name": "schema_tables: every table both kernels stand on at this version, the version table among them - 52 tables at schema 12 (spine_hops joined at sp9b THE REPLAY; no table joined at sp9 - a column on spine_services; spine_benches at sp8)",
    "kind": "schema_tables",
    "input": {},
    "expect": {
@@ -31,6 +31,7 @@
      "spine_grading",
      "spine_harness_runs",
      "spine_heartbeat",
+     "spine_hops",
      "spine_inbox",
      "spine_includes",
      "spine_intent_turns",
@@ -70,7 +71,7 @@
      "spine_wear",
      "spine_world"
     ],
-    "count": 51
+    "count": 52
    }
   }
  ]

@@ -431,6 +431,16 @@ The measure is JB's: *"how well Orreth can do it vs YOU"*. Part A is by hand on 
    the conditional way out dashed — read by the trial run. PROMOTE, Yes, JOINED. In the JOINED step's
    box, ask `hello`. PASS: the reply `HI HELLO` lands in the chat; greet and shout light on the true
    graph with "the last run took 2 hops: greet → shout". Ask `yo`. PASS: `hi yo`, one hop lit.
+9. **The graph model and the replay (sp9b).** Open the `lang1` bench (or the `lang1.v0` graph under
+   graphs). PASS: ONE drawing, fitted to the canvas with no scrollbar: the import node `run` reads
+   "4 nodes inside · lang-src" with **open ▸**. Click open ▸. PASS: the canvas shows the code's own
+   graph — start · greet · shout · end, the conditional way out dashed — under a breadcrumb
+   `lang1.v0 › run` that says the hull's ring once; the breadcrumb's first word goes back up. Say
+   `lang1, hello` in the chat. PASS: when the reply lands, greet then shout light in turn ("hop 1",
+   "hop 2"), the edges between them amber. On the bench's card at THE CARD (a fresh agent `lang2`
+   through the wizard, same source), PASS: the card lists "replay case 1 · “hello”"; clicking it
+   plays the trial run's hops on the canvas from the room's record. Say `lang1, yo`. PASS: greet
+   alone lights, the way to end dashed and taken.
 
 ## Walk records
 

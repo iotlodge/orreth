@@ -826,6 +826,237 @@
    "expect": {
     "words": "ran the imported graph lang-src at a1b2c3d4e5f6 \u2014 entry graph:graph \u00b7 hops: greet \u2192 shout"
    }
+  },
+  {
+   "name": "op_shape: a subgraph's nodes (parent:child, as get_graph(xray=True) names them) fold under the parent - a node of kind graph that CONTAINS a graph with its entry; the crossing edges land on the parent, once (sp9b THE GRAPH MODEL)",
+   "kind": "op_shape",
+   "input": {
+    "graph": {
+     "nodes": [
+      {
+       "id": "__start__",
+       "type": "runnable",
+       "data": {
+        "name": "__start__"
+       }
+      },
+      {
+       "id": "tail",
+       "type": "runnable",
+       "data": {
+        "name": "tail"
+       }
+      },
+      {
+       "id": "__end__"
+      },
+      {
+       "id": "inner:greet",
+       "type": "runnable",
+       "data": {
+        "name": "inner:greet"
+       }
+      },
+      {
+       "id": "inner:shout",
+       "type": "runnable",
+       "data": {
+        "name": "inner:shout"
+       }
+      },
+      {
+       "id": "inner:__end__"
+      }
+     ],
+     "edges": [
+      {
+       "source": "__start__",
+       "target": "inner:greet"
+      },
+      {
+       "source": "inner:__end__",
+       "target": "tail"
+      },
+      {
+       "source": "tail",
+       "target": "__end__"
+      },
+      {
+       "source": "inner:greet",
+       "target": "inner:__end__",
+       "conditional": true
+      },
+      {
+       "source": "inner:greet",
+       "target": "inner:shout",
+       "conditional": true
+      },
+      {
+       "source": "inner:shout",
+       "target": "inner:__end__"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "shape": {
+     "nodes": [
+      {
+       "id": "__start__",
+       "kind": "start"
+      },
+      {
+       "id": "tail",
+       "kind": "node"
+      },
+      {
+       "id": "__end__",
+       "kind": "end"
+      },
+      {
+       "id": "inner",
+       "kind": "graph",
+       "graph": {
+        "entry": "greet",
+        "nodes": [
+         {
+          "id": "greet",
+          "kind": "node"
+         },
+         {
+          "id": "shout",
+          "kind": "node"
+         },
+         {
+          "id": "__end__",
+          "kind": "end"
+         }
+        ],
+        "edges": [
+         {
+          "from": "greet",
+          "to": "__end__",
+          "when": true
+         },
+         {
+          "from": "greet",
+          "to": "shout",
+          "when": true
+         },
+         {
+          "from": "shout",
+          "to": "__end__",
+          "when": false
+         }
+        ]
+       }
+      }
+     ],
+     "edges": [
+      {
+       "from": "__start__",
+       "to": "inner",
+       "when": false
+      },
+      {
+       "from": "inner",
+       "to": "tail",
+       "when": false
+      },
+      {
+       "from": "tail",
+       "to": "__end__",
+       "when": false
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "op_shape: a loop in the code is a loop in the reading - the shape keeps the way back (sp9b THE GRAPH MODEL)",
+   "kind": "op_shape",
+   "input": {
+    "graph": {
+     "nodes": [
+      {
+       "id": "__start__"
+      },
+      {
+       "id": "a"
+      },
+      {
+       "id": "b"
+      },
+      {
+       "id": "__end__"
+      }
+     ],
+     "edges": [
+      {
+       "source": "__start__",
+       "target": "a"
+      },
+      {
+       "source": "a",
+       "target": "b"
+      },
+      {
+       "source": "b",
+       "target": "a",
+       "conditional": true
+      },
+      {
+       "source": "b",
+       "target": "__end__",
+       "conditional": true
+      }
+     ]
+    }
+   },
+   "expect": {
+    "shape": {
+     "nodes": [
+      {
+       "id": "__start__",
+       "kind": "start"
+      },
+      {
+       "id": "a",
+       "kind": "node"
+      },
+      {
+       "id": "b",
+       "kind": "node"
+      },
+      {
+       "id": "__end__",
+       "kind": "end"
+      }
+     ],
+     "edges": [
+      {
+       "from": "__start__",
+       "to": "a",
+       "when": false
+      },
+      {
+       "from": "a",
+       "to": "b",
+       "when": false
+      },
+      {
+       "from": "b",
+       "to": "a",
+       "when": true
+      },
+      {
+       "from": "b",
+       "to": "__end__",
+       "when": true
+      }
+     ]
+    }
+   }
   }
  ]
 }

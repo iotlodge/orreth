@@ -97,7 +97,8 @@ FEED_TOPICS = [ASK_RECEIVED, JOURNEY, REPLY, CONFIRM_NEEDED, SESSION_OPENED,
                # Phase 8 sp6: THE TWO CHIPS — a body challenged to prove who and what it is · the kernel's verdict on its proof
                _chips.KEYCHECK_ASKED, _chips.KEYCHECK_VERDICT,
                # Phase 8 sp8: THE BENCH — an effort opened · let go (a step moved is read, not announced)
-               _bench.BENCH_OPENED, _bench.BENCH_CLOSED]
+               _bench.BENCH_OPENED, _bench.BENCH_CLOSED,
+               _op.HOPS]                           # Phase 8 sp9b: THE REPLAY — the hops a compiled graph took, one fact per run
 
 
 def ask_view(conn, ask_id: str) -> dict | None:
@@ -162,7 +163,8 @@ def ask_view(conn, ask_id: str) -> dict | None:
                       **({"needs_code": True, "code_ok": bool(h.get("code_ok"))}   # W5: the asker's
                          if h.get("needs_code") else {})}            # code, then the master
                      if row[2] == "awaiting-confirm" and (h := json.loads(row[13] or "{}")) else None),
-            "journey": [n for n in notes if n]}
+            "journey": [n for n in notes if n],
+            "hops": _op.hops_for(conn, ask=ask_id)}         # sp9b THE REPLAY: the hops a compiled graph took for this ask, in order
 
 
 def fact_view(conn, message_id: str) -> dict | None:
@@ -828,6 +830,11 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                 with psycopg.connect(dsn, autocommit=True) as conn:
                     return self._json(200, {"drafts": crafts.drafts(conn, person), "person": person,
                                             "kinds": list(crafts.CRAFT_KINDS)})
+            if path == "/hops":                          # Phase 8 sp9b: THE REPLAY — a run's hops by the ask it served, or by the harness run and its case
+                from urllib.parse import parse_qs
+                qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} if "?" in self.path else {}
+                with psycopg.connect(dsn, autocommit=True) as conn:
+                    return self._json(200, {"hops": _op.hops_for(conn, ask=qs.get("ask"), run=qs.get("run"), case=qs.get("case"))})
             if path == "/experiments":                   # Phase 8 sp4: THE EXPERIMENT — this universe's experiments (one whole by id), the seats
                 from urllib.parse import parse_qs
                 qs = {k: v[0] for k, v in parse_qs(self.path.split("?", 1)[1]).items()} \

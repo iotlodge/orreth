@@ -1002,6 +1002,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/benches/:name/close", post(benches_post)) // let the effort go — routine, like discard and decline
         .route("/wear", get(wear_door)) // THE WEAR TABLE — which body wears which component at which version
         .route("/experiments", get(experiments_door)) // Phase 8 sp4: THE EXPERIMENT — this universe's experiments, one whole by id
+        .route("/hops", get(hops_door)) // Phase 8 sp9b THE REPLAY (canon 0011 §4b): the hops a compiled graph took — by ask, or by run and case
         .route("/experiments/promote", post(experiments_post)) // the stamped promotion — held at L2 (an agent) · L3 (a resident)
         .route("/experiments/decline", post(experiments_post)) // the human's no — routine, recorded
         .route("/seats", get(seats_door)) // the promoted agents' seats — where each stands and its rung
@@ -2699,6 +2700,29 @@ async fn levels_open(
 }
 
 /// `GET /experiments[?id=|agent=|state=]` — Phase 8 sp4: THE EXPERIMENT — the universe's experiments (one whole by id), the seats.
+/// Phase 8 sp9b THE REPLAY (canon 0011 §4b): `GET /hops?ask=…` · `GET /hops?run=…&case=N` — every hop a compiled
+/// graph took, in the order the hops began (the body wrote them; the glass plays them at their recorded pace).
+async fn hops_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> Response {
+    let out = async {
+        let g = ground(&app).await?;
+        let case = q.get("case").and_then(|c| c.parse::<i32>().ok());
+        let hops = crate::operating_live::hops_for(
+            g.client(),
+            scope(&app),
+            q.get("ask").map(String::as_str),
+            q.get("run").map(String::as_str),
+            case,
+        )
+        .await?;
+        Ok::<_, RoadError>(json!({"hops": hops}))
+    }
+    .await;
+    match out {
+        Ok(v) => answer(200, v),
+        Err(e) => refuse(e),
+    }
+}
+
 async fn experiments_door(State(app): State<Arc<App>>, Query(q): Query<HashMap<String, String>>) -> Response {
     let out = async {
         let g = ground(&app).await?;

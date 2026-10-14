@@ -367,10 +367,11 @@ pub async fn services_listing(
     let rows = g
         .client()
         .query(
-            "SELECT name, scope, kind, did, manifest, manifest_hash, version, placement, \
-             secrets_with, state, by_did, since, registered_at, last_ok, last_detail, \
-             last_checked_at, marker, root_marker FROM spine_services WHERE scope = $1 AND \
-             ($2::text IS NULL OR kind = $2) ORDER BY kind, name",
+            &format!(
+                "SELECT {} FROM spine_services WHERE scope = $1 AND \
+                 ($2::text IS NULL OR kind = $2) ORDER BY kind, name",
+                crate::services_live::COLS   // W142: the one column list — the listing's own copy had no `shape`
+            ),
             &[&scope, &kind],
         )
         .await?;
@@ -394,6 +395,7 @@ pub async fn services_listing(
                 "registered_at": isoformat(r.get::<_, SystemTime>(12)),
                 "last_health": checked.map(|at| json!({"ok": r.get::<_, Option<bool>>(13), "detail": r.get::<_, Option<String>>(14), "at": isoformat(at)})),
                 "marker": r.get::<_, Option<String>>(16), "root_marker": r.get::<_, Option<String>>(17),
+                "shape": json_text(r.get::<_, Option<String>>(18).as_deref()).unwrap_or(Value::Null),   // sp9 · W142: the true graph, when a body has read it
                 "secrets": c["secrets"].clone(),
                 "retirable": ladder_step(Some(&state), "retire").ok,
                 "restorable": ladder_step(Some(&state), "restore").ok,

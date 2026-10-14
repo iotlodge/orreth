@@ -286,10 +286,15 @@ def test_summon_is_generalized_and_a_repo_graph_runs_inside_the_hull(pg, monkeyp
     subprocess.run(["git", "-C", str(repo), "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-q", "-m", "two"], check=True)
     commit2 = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], check=True, capture_output=True, text=True).stdout.strip()
     services.register(pg, "lang-src", "source", {"repo": str(repo), "commit": commit2, "entry": "langgraph_app:graph"}, by=PERSON)
-    reply, said = op.run_import(pg, {"id": "run", "source": "lang-src"}, "hello")
+    reply, said = op.run_import(pg, {"id": "run", "source": "lang-src"}, "hello", {"ask": "ask_hops1", "agent": "imp", "scope": u})
     assert reply == "HI HELLO" and said == f"ran the imported graph lang-src at {commit2[:12]} — entry langgraph_app:graph · hops: greet → shout"
-    reply, said = op.run_import(pg, {"id": "run", "source": "lang-src"}, "yo")
+    hops = op.hops_for(pg, ask="ask_hops1")                     # sp9b THE REPLAY: every hop a row — by the ask it served
+    assert [h["node"] for h in hops] == ["greet", "shout"] and all(h["ok"] is True and isinstance(h["took_ms"], int) and h["in_hash"] and h["out_hash"] for h in hops)
+    assert hops[0]["agent"] == "imp" and hops[0]["source"] == "lang-src" and hops[0]["ns"] == [] and hops[0]["at"]
+    reply, said = op.run_import(pg, {"id": "run", "source": "lang-src"}, "yo", {"run": "run_hops1", "case": 2, "agent": "imp", "scope": u})
     assert reply == "hi yo" and said.endswith("hops: greet")
+    assert [h["node"] for h in op.hops_for(pg, run="run_hops1", case=2)] == ["greet"] and op.hops_for(pg, run="run_hops1", case=1) == []
+    assert op.hops_for(pg) == []
     shape = services.get(pg, "lang-src")["shape"]
     assert [n["id"] for n in shape["nodes"]] == ["__start__", "greet", "shout", "__end__"] and shape["nodes"][0]["kind"] == "start"
     assert {"from": "greet", "to": "shout", "when": True} in shape["edges"] and {"from": "__start__", "to": "greet", "when": False} in shape["edges"]

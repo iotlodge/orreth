@@ -36,6 +36,7 @@ only. Law for law with the Rust kernel (`operating.rs`, fixture `operating-v0.js
 from __future__ import annotations
 
 import json
+import time
 import re
 import secrets
 
@@ -167,18 +168,58 @@ def shape_of(graph_json: dict) -> dict:
     gives (nodes `{id, type, data}` · edges `{source, target, conditional?}`, the same JSON Studio draws) —
     as the kernel records it on the source: `{nodes: [{id, kind}], edges: [{from, to, when}]}`; `__start__`
     and `__end__` wear the kinds start and end, every other node the kind node; a conditional edge wears
-    when. The order is the graph's own."""
-    nodes, edges = [], []
+    when. The order is the graph's own. THE GRAPH MODEL (canon 0011 §4b, sp9b): a nested node
+    `parent:child` (what `get_graph(xray=True)` names a subgraph's nodes) folds under `parent` — a node of
+    kind graph that CONTAINS a graph `{entry, nodes, edges}`; an edge crossing into a child becomes an edge
+    to the parent and names the child graph's entry; an edge leaving a child becomes an edge from the
+    parent; the same crossing twice is one edge. A loop in the code is a loop in the reading."""
+    ids, edges = [], []
     for n in (graph_json or {}).get("nodes") or []:
         if not isinstance(n, dict) or n.get("id") is None:
             continue
-        i = str(n["id"])
-        nodes.append({"id": i, "kind": "start" if i == "__start__" else "end" if i == "__end__" else "node"})
+        ids.append(str(n["id"]))
     for e in (graph_json or {}).get("edges") or []:
         if not isinstance(e, dict) or e.get("source") is None or e.get("target") is None:
             continue
-        edges.append({"from": str(e["source"]), "to": str(e["target"]), "when": bool(e.get("conditional"))})
-    return {"nodes": nodes, "edges": edges}
+        edges.append((str(e["source"]), str(e["target"]), bool(e.get("conditional"))))
+    return _fold(ids, edges)
+
+
+def _node_kind(i: str) -> str:
+    return "start" if i == "__start__" else "end" if i == "__end__" else "node"
+
+
+def _fold(ids: list[str], edges: list[tuple[str, str, bool]]) -> dict:
+    """One level of the fold (recursive for `a:b:c`): see `shape_of`."""
+    order: list[str] = []
+    inner: dict[str, list[str]] = {}
+    for i in ids:
+        p, _, rest = i.partition(":")
+        if rest:
+            inner.setdefault(p, []).append(rest)
+        if p not in order:
+            order.append(p)
+    nodes = []
+    for p in order:
+        if p in inner:
+            own = [(a.partition(":")[2], b.partition(":")[2], w) for a, b, w in edges
+                   if a.startswith(p + ":") and b.startswith(p + ":")]
+            entry = next((b.partition(":")[2] for a, b, w in edges if not a.startswith(p + ":") and b.startswith(p + ":")), None)
+            sub = _fold(inner[p], own)
+            sub = {"entry": (entry or inner[p][0]).partition(":")[0], **sub}
+            nodes.append({"id": p, "kind": "graph", "graph": sub})
+        else:
+            nodes.append({"id": p, "kind": _node_kind(p)})
+    out, seen = [], set()
+    for a, b, w in edges:
+        fa, fb = a.partition(":")[0], b.partition(":")[0]
+        if fa == fb and fa in inner:
+            continue                                    # inside one child — folded into its graph
+        if (fa, fb, w) in seen:
+            continue
+        seen.add((fa, fb, w))
+        out.append({"from": fa, "to": fb, "when": w})
+    return {"nodes": nodes, "edges": out}
 
 
 # ---- the ground ----------------------------------------------------------------------------------
@@ -199,6 +240,13 @@ DDL = (
     "ALTER TABLE spine_verdicts ADD COLUMN IF NOT EXISTS on_ask text",
     "CREATE INDEX IF NOT EXISTS spine_verdicts_on_ask ON spine_verdicts (scope, on_ask)",
     "ALTER TABLE spine_intentions ADD COLUMN IF NOT EXISTS watches text",
+    # Phase 8 sp9b THE REPLAY (canon 0011 §4b, schema 12): every hop a compiled graph took — by the ask it served,
+    # or by the harness run and its case; the body writes them, both kernels read them
+    "CREATE TABLE IF NOT EXISTS spine_hops ( hop_id bigserial PRIMARY KEY, scope text NOT NULL, ref text, run_id text,"
+    " case_no int, agent text, source text NOT NULL, node text NOT NULL, ns text, step int, at timestamptz, took_ms int,"
+    " ok boolean, in_hash text, out_hash text, landed_at timestamptz NOT NULL DEFAULT now())",
+    "CREATE INDEX IF NOT EXISTS spine_hops_ref ON spine_hops (scope, ref, hop_id)",
+    "CREATE INDEX IF NOT EXISTS spine_hops_run ON spine_hops (scope, run_id, case_no, hop_id)",
 )
 
 
@@ -539,7 +587,7 @@ def checkout(source: dict, home=None):
     return dest
 
 
-def run_import(conn, node: dict, text: str) -> tuple[str, str]:
+def run_import(conn, node: dict, text: str, ctx: dict | None = None) -> tuple[str, str]:
     """An `import` node run: the source on the shelf (the repo form), its commit fetched, its
     entry `module:attr` loaded from the checkout and run — a compiled LangGraph (`.invoke({"text"})`
     → `reply`) or a callable of the words. Dev universes only. Returns (reply, the journey's words);
@@ -576,20 +624,46 @@ def run_import(conn, node: dict, text: str) -> tuple[str, str]:
         target = mod
         for part in attr.split("."):
             target = getattr(target, part)
-        hops: list[str] = []
+        hops: list[dict] = []
         if hasattr(target, "stream") and hasattr(target, "get_graph"):   # sp9 THE TRUE GRAPH: a compiled LangGraph streams — every hop named as it lands, the last state the reply
-            last = None
-            for mode, chunk in target.stream({"text": text}, stream_mode=["updates", "values"]):
-                if mode == "updates" and isinstance(chunk, dict):
-                    hops.extend(str(k) for k in chunk.keys())
-                elif mode == "values":
-                    last = chunk
+            last, started = None, {}                             # sp9b THE REPLAY: the debug stream with subgraphs — every task's start and result, timed, hashed
+            for ns, mode, chunk in target.stream({"text": text}, stream_mode=["debug", "values"], subgraphs=True):
+                if mode == "values":
+                    if not ns:
+                        last = chunk                             # the top graph's last state is the reply
+                    continue
+                if not isinstance(chunk, dict):
+                    continue
+                pl = chunk.get("payload") or {}
+                path = [str(x).partition(":")[0] for x in (ns or ())]
+                if chunk.get("type") == "task":
+                    h = {"node": ":".join(path + [str(pl.get("name"))]), "ns": path, "step": chunk.get("step"),
+                         "at": chunk.get("timestamp"), "took_ms": None, "ok": None,
+                         "in_hash": ev.content_hash(json.dumps(pl.get("input"), sort_keys=True, default=str)), "out_hash": None}
+                    started[pl.get("id")] = (h, time.monotonic())
+                    hops.append(h)                               # in the order the hops BEGAN
+                elif chunk.get("type") == "task_result":
+                    o = started.pop(pl.get("id"), None)
+                    if o is None:
+                        continue
+                    h, t0 = o
+                    h["took_ms"] = int((time.monotonic() - t0) * 1000)
+                    h["ok"] = pl.get("error") is None
+                    h["out_hash"] = ev.content_hash(json.dumps(pl.get("result"), sort_keys=True, default=str))
             out = last if last is not None else target.invoke({"text": text})
             reply = out.get("reply") if isinstance(out, dict) else None
             reply = str(reply if reply is not None else out)
             try:                                                 # the shape on the source's row — read from the code, never drawn by hand (the kernel's record; the canvas draws it)
-                record_shape(conn, name, shape_of(target.get_graph().to_json()))
+                try:
+                    gj = target.get_graph(xray=True).to_json()   # sp9b: the subgraphs opened — the fold names them
+                except TypeError:
+                    gj = target.get_graph().to_json()
+                record_shape(conn, name, shape_of(gj))
             except Exception:                                    # noqa: BLE001 — the shape is a record, never the run
+                pass
+            try:
+                record_hops(conn, ctx, name, hops)               # the record and the feed's pointer — a hop is a row, never a sentence alone
+            except Exception:                                    # noqa: BLE001 — the record never fails the run
                 pass
         elif hasattr(target, "invoke"):
             out = target.invoke({"text": text})
@@ -603,7 +677,62 @@ def run_import(conn, node: dict, text: str) -> tuple[str, str]:
     except Exception as e:                                       # noqa: BLE001
         return (f"CANNOT ACT: the imported graph {name} ({entry}) failed: {type(e).__name__}: {str(e)[:300]}",
                 f"import node {node.get('id')}: {entry} failed — {type(e).__name__}")
-    return reply, import_words(name, str(m["commit"]), entry, hops or None)
+    return reply, import_words(name, str(m["commit"]), entry, [h["node"] for h in hops] or None)
+
+
+HOPS = "orreth.hops.v1"                          # sp9b THE REPLAY: one fact per run — the feed's pointer to the hops a compiled graph took
+
+
+def record_hops(conn, ctx: dict | None, source: str, hops: list[dict]) -> None:
+    """THE REPLAY (canon 0011 §4b): every hop a compiled graph took lands as a row of `spine_hops` — by the ask
+    it served (`ctx.ask`), or by the harness run and its case (`ctx.run` · `ctx.case`) — and one `orreth.hops.v1`
+    fact carries them to the feed. The body writes, both kernels read. The hops publish WITH the reply (the
+    body serves in one transaction); the glass plays them at their recorded pace."""
+    if not hops:
+        return
+    from . import outbox
+    ctx = ctx or {}
+    ensure_schema(conn)
+    scope = ev.universe()
+    with conn.transaction():
+        cur = conn.cursor()
+        for h in hops:
+            cur.execute("INSERT INTO spine_hops (scope, ref, run_id, case_no, agent, source, node, ns, step, at, took_ms, ok, in_hash, out_hash)"
+                        " VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                        (scope, ctx.get("ask"), ctx.get("run"), ctx.get("case"), ctx.get("agent"), source, h["node"],
+                         ":".join(h.get("ns") or []), h.get("step"), h.get("at"), h.get("took_ms"), h.get("ok"), h.get("in_hash"), h.get("out_hash")))
+        if ctx.get("ask"):
+            cur.execute("UPDATE spine_asks SET seq = seq + 1 WHERE ask_id = %s RETURNING seq", (ctx["ask"],))
+            r = cur.fetchone()
+            aggregate = {"type": "ask", "id": ctx["ask"], "sequence": int(r[0]) if r else 1}
+        else:
+            aggregate = {"type": "run", "id": str(ctx.get("run") or "-"), "sequence": int(ctx.get("case") or 1)}
+        e = ev.make_envelope(kind="event", type=HOPS, universe_id=ev.universe(), scope_path=str(ctx.get("scope") or ev.scope()),
+                             payload={"ref": ctx.get("ask"), "run": ctx.get("run"), "case": ctx.get("case"), "agent": ctx.get("agent"),
+                                      "source": source, "hops": [{"node": h["node"], "step": h.get("step"), "took_ms": h.get("took_ms"), "ok": h.get("ok")} for h in hops]},
+                             correlation_id=ctx.get("ask") or ctx.get("run"), authority_chain=list(ctx.get("chain") or []), aggregate=aggregate)
+        outbox.add_row(cur, ev.encode(e), e["message_id"])
+
+
+def hops_for(conn, ask: str | None = None, run: str | None = None, case=None) -> list[dict]:
+    """The hops door's reading: by the ask, or by the run and its case, in the order they began."""
+    ensure_schema(conn)
+    cur = conn.cursor()
+    cols = "ref, run_id, case_no, agent, source, node, ns, step, at, took_ms, ok, in_hash, out_hash"
+    if ask:
+        cur.execute(f"SELECT {cols} FROM spine_hops WHERE scope = %s AND ref = %s ORDER BY hop_id", (ev.universe(), ask))
+    elif run:
+        try:
+            case_no = int(case) if case not in (None, "") else None
+        except (TypeError, ValueError):
+            case_no = None
+        cur.execute(f"SELECT {cols} FROM spine_hops WHERE scope = %s AND run_id = %s AND (%s::int IS NULL OR case_no = %s) ORDER BY hop_id",
+                    (ev.universe(), run, case_no, case_no))
+    else:
+        return []
+    return [{"ref": r[0], "run": r[1], "case": r[2], "agent": r[3], "source": r[4], "node": r[5], "ns": r[6].split(":") if r[6] else [],
+             "step": r[7], "at": r[8].isoformat() if r[8] else None, "took_ms": r[9], "ok": r[10], "in_hash": r[11], "out_hash": r[12]}
+            for r in cur.fetchall()]
 
 
 def record_shape(conn, source: str, shape: dict) -> None:

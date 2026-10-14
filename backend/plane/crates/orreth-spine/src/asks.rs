@@ -48,7 +48,7 @@ pub use crate::watch::WATCH_TURNED;
 /// (a body parked, a tool hop, a lease crossing the line, a lever pulled, a seat taken, a
 /// body at the join desk, an intention's life, the shelf's and the Stable's changes, a
 /// memory landed, the kernel's own heartbeat) now reaches THE PANEL as a pointer.
-pub const FEED_TOPICS: [&str; 53] = [
+pub const FEED_TOPICS: [&str; 54] = [
     ASK_RECEIVED,
     crate::memory::SESSION_OPENED, // W51: a roll is a fact every door's sessions list follows
     JOURNEY,
@@ -111,6 +111,8 @@ pub const FEED_TOPICS: [&str; 53] = [
     // ---- Phase 8 sp8: THE BENCH — an effort opened · let go (a step moved is read, not announced) ----
     crate::benches::BENCH_OPENED,
     crate::benches::BENCH_CLOSED,
+    // ---- Phase 8 sp9b: THE REPLAY — the hops a compiled graph took, one fact per run ----
+    crate::operating::HOPS,
 ];
 
 // ---- the fact, minted now ------------------------------------------------------------
@@ -1149,6 +1151,7 @@ pub async fn ask_view(g: &Ground, scope: &str, ask_id: &str) -> Result<Option<Va
     } else {
         None
     };
+    let hops = crate::operating_live::hops_for(g.client(), scope, Some(ask_id.as_ref()), None, None).await?; // sp9b THE REPLAY
     Ok(Some(json!({
         "ask_id": ask_id, "text": row.get::<_, String>(0), "person": row.get::<_, String>(1),
         "status": status, "reply": reply, "served_by": served_by,
@@ -1159,7 +1162,7 @@ pub async fn ask_view(g: &Ground, scope: &str, ask_id: &str) -> Result<Option<Va
         "session": row.get::<_, Option<String>>(10),
         "marker": marker, "origin": origin, "duty": duty,
         "proof": proof.filter(|p| !p.is_empty()).unwrap_or_else(|| "L1".into()),
-        "hold": hold, "journey": journey,
+        "hold": hold, "journey": journey, "hops": hops,
     })))
 }
 

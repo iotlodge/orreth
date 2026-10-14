@@ -26,6 +26,7 @@ pub const GRADE_PER_BEAT: i64 = 5;
 pub const GRADE_EVERY_S: u64 = 60;
 pub const GRADE_DIAL: &str = "SPINE_GRADE_LIVE";
 pub const SERVES: &str = "operating-state";
+pub const HOPS: &str = "orreth.hops.v1"; // sp9b THE REPLAY: one fact per run — the feed's pointer to the hops a compiled graph took
 pub const FEEDBACK_GIVEN: &str = "orreth.feedback.given.v1";
 pub const INCLUDE_SUMMONED: &str = "orreth.include.summoned.v1";
 pub const INCLUDE_DISMISSED: &str = "orreth.include.dismissed.v1";
@@ -180,23 +181,96 @@ pub fn hops_words(hops: &[String]) -> String {
 /// source: `{nodes: [{id, kind}], edges: [{from, to, when}]}` — `__start__` and `__end__` wear start and
 /// end, every other node the kind node; a conditional edge wears when; the order is the graph's own.
 pub fn shape_of(graph: &Value) -> Value {
-    let mut nodes = vec![];
+    // sp9b THE GRAPH MODEL (canon 0011 §4b): `parent:child` (get_graph(xray=True)) folds under the parent — a node of
+    // kind graph that CONTAINS a graph {entry, nodes, edges}; crossing edges land on the parent, once; a loop stays.
+    let mut ids: Vec<String> = vec![];
+    let mut edges: Vec<(String, String, bool)> = vec![];
     for n in graph["nodes"].as_array().cloned().unwrap_or_default() {
         if !n.is_object() || n["id"].is_null() {
             continue;
         }
-        let id = python_str(&n["id"]);
-        let kind = if id == "__start__" { "start" } else if id == "__end__" { "end" } else { "node" };
-        nodes.push(json!({"id": id, "kind": kind}));
+        ids.push(python_str(&n["id"]));
     }
-    let mut edges = vec![];
     for e in graph["edges"].as_array().cloned().unwrap_or_default() {
         if !e.is_object() || e["source"].is_null() || e["target"].is_null() {
             continue;
         }
-        edges.push(json!({"from": python_str(&e["source"]), "to": python_str(&e["target"]), "when": e["conditional"].as_bool().unwrap_or(false)}));
+        edges.push((python_str(&e["source"]), python_str(&e["target"]), e["conditional"].as_bool().unwrap_or(false)));
     }
-    json!({"nodes": nodes, "edges": edges})
+    fold(&ids, &edges)
+}
+
+fn head(s: &str) -> &str {
+    s.split_once(':').map(|(h, _)| h).unwrap_or(s)
+}
+
+fn tail(s: &str) -> Option<&str> {
+    s.split_once(':').map(|(_, t)| t)
+}
+
+fn node_kind(i: &str) -> &'static str {
+    if i == "__start__" {
+        "start"
+    } else if i == "__end__" {
+        "end"
+    } else {
+        "node"
+    }
+}
+
+/// One level of the fold (recursive for `a:b:c`) — `operating._fold`, law for law.
+fn fold(ids: &[String], edges: &[(String, String, bool)]) -> Value {
+    let mut order: Vec<String> = vec![];
+    let mut inner: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+    for i in ids {
+        let p = head(i).to_string();
+        if let Some(rest) = tail(i) {
+            inner.entry(p.clone()).or_default().push(rest.to_string());
+        }
+        if !order.contains(&p) {
+            order.push(p);
+        }
+    }
+    let mut nodes = vec![];
+    for p in &order {
+        if let Some(kids) = inner.get(p) {
+            let pre = format!("{p}:");
+            let own: Vec<(String, String, bool)> = edges
+                .iter()
+                .filter(|(a, b, _)| a.starts_with(&pre) && b.starts_with(&pre))
+                .map(|(a, b, w)| (tail(a).unwrap_or("").to_string(), tail(b).unwrap_or("").to_string(), *w))
+                .collect();
+            let entry = edges
+                .iter()
+                .find(|(a, b, _)| !a.starts_with(&pre) && b.starts_with(&pre))
+                .map(|(_, b, _)| tail(b).unwrap_or("").to_string())
+                .unwrap_or_else(|| kids[0].clone());
+            let sub = fold(kids, &own);
+            let mut obj = serde_json::Map::new();
+            obj.insert("entry".into(), json!(head(&entry)));
+            for (k, v) in sub.as_object().cloned().unwrap_or_default() {
+                obj.insert(k, v);
+            }
+            nodes.push(json!({"id": p, "kind": "graph", "graph": Value::Object(obj)}));
+        } else {
+            nodes.push(json!({"id": p, "kind": node_kind(p)}));
+        }
+    }
+    let mut out = vec![];
+    let mut seen: Vec<(String, String, bool)> = vec![];
+    for (a, b, w) in edges {
+        let (fa, fb) = (head(a).to_string(), head(b).to_string());
+        if fa == fb && inner.contains_key(&fa) {
+            continue; // inside one child — folded into its graph
+        }
+        let key = (fa.clone(), fb.clone(), *w);
+        if seen.contains(&key) {
+            continue;
+        }
+        seen.push(key);
+        out.push(json!({"from": fa, "to": fb, "when": w}));
+    }
+    json!({"nodes": nodes, "edges": out})
 }
 
 /// The measurement's value as the snapshot carries it (null = unknown).
