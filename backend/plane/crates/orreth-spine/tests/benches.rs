@@ -164,12 +164,17 @@ async fn a_bench_is_one_effort_one_place_under_the_seat() {
     assert_eq!(s, 400, "{r}");
     assert!(r["error"].as_str().unwrap().contains("no graph jonathan.v0"), "{r}");
     for (kind, name, body) in [
-        ("graph", "jonathan.v0", json!({"entry": "say", "nodes": [{"id": "say", "kind": "echo"}], "edges": []})),
+        ("graph", "jonathan.v0", json!({"entry": "say", "nodes": [{"id": "say", "kind": "echo", "prompt": "jonathan-words"}], "edges": []})), // W149: the graph NAMES a prompt
         ("template", "jonathan", json!({"kind": "agent", "name": "jonathan", "graph": "jonathan.v0", "nature": "answers hello", "capabilities": ["ask"]})),
     ] {
         let (s, r) = knock(port, "POST", "/drafts", Some(&json!({"kind": kind, "name": name, "bench": "jonathan", "body": body})), &jb).await;
         assert_eq!(s, 201, "{r}");
     }
+    let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await; // W149: a named prompt neither drafted nor standing refuses first
+    assert_eq!(s, 400, "{r}");
+    assert!(r["error"].as_str().unwrap().contains("the graph names prompt jonathan-words, which is neither a draft on the bench nor on the shelf"), "{r}");
+    let (s, r) = knock(port, "POST", "/drafts", Some(&json!({"kind": "prompt", "name": "jonathan-words", "bench": "jonathan", "body": {"text": "Say hello."}})), &jb).await;
+    assert_eq!(s, 201, "{r}");
     let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await;
     assert_eq!(s, 400, "{r}");
     assert!(r["error"].as_str().unwrap().contains("no golden set"), "{r}");
@@ -180,13 +185,22 @@ async fn a_bench_is_one_effort_one_place_under_the_seat() {
     let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await;
     assert_eq!(s, 202, "{r}");
     let lines: Vec<&str> = r["lines"].as_array().unwrap().iter().map(|l| l.as_str().unwrap()).collect();
-    assert_eq!(lines, vec!["the graph jonathan.v0 as version 1", "the golden set jonathan as version 1", "the agent jonathan as version 1 -> the experiment"]);
-    assert_eq!((r["level"].as_str(), r["cuts"].as_array().unwrap().len()), (Some("L2"), 3));
+    assert_eq!(lines, vec!["the prompt jonathan-words as version 1", "the graph jonathan.v0 as version 1", "the golden set jonathan as version 1", "the agent jonathan as version 1 -> the experiment"]); // W149: the prompt first
+    assert_eq!((r["level"].as_str(), r["cuts"].as_array().unwrap().len()), (Some("L2"), 4));
     let held = r["held"].as_str().unwrap().to_string();
     let (_, b) = knock(port, "GET", "/benches/jonathan", None, &jb).await;
     assert_eq!((b["bench"]["step"].as_str(), b["bench"]["hold"].as_str()), (Some("cut"), Some(held.as_str())), "{b}");
-    let (s, _) = knock(port, "GET", "/services/jonathan.v0.graph", None, &jb).await;
-    assert_ne!(s, 200, "nothing lands before the Yes");
+    let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await; // W148: one chain, ONE hold
+    assert!(s != 202 && r.to_string().contains("already held"), "filed twice must refuse in words: {s} {r}");
+    // the shelf's listing is the one read door for a craft by name (there is no /services/<name>)
+    let on_shelf = |name: &'static str| {
+        let jb = jb.clone();
+        async move {
+            let (_, r) = knock(port, "GET", "/services", None, &jb).await;
+            r["services"].as_array().cloned().unwrap_or_default().into_iter().find(|x| x["name"] == json!(name)).map(|x| x["version"].as_i64().unwrap_or(0))
+        }
+    };
+    assert_eq!((on_shelf("jonathan.v0.graph").await, on_shelf("jonathan-words.prompt").await), (None, None), "nothing lands before the Yes");
     knock(port, "POST", "/confirm", Some(&json!({"ask_id": held, "approve": true})), &jb).await;
     let t0 = std::time::Instant::now();
     let mut v = Value::Null;
@@ -196,13 +210,14 @@ async fn a_bench_is_one_effort_one_place_under_the_seat() {
         tokio::time::sleep(Duration::from_millis(400)).await;
     }
     let reply = v["reply"].as_str().unwrap_or_default().to_string();
-    assert!(reply.contains("jonathan.v0.graph is on the shelf as version 1") && reply.contains("experiment room"), "{v}");
+    assert!(reply.contains("jonathan-words.prompt is on the shelf as version 1") && reply.contains("jonathan.v0.graph is on the shelf as version 1") && reply.contains("experiment room"), "{v}");
+    assert_eq!((on_shelf("jonathan-words.prompt").await, on_shelf("jonathan.v0.graph").await), (Some(1), Some(1)), "W149: the prompt the graph names landed with the chain");
     let (_, b) = knock(port, "GET", "/benches/jonathan", None, &jb).await;
     assert_eq!((b["bench"]["step"].as_str(), b["bench"]["hold"].is_null(), b["bench"]["experiments"].as_array().unwrap().len()), (Some("card"), true, 1), "{b}");
     let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await;
     assert_eq!(s, 400, "{r}");
     assert!(r["error"].as_str().unwrap().contains("already running"), "{r}");
-    println!("benches · ONE WORD TO WORK: refused in words until the chain stood, one hold named three cuts, the Yes cut them in order and opened the experiment — the bench at THE CARD");
+    println!("benches · ONE WORD TO WORK: refused in words until the chain stood, one hold named four cuts (the prompt the graph names first, W149), the Yes cut them in order and opened the experiment — the bench at THE CARD");
 
     lit.stop().await;
 }

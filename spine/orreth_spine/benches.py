@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE STUDIO sp8, THE BENCH (canon 0011 §2) · 2026-10-13
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE STUDIO sp11: W148 one chain ONE hold · W149 the prompts and skills the graph names are cut before it · 2026-10-16
 """THE BENCH (canon 0011 §2, JB's lock 2026-10-13).
 
 One effort, one place. A bench is a named effort under a person's seat — the agent's name is
@@ -215,13 +216,31 @@ def _plain_of(name: str, kind: str) -> str:
     return {"graph": f"the graph {name}.v0", "golden": f"the golden set {name}", "template": f"the agent {name}"}[kind]
 
 
-def plan_work(name: str, graph, golden, template) -> dict:
+def plan_work(name: str, graph, golden, template, refs=None) -> dict:
     """The pure law of the chain (fixture `bench_work_plan`). Each of graph · golden · template is
     None (nothing of that kind under the bench or on the shelf) or {draft: bool, same: bool, version:
     int|None} — whether a draft lies on the bench, whether its bytes equal the shelf's, and the
-    shelf's standing version. Returns {ok, cuts, lines, reason, text}: the cuts in order, a line per
-    craft for the card, the one reason when the chain refuses, and the held act's words."""
+    shelf's standing version. W149 (sp11, 2026-10-16): `refs` are the prompts and skills the graph
+    NAMES, in its order — [{kind, name, draft, same, version}] — cut BEFORE the graph (a graph
+    that names a prompt no body can read is not whole); one neither drafted nor standing refuses.
+    Returns {ok, cuts, lines, reason, text}: the cuts in order (a ref's cut is "kind:name"), a line
+    per craft for the card, the one reason when the chain refuses, and the held act's words."""
     lines, cuts, reason = [], [], None
+    for r in refs or []:
+        r = r if isinstance(r, dict) else {}
+        kind, rname = str(r.get("kind") or ""), str(r.get("name") or "")
+        has, same, ver = bool(r.get("draft")), bool(r.get("same")), r.get("version")
+        what = f"the {kind} {rname}"
+        if has and not same:
+            cuts.append(f"{kind}:{rname}"); lines.append(f"{what} as version {(ver or 0) + 1}")
+        elif has and same:
+            lines.append(f"{what} stands (version {ver}) - unchanged, skipped")
+        elif ver:
+            lines.append(f"{what} stands (version {ver})")
+        else:
+            reason = reason or (f"the graph names {kind} {rname}, which is neither a draft on the bench nor on the shelf - "
+                                f"draft it on the bench, or name one that stands")
+            lines.append(f"{what}: none")
     for kind in WORK_ORDER:
         c = {"graph": graph, "golden": golden, "template": template}[kind]
         c = c if isinstance(c, dict) else {}
@@ -253,7 +272,7 @@ def plan_work(name: str, graph, golden, template) -> dict:
             "text": f"putting {name} to work - " + " · ".join(lines) if ok else ""}
 
 
-def work_check(conn, person: str, name: str) -> dict:
+def work_check(conn, person: str, name: str, *, answering: str | None = None) -> dict:
     """What "put <name> to work" would do, read off the bench and the shelf — or why it refuses, in
     words. The drafts of the chain are validated here (a draft that does not read whole refuses
     before the hold, as a cut would)."""
@@ -266,10 +285,44 @@ def work_check(conn, person: str, name: str) -> dict:
     if open_x:
         raise BenchRefused(f"an experiment on {name} is already {open_x[0]['state']} ({open_x[0]['experiment_id']}) — "
                            f"its card is the next step; decline it to start over")
+    if b.get("hold") and b["hold"] != answering:   # W148 (sp11's proof, 2026-10-16): one chain, ONE hold — filed twice,
+        cur = conn.cursor()                        # the door (and the maker) doubled the hold; the pending one is the answer
+                                                   # (`answering`: the settle reads the chain for the hold it is answering)
+        cur.execute("SELECT status FROM spine_asks WHERE ask_id = %s", (b["hold"],))
+        r = cur.fetchone()
+        if r and r[0] == "awaiting-confirm":
+            raise BenchRefused(f"put {name} to work is already held ({b['hold']}) — the human's Yes is pending; "
+                               "answer that hold, or cancel it, before filing again")
     by_kind = {}
     for d in w["drafts"]:
         by_kind.setdefault(d["kind"], d)            # newest first
     ins, drafts = {}, {}
+    # W149: the prompts and skills the GRAPH names — read off the bench's graph draft, or the graph standing
+    # on the shelf when the bench has no graph draft — each a cut before the graph, or a line, or a refusal
+    gbody = (by_kind.get("graph") or {}).get("body")
+    if not isinstance(gbody, dict):
+        grow = services.get(conn, crafts.craft_name(name + ".v0", "graph"))
+        gbody = (grow or {}).get("manifest") if grow and grow.get("kind") == "graph" else None
+    refs = []
+    for node in (gbody or {}).get("nodes") or [] if isinstance(gbody, dict) else []:
+        for rk in ("prompt", "skill"):
+            rn = str(node.get(rk) or "").strip() if isinstance(node, dict) else ""
+            if rn and (rk, rn) not in [(r["kind"], r["name"]) for r in refs]:
+                refs.append({"kind": rk, "name": rn})
+    for r in refs:
+        d = next((x for x in w["drafts"] if x["kind"] == r["kind"] and x["name"] == r["name"]), None)   # newest first
+        row = services.get(conn, crafts.craft_name(r["name"], r["kind"]))
+        if row is not None and row["kind"] != r["kind"]:
+            raise BenchRefused(f"{row['name']} is on the shelf as a {row['kind']} — a name wears one kind")
+        if row is not None and row["state"] == "retired":
+            raise BenchRefused(f"{row['name']} is retired — restore it first, then put {name} to work")
+        if d is not None:
+            v = crafts.validate(r["kind"], d["body"])
+            if not v["ok"]:
+                raise BenchRefused(f"the {r['name']} {r['kind']} draft does not read whole yet: {v['reason']}")
+            drafts[f"{r['kind']}:{r['name']}"] = d
+        r.update(draft=d is not None, same=bool(d and row and row["manifest_hash"] == services.pin(d["body"])),
+                 version=int(row["version"]) if row else None)
     for kind in WORK_ORDER:
         cname = name + ".v0" if kind == "graph" else name
         row = services.get(conn, crafts.craft_name(cname, kind))
@@ -287,7 +340,7 @@ def work_check(conn, person: str, name: str) -> dict:
             drafts[kind] = d
         ins[kind] = {"draft": d is not None, "same": bool(d and row and row["manifest_hash"] == services.pin(d["body"])),
                      "version": int(row["version"]) if row else None}
-    plan = plan_work(name, ins["graph"], ins["golden"], ins["template"])
+    plan = plan_work(name, ins["graph"], ins["golden"], ins["template"], refs)
     if not plan["ok"]:
         raise BenchRefused(plan["reason"] or "nothing to put to work")
     t = drafts["template"]["body"]
@@ -298,13 +351,16 @@ def work_check(conn, person: str, name: str) -> dict:
     return {"bench": b, "plan": plan, "drafts": {k: d["draft_id"] for k, d in drafts.items()}}
 
 
-def hold_work(conn, person: str, name: str, *, session: str | None = None) -> dict:
+def hold_work(conn, person: str, name: str, *, session: str | None = None, filed_by: str | None = None) -> dict:
     """ONE hold for the chain (L2): the card's lines are the held act's words; the bench keeps the
     ask it holds at the step CUT."""
     from .proof import hold_kernel_act
     c = work_check(conn, person, name)
+    args = {"bench": name, "person": person}
+    if filed_by:                                   # sp11: the maker filed it on the human's brief — the record says so, the glass reads it
+        args["filed_by"] = filed_by
     held = hold_kernel_act(conn, text=c["plan"]["text"], person=person, tool=WORK_TOOL,
-                           args={"bench": name, "person": person}, level=WORK_LEVEL, session=session, cls=WORK_CLASS)
+                           args=args, level=WORK_LEVEL, session=session, cls=WORK_CLASS)
     move(conn, person, name, step="cut", hold=held)
     return {"held": held, "level": WORK_LEVEL, "class": WORK_CLASS, "lines": c["plan"]["lines"], "cuts": c["plan"]["cuts"]}
 
@@ -315,9 +371,9 @@ def work_in(conn, args: dict, by: str, ask: str | None = None, marker: str | Non
     the bench moves to THE CARD with its hold cleared. The words name every landing."""
     from . import crafts, experiments
     person, name = str(args.get("person") or by), str(args.get("bench") or "")
-    c = work_check(conn, person, name)
+    c = work_check(conn, person, name, answering=ask)
     said = []
-    for kind in c["plan"]["cuts"]:
+    for kind in c["plan"]["cuts"]:                 # W149: a ref's cut is "kind:name", before the graph
         if kind == "template":
             said.append(experiments.open_in(conn, {"draft_id": c["drafts"][kind], "person": person}, by, ask, marker))
         else:

@@ -292,6 +292,61 @@ shipping/invoke single node graph". The lock, through the question door
 - **The measure (JB's phase objective):** how well Orreth makes greeter from
   the brief versus how well Fable would. The proof is one walk, SPEC-STUDIO-01
   Part B, done by the agent.
+- **Built 2026-10-16 (JB's word: "commit spoonful 10 with all of this, then
+  start spoonful 11").** The `bench` tool on the door (`spine/tools.v0.json`,
+  both kernels read it; `tools.py` runs it body-side): open · read · work ·
+  close, routine as a draft's save is — `work` files THE KERNEL'S OWN hold,
+  `bench.work` at L2 under the human's seat in the ask's session
+  (`benches.hold_work`, the same hold the bench's PUT TO WORK button files;
+  one door, W118's law), for the human's single Yes; a governing seat's word
+  like the door's (a reading seat's ask is refused in words); a bench not
+  whole refuses in words before any hold; filed, the tool tells the mind
+  "never answer it". The `draft` tool gains `bench`: a draft files ON the
+  human's open bench of that name (a bench not open refuses in words — the
+  agent opens it first); both declarations re-pinned on purpose (fixture
+  tools-v0). The workshop binding turned (0.2.0): the maker's charge with the
+  road in order (open the bench · the graph · a prompt when words are needed ·
+  the golden set under THE HARNESS'S LAW · the template · `work`) and every
+  format spelled out; **`mind` by stock on the binding** — `claude-opus-5-5`,
+  standard — read by the body over the workspace template's haiku (the
+  Stable's assignment, the MIND chip, still wins); **`rounds` 12** — the
+  binding's (or a template's) rounds replace the gateway's stock of three for
+  the acting mind, the one-call rule lifted; the docs tools named on the door
+  (`search-docs-by-lang-chain` · `query-docs-filesystem-docs-by-lang-chain` ·
+  `search-api` · `get-symbol`) and on the librarian's template — an MCP-born
+  tool a template names is offered only while its server stands on the shelf
+  (the door's own law since P6.5), so a ground without the servers loses
+  nothing and says nothing false; allen's template waits for allen. The
+  Workshop's recall grows THE STABLE (the standing stalls by name with their
+  model — a think node pins one, a template wears its model) and YOUR BENCHES
+  (the human's open benches and what stands on each, whole or not), under
+  the ask's person alone (AG-9); THE OPEN DRAFT says its bench. The glass:
+  a `bench.work` hold under YOUR seat that this chat did not type is drawn in
+  the chat as the agent's ("workshop made greeter on your brief · files put it
+  to work · your Yes") — the held act's args carry `filed_by`, the maker's
+  DID, so the record says who filed it and the glass never guesses (the
+  bench's own button files none) — with the hold's own Yes and Cancel, and
+  the bench's card carries its second face as before; the Workshop's first
+  screen names the brief; the guide 0.16.0 teaches it (test_guide names the
+  brief as a body's sentence — the wizard's parser is anchored to the line's
+  end, so "make an agent called …" reaches the agent). Proof:
+  `test_workshop.py` — the maker's road through the two tools with a draft
+  refused before its bench is open, a golden set not whole then fixed, the
+  recall of the stalls and the benches, ONE hold under the kernel's name in
+  the human's session with the chain's three lines and nothing on the shelf,
+  the Yes through the kernel's own settle, the three modes law at the tool
+  (no human → nothing; a reading seat → refused in words); W148 found by it
+  and cured on both kernels — the chain filed twice refuses in words while its
+  hold awaits the human (one act, one hold). W149 found by JB's first walk of
+  Part B the same day and cured on both kernels: the chain cuts the prompts
+  and skills the graph names BEFORE the graph (the maker's `greeter-words`
+  had stayed a draft and the trial ran without it); one the graph names that
+  is neither drafted nor standing refuses in words. Walked by the agent on
+  JB's brief 2026-10-16 — SPEC-STUDIO-01 Part B PASS through step 6 on the
+  second run (the prompt first, the trial's replies labelled as the prompt
+  asked, opus on the meter, promoted, "greeter, hello" answered in three
+  languages); step 7, the measure, is JB's; W150 · W151 named for the glass;
+  the word Studio turns on his word (§1).
 
 ### 7. The docs live in the kernel (JB: "the kernel [should] always host langchain/graph docs so that agents and humans can query/search if intent and role support")
 
@@ -470,11 +525,20 @@ golden set, a Yes, joined. No walk of 2026-10-12/13 is wasted.
    through the Yes, the refusals, the skip) · `tests/benches.rs` (the
    doors, 403 to a reading seat, the Yes through `/confirm`) · conformance
    on both kernels. Named, not built: the agent's own PUT TO WORK (sp11).
-4. **THE AGENT MAKES IT ALL.** The workshop binding turned (§6), the `bench`
-   tool, the docs tools named in three templates, the one-call rule lifted,
-   the agent on Opus; SPEC-STUDIO-01 Part B walked BY THE AGENT on JB's one
-   brief and one Yes. The word Studio, if JB locks it, lands here with the
-   book and the demo.
+4. **THE AGENT MAKES IT ALL — BUILT 2026-10-16 on JB's word ("commit
+   spoonful 10 with all of this, then start spoonful 11").** The workshop
+   binding turned (§6), the `bench` tool, the `draft` tool filing on a bench,
+   the docs tools named on the workshop and the librarian (allen's template
+   waits for allen), the one-call rule lifted (the binding's rounds), the
+   agent on Opus by stock (the binding's mind; the MIND chip still wins); the
+   kernel's own `bench.work` hold filed by the agent under the human's seat
+   and drawn in the chat as the agent's; the guide 0.16.0; `test_workshop.py`
+   (the maker's proof); conformance on both kernels (tools-v0 re-pinned:
+   `draft` · `bench`). **SPEC-STUDIO-01 Part B walked BY THE AGENT on JB's
+   one brief and one Yes — PASS 2026-10-16 through step 6** (the first run
+   found W149, cured the same day; step 7, the measure, is JB's; W150 · W151
+   named for the glass) — the fourth claim is proven: the word Studio turns
+   on JB's word, with the book and the demo (§1).
 
 **The proof — SPEC-STUDIO-01** (to be written in `experience-specs.md` when
 spoonful 1 opens): **Part A, by hand** — JB makes an agent on a bench through

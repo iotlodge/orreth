@@ -488,6 +488,92 @@ The measure is JB's: *"how well Orreth can do it vs YOU"*. Part A is by hand on 
    line — "the work4 bench let go — the effort continues as work5"; THE SHELF lists one bench,
    `work5`, none named work4; the golden case reads "hello work5".
 
+### Part B — one brief, by the agent (sp11 THE AGENT MAKES IT ALL; walked by JB in the glass, OWED)
+
+The measure is JB's: how well Orreth makes greeter from the brief versus how well Fable would. Every
+typed sentence stands alone in a code block; the Yes is a click, never Enter.
+
+1. **The brief.** Open the Workshop (the first screen names the brief). In the chat — it speaks to the
+   Workshop's agent while the pull is open — type:
+
+   ```
+   make an agent called greeter that answers hello in three languages, with a golden case per language, on the opus stall
+   ```
+
+   PASS: the wizard does NOT open (its word is the whole line "make an agent"; a brief is longer). The
+   agent thinks on the opus stall (the meter line on the Panel's gateway organ names it; the MIND chip
+   reads opus unless you assigned another). Within a minute the rail shows a bench `greeter` under YOUR
+   BENCHES with its drafts under it — the graph `greeter.v0`, a prompt `greeter-words` (when the agent
+   gave it words of its own), the golden set `greeter`, the template `greeter`; the agent's reply says
+   in plain words what it made and that the Yes is yours.
+2. **The one hold.** PASS: in the chat, a hold this chat did not type — "workshop made greeter on your
+   brief · files put it to work · your Yes" — with the chain's lines ("the prompt greeter-words as
+   version 1 · the graph greeter.v0 as version 1 · the golden set greeter as version 1 · the agent
+   greeter as version 1 → the experiment" — the prompt the graph names FIRST, W149)
+   and its own Yes and Cancel; click the `greeter` bench on the rail: the bench's card stands at PUT TO
+   WORK holding the SAME ask with its second face. Nothing of greeter stands on THE SHELF yet.
+3. **Read before the Yes.** Click the golden set draft under the bench. PASS: three cases, one per
+   language, each expecting short words the reply must contain (THE HARNESS'S LAW); click the graph:
+   one think node pinned to the opus stall, with its prompt when one was made; click the template: kind
+   agent, graph greeter.v0, a nature in one line, a mind naming opus's model. Every draft is yours to
+   edit by hand here before the Yes.
+4. **The Yes.** Click Yes on either face. PASS: one line per landing in the chat — the graph and the
+   golden set on the shelf as version 1, the experiment opened on greeter in its room; the bench at THE
+   CARD; the canvas lights the trial's hops through the work box as the room's record lands.
+5. **The gate.** PASS: within a minute the card reads `candidate: 3 passed, 0 failed` (or names the
+   case that failed, in the harness's words — a fail is a PASS of the gate, not of the agent: say
+
+   ```
+   workshop, fix the greeter golden set so every case expects words the reply contains
+   ```
+
+   and the agent updates the draft on the bench; "fix the golden cases" on the card declines and puts
+   it to work again), the four reviewers signed, the leaning to promote.
+6. **The promotion and the ask.** Click PROMOTE (or the chat's card's promote with where the next life
+   stands), Yes. Then:
+
+   ```
+   say hello to greeter
+   ```
+
+   PASS: `body joined greeter`; the reply greets in three languages; its journey names the think node
+   and the stall; "what levels are here?" lists the experiment room and nothing more.
+7. **The measure.** Write, in the walk's record, how well Orreth made greeter against what Fable would
+   have written by hand: the graph, the prompt's words, the cases, the template's nature — and what the
+   agent got wrong. The word "Studio" turns in the glass, the book and the demo when this part passes
+   (canon 0011 §1).
+
+**The bar is every arrow above, as written.** What the agent may never do holds throughout: it cut
+nothing, promoted nothing, seated nothing, registered nothing, answered no hold.
+
+**First walk, 2026-10-16 (JB, through step 5) — W149 found.** The brief made the bench, four crafts
+and one hold; the Yes cut the graph and the golden set and opened the experiment; the trial passed
+3 of 3 and the reviewers leaned to promote. But the prompt `greeter-words` the agent wrote and named
+on the think node had stayed a draft on the bench — the chain cut graph · golden · template only —
+so the trial ran without it (no language labels in the replies, though the prompt asked for them)
+and the gate judged a thinner agent than the one made. The workshop agent thought on sonnet, JB's own
+MIND-chip assignment of 2026-10-14 winning over Opus by stock (as locked); "unassign workshop"
+restores the stock. The agent's answer to the step-5 fix sentence was right: the cases already obeyed
+the harness's law and the experiment was already proposed, so it filed nothing and said so. CURED
+the same day on both kernels (0005 W149); the walk is re-run from the brief.
+
+**Second walk, 2026-10-16 (JB, after W149's cure and "unassign workshop") — PASS through step 6.**
+The brief made the bench and four crafts; the hold's lines read "the prompt greeter-words as version
+1 · the graph greeter.v0 stands (version 1) — unchanged, skipped · the golden set greeter as version
+2 · the agent greeter as version 1 → the experiment" (W149 holding; the unchanged graph a skipped
+line, as the law says); the chat drew the hold as "workshop made greeter on your brief · files put it
+to work · your Yes"; the Yes landed the prompt and the golden set and opened exp-greeter-2; the trial
+passed 3 of 3 WITH the prompt (every reply labelled by language, as the prompt asked); the grader, the
+identity chip and the security chip signed, the critic filed its proposed golden draft and closed
+without the verdict line (recorded as missing, honestly); the promotion held, the Yes seated greeter
+on floor ops wearing greeter.template v1; "greeter, hello" → "Hello. Hola. Bonjour. Good to see you,
+jb." The workshop thought on opus (the meter). Step 7, the measure, is JB's to write. Found, not
+blocking, for the glass: W150 — a bench the agent made, opened at THE CARD, draws the wizard's stock
+(an echo node, a haiku template) instead of the bench's own crafts; W151 — the MIND chip reads "the
+template's own (haiku)" while the seat wears the binding's opus by stock. Named: the critic's missing
+verdict line after its propose call; the standing proposal re-pinned at the chat's foot (JB: the
+chat's promote was far up the scroll — the bench's card carried it, by design).
+
 ## Walk records
 
 ### Before-walk #1 — the old glass, 2026-09-16 (P0 sp3)

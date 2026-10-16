@@ -111,7 +111,7 @@
     },
     {
       "name": "draft",
-      "description": "Save a DRAFT of a craft under the human whose ask you serve — a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp3, THE WORKSHOP). Routine: a draft is unversioned and lives under the human's seat alone, never on the shelf. Pass the WHOLE declaration as `body` (the full object as it should stand after the change — never a fragment), the draft's `name` (short, lowercase) and its `kind`; the same name and kind updates the human's existing draft. The cut onto the shelf is the human's alone (\"cut the <name> draft\") — never offer to cut. When the human asks you to change, add to or write a draft, CALL this tool; never describe the change instead.",
+      "description": "Save a DRAFT of a craft under the human whose ask you serve — a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp3, THE WORKSHOP). Routine: a draft is unversioned and lives under the human's seat alone, never on the shelf. Pass the WHOLE declaration as `body` (the full object as it should stand after the change — never a fragment), the draft's `name` (short, lowercase) and its `kind`; the same name and kind updates the human's existing draft. `bench` names the open bench the draft files on — the agent's name (THE STUDIO sp11: a bench is one effort, one place); a draft with no bench is loose. The cut onto the shelf is the human's alone (\"cut the <name> draft\") — never offer to cut. When the human asks you to change, add to or write a draft, CALL this tool; never describe the change instead.",
       "input_schema": {
         "type": "object",
         "properties": {
@@ -135,12 +135,45 @@
           },
           "words": {
             "type": "string"
+          },
+          "bench": {
+            "type": "string"
           }
         },
         "required": [
           "name",
           "kind",
           "body"
+        ]
+      },
+      "consequence": "routine",
+      "ground": true
+    },
+    {
+      "name": "bench",
+      "description": "Keep THE BENCH — one effort, one place — under the human whose ask you serve (THE STUDIO sp11, THE AGENT MAKES IT ALL). action=open opens a bench named for the agent (`name`, short and lowercase), or hands back the open one of that name. action=read reads what stands on it: its step, its drafts and whether each reads whole, its experiments. action=work files ONE held act — \"put <name> to work\": the kernel cuts what changed on the bench in order (the graph, the golden set, then the template), skips what already stands, and opens THE EXPERIMENT on the agent's cut; it holds at the interlock for the human's single Yes in the chat, and you never answer it; it refuses in words before any hold when the bench is not whole (no graph, no golden set, no template, nothing changed, an experiment already running). action=close lets the bench go: its drafts discarded, its open experiment declined; what reached the shelf stays. Routine: a bench is the human's own place; the consequential act — the chain — is the kernel's, held at L2 for the human. When the human asks you to make an agent, open its bench, file every draft on it, then call action=work; never describe the act instead.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "open",
+              "read",
+              "work",
+              "close"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "words": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "name"
         ]
       },
       "consequence": "routine",

@@ -107,6 +107,16 @@ def test_one_word_to_work_cuts_in_order_skips_what_stands_and_opens_the_experime
     experiments.decline(pg, PERSON, xs[0]["experiment_id"], reason="the test starts over")
     c2 = benches.work_check(pg, PERSON, name)
     assert c2["plan"]["cuts"] == ["template"] and c2["plan"]["lines"][0] == f"the graph {name}.v0 stands (version 1) - unchanged, skipped"
+    # W149 (JB's walk 2026-10-16): a graph naming a prompt that is neither a draft on the bench nor on the shelf refuses in
+    # words before any hold; drafted on the bench, the prompt is the FIRST cut of the chain
+    crafts.save_draft(pg, PERSON, "graph", name + ".v0", dict(graph, nodes=[{"id": "say", "kind": "echo", "prompt": name + "-words"}]), bench=name)
+    with pytest.raises(benches.BenchRefused, match=f"the graph names prompt {name}-words, which is neither a draft on the bench nor on the shelf"):
+        benches.work_check(pg, PERSON, name)
+    crafts.save_draft(pg, PERSON, "prompt", name + "-words", {"text": "Say hello."}, bench=name)
+    crafts.save_draft(pg, PERSON, "template", name, {"kind": "agent", "name": name, "graph": name + ".v0", "nature": "answers hello, warmly", "capabilities": ["ask"]}, bench=name)
+    c3 = benches.work_check(pg, PERSON, name)
+    assert c3["plan"]["cuts"] == [f"prompt:{name}-words", "graph", "template"] and c3["plan"]["lines"][0] == f"the prompt {name}-words as version 1"
+    assert c3["drafts"][f"prompt:{name}-words"]
     # a changed graph with the template unchanged still refuses: an experiment needs a change to judge
     plan = benches.plan_work(name, {"draft": True, "same": False, "version": 1}, {"draft": False, "same": False, "version": 1}, {"draft": True, "same": True, "version": 1})
     assert not plan["ok"] and plan["cuts"] == ["graph"] and "stands unchanged" in plan["reason"]

@@ -3,6 +3,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 sp4, placement enforced at birth · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp1 (kernel), walk #7's W8 · W12 · W16 · W17 · 2026-09-21
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6 cure sp3 (the re-walk's wounds): W21 the duty law + the pack · W23 the interlock's words · W24 echo's bubble · 2026-09-21
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE STUDIO sp11 THE AGENT MAKES IT ALL (canon 0011 §6): a binding's mind by stock · the maker's rounds · the Workshop's recall of THE STABLE and YOUR BENCHES · 2026-10-16
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp4, W26: an empty reply never lands as replied — asked again once, then said in words · 2026-09-23
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P6.5 sp3, the Stable keeper · 2026-09-24
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp6, the bodies' seam: the harness command served on the bench · 2026-09-24
@@ -349,6 +350,12 @@ class Resident:
             self.template["capabilities"] = list(dict.fromkeys(
                 self.template.get("capabilities", [])
                 + self.binding.get("capabilities", [])))   # the seat's tools
+            if self.binding.get("mind"):                   # THE STUDIO sp11: a binding may name the seat's mind by stock
+                self.template["mind"] = dict(self.binding["mind"])   # (the Workshop's agent on Opus, canon 0011 §6); the
+        # THE STUDIO sp11, THE AGENT MAKES IT ALL: the rounds a mind may act through in one serve — the  # Stable's assignment still wins
+        # binding's (or the template's) `rounds`; unset, the gateway's own stock of three. The maker calls
+        # the bench once, the draft once per craft and the bench again: the one-call rule lifted (0011 §6)
+        self.rounds = int((self.binding or {}).get("rounds") or self.template.get("rounds") or 0)
         self.identity = Identity.load(self.name, home)
         # P6 sp4: the placement profile the template declares (defaults
         # applied) — enforced at the join, never here; a self is loaded
@@ -719,6 +726,28 @@ class Resident:
                         elif r["kind"] == "template":
                             line = f"a {m.get('kind', 'resident')} body · graph {m.get('graph')} · {m.get('nature') or m.get('charge') or ''}"[:220]
                         notes.append(f"craft {r['name']}: {line}")
+                    # THE STUDIO sp11, THE AGENT MAKES IT ALL (canon 0011 §6): the maker reads THE STABLE (the standing
+                    # stalls by name, each with its model — a think node pins one, a template wears its model) and
+                    # YOUR BENCHES (the human's open benches, what stands on each) — under the ask's person alone (AG-9)
+                    from . import stable as _stable
+                    standing = [m for m in _stable.stalls(conn) if m["state"] in _stable.STANDING]
+                    notes.append("THE STABLE's standing stalls (name · model · class): "
+                                 + ("; ".join(f"{m['name']} · {(m.get('manifest') or {}).get('model')} · {(m.get('manifest') or {}).get('class') or 'standard'}"
+                                              for m in standing) or "none standing — a template keeps the model it names"))
+                    if person:
+                        from . import benches as _benches
+                        mine = _benches.listing(conn, person, state="open")
+                        if mine:
+                            lines = []
+                            for b in mine:
+                                w = _benches.whole(conn, person, b)
+                                ds = ", ".join(f"{d['name']} {d['kind']} ({'whole' if crafts.validate(d['kind'], d['body'])['ok'] else 'not whole yet'})"
+                                               for d in w["drafts"]) or "no drafts yet"
+                                xs = ", ".join(f"{x['experiment_id']} {x['state']}" for x in w["experiments"]) or "no experiment"
+                                lines.append(f"{b['name']} at {str(b['step']).upper()} · drafts: {ds} · {xs}")
+                            notes.append("YOUR BENCHES — the human's open benches: " + "; ".join(lines))
+                        else:
+                            notes.append("YOUR BENCHES — the human has no open bench; a brief opens one (the bench tool, action open)")
                     import re as _re
                     for did_ in _re.findall(r"\[draft (draft_[0-9a-f]+)\]", s["text"]):
                         d = crafts.draft(conn, person, did_) if person else None
@@ -727,9 +756,11 @@ class Resident:
                             continue
                         v = crafts.validate(d["kind"], d["body"])
                         notes.append(f"THE OPEN DRAFT — the human's own {d['name']} {d['kind']} ({d['draft_id']}), "
-                                     f"{'reads whole' if v['ok'] else 'NOT whole yet: ' + str(v['reason'])}. Its declaration: "
+                                     f"{'reads whole' if v['ok'] else 'NOT whole yet: ' + str(v['reason'])}"
+                                     + (f", on the {d['bench']} bench" if d.get("bench") else ", loose (on no bench)") + ". Its declaration: "
                                      f"{json.dumps(d['body'], ensure_ascii=False)}. When the human asks to CHANGE it, call the "
-                                     f"`draft` tool ONCE with name {d['name']!r}, kind {d['kind']!r} and the WHOLE edited "
+                                     f"`draft` tool ONCE with name {d['name']!r}, kind {d['kind']!r}"
+                                     + (f", bench {d['bench']!r}" if d.get("bench") else "") + " and the WHOLE edited "
                                      "declaration as `body` — never a fragment, never a description of the change instead. "
                                      "The cut is the human's alone: say “say cut the "
                                      f"{d['name']} draft” and never offer to cut it yourself.")
@@ -995,14 +1026,15 @@ class Resident:
                             model=mind.get("model"), on_delta=deltas,
                             subject=self.name, klass=mind.get("class"),
                             pin=mind.get("pin"), ask=self._current_ask,
-                            require=self._require_tool)   # P6.5 sp3: the Stable decides the mind · sp5: the meter wears the ask · W116: the required tool
+                            require=self._require_tool,   # P6.5 sp3: the Stable decides the mind · sp5: the meter wears the ask · W116: the required tool
+                            **({"max_rounds": self.rounds} if self.rounds else {}))   # sp11: the maker's rounds
                         if not (reply or "").strip():          # W26: asked again, once
                             reply, more = self.gateway.think_acting(
                                 self._serve_conn, did=self.identity.did,
                                 system=system, prompt=prompt, door=door,
                                 model=mind.get("model"), on_delta=deltas,
                                 subject=self.name, klass=mind.get("class"), pin=mind.get("pin"), ask=self._current_ask,
-                                require=self._require_tool)
+                                require=self._require_tool, **({"max_rounds": self.rounds} if self.rounds else {}))
                             acts, retried = acts + more, [W26_STEP]
                             if not (reply or "").strip():
                                 reply = W26_WORDS

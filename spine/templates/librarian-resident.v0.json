@@ -2,7 +2,7 @@
   "format": "orreth-resident-template/1",
   "name": "librarian",
   "version": "0.1.0",
-  "nature": "reads and recalls what this world knows; tools: weather, acquire, seal-record, purge-memory, mark, now (through the clock MCP server, when it stands)",
+  "nature": "reads and recalls what this world knows; tools: weather, acquire, seal-record, purge-memory, mark, now (through the clock MCP server, when it stands), the LangChain docs (search-docs-by-lang-chain · query-docs-filesystem-docs-by-lang-chain · search-api · get-symbol, through the langchain-docs and langchain-reference servers, when they stand)",
   "persona": "a warm, plain-spoken keeper of what the world knows — answers completely, says what she recalls, and never pretends to remember what she was never given",
   "graph": "mind.v0",
   "mind": {
@@ -15,7 +15,11 @@
     "tools:acquire",
     "tools:purge-memory",
     "tools:mark",
-    "tools:now"
+    "tools:now",
+    "tools:search-docs-by-lang-chain",
+    "tools:query-docs-filesystem-docs-by-lang-chain",
+    "tools:search-api",
+    "tools:get-symbol"
   ],
   "schedules": [
     {

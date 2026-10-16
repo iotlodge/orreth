@@ -76,14 +76,28 @@
    }
   },
   {
-   "name": "tool_manifest: the draft tool - its declaration, read from tools.v0.json, pinned (Phase 8 sp3, THE WORKSHOP: the Workshop agent's one tool, routine - a draft under the human's seat)",
+   "name": "tool_manifest: the draft tool - its declaration, read from tools.v0.json, re-pinned on purpose (THE STUDIO sp11: `bench` names the open bench the draft files on; sp3: the Workshop agent's tool, routine - a draft under the human's seat)",
    "kind": "tool_manifest",
    "input": {
     "name": "draft"
    },
    "expect": {
-    "bytes": "{\"consequence\":\"routine\",\"description\":\"Save a DRAFT of a craft under the human whose ask you serve \\u2014 a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp3, THE WORKSHOP). Routine: a draft is unversioned and lives under the human's seat alone, never on the shelf. Pass the WHOLE declaration as `body` (the full object as it should stand after the change \\u2014 never a fragment), the draft's `name` (short, lowercase) and its `kind`; the same name and kind updates the human's existing draft. The cut onto the shelf is the human's alone (\\\"cut the <name> draft\\\") \\u2014 never offer to cut. When the human asks you to change, add to or write a draft, CALL this tool; never describe the change instead.\",\"input_schema\":{\"properties\":{\"body\":{\"type\":\"object\"},\"kind\":{\"enum\":[\"template\",\"prompt\",\"skill\",\"policy\",\"graph\",\"binding\",\"golden\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"words\":{\"type\":\"string\"}},\"required\":[\"name\",\"kind\",\"body\"],\"type\":\"object\"},\"name\":\"draft\"}",
-    "hash": "sha256:49c9c4bdd9dcb58c227e35b41961b583b3669ebd6bc538bffced7bb71fc52509",
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Save a DRAFT of a craft under the human whose ask you serve \\u2014 a template, prompt, skill, policy, graph, binding or golden set (Phase 8 sp3, THE WORKSHOP). Routine: a draft is unversioned and lives under the human's seat alone, never on the shelf. Pass the WHOLE declaration as `body` (the full object as it should stand after the change \\u2014 never a fragment), the draft's `name` (short, lowercase) and its `kind`; the same name and kind updates the human's existing draft. `bench` names the open bench the draft files on \\u2014 the agent's name (THE STUDIO sp11: a bench is one effort, one place); a draft with no bench is loose. The cut onto the shelf is the human's alone (\\\"cut the <name> draft\\\") \\u2014 never offer to cut. When the human asks you to change, add to or write a draft, CALL this tool; never describe the change instead.\",\"input_schema\":{\"properties\":{\"bench\":{\"type\":\"string\"},\"body\":{\"type\":\"object\"},\"kind\":{\"enum\":[\"template\",\"prompt\",\"skill\",\"policy\",\"graph\",\"binding\",\"golden\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"words\":{\"type\":\"string\"}},\"required\":[\"name\",\"kind\",\"body\"],\"type\":\"object\"},\"name\":\"draft\"}",
+    "hash": "sha256:e77d69ead1381d8aed119cc8e82b5733400c21c2b8a805e5b0edf9ded1b7a526",
+    "consequence": "routine",
+    "ground": true,
+    "master": false
+   }
+  },
+  {
+   "name": "tool_manifest: the bench tool - its declaration, read from tools.v0.json, pinned (THE STUDIO sp11, THE AGENT MAKES IT ALL: the Workshop agent's second tool, routine - the bench under the human's seat; `work` files the kernel's own held act)",
+   "kind": "tool_manifest",
+   "input": {
+    "name": "bench"
+   },
+   "expect": {
+    "bytes": "{\"consequence\":\"routine\",\"description\":\"Keep THE BENCH \\u2014 one effort, one place \\u2014 under the human whose ask you serve (THE STUDIO sp11, THE AGENT MAKES IT ALL). action=open opens a bench named for the agent (`name`, short and lowercase), or hands back the open one of that name. action=read reads what stands on it: its step, its drafts and whether each reads whole, its experiments. action=work files ONE held act \\u2014 \\\"put <name> to work\\\": the kernel cuts what changed on the bench in order (the graph, the golden set, then the template), skips what already stands, and opens THE EXPERIMENT on the agent's cut; it holds at the interlock for the human's single Yes in the chat, and you never answer it; it refuses in words before any hold when the bench is not whole (no graph, no golden set, no template, nothing changed, an experiment already running). action=close lets the bench go: its drafts discarded, its open experiment declined; what reached the shelf stays. Routine: a bench is the human's own place; the consequential act \\u2014 the chain \\u2014 is the kernel's, held at L2 for the human. When the human asks you to make an agent, open its bench, file every draft on it, then call action=work; never describe the act instead.\",\"input_schema\":{\"properties\":{\"action\":{\"enum\":[\"open\",\"read\",\"work\",\"close\"],\"type\":\"string\"},\"name\":{\"type\":\"string\"},\"words\":{\"type\":\"string\"}},\"required\":[\"action\",\"name\"],\"type\":\"object\"},\"name\":\"bench\"}",
+    "hash": "sha256:132d79a03a337dd04f61be875e6d9edc48a5f7f2c3da5c6581811c6a6db21a16",
     "consequence": "routine",
     "ground": true,
     "master": false

@@ -486,6 +486,161 @@
      "text": ""
     }
    }
+  },
+  {
+   "name": "bench_work_plan: W149 - the prompt the graph names is cut FIRST, then graph, golden, the agent",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "greeter",
+    "refs": [
+     {
+      "kind": "prompt",
+      "name": "greeter-words",
+      "draft": true,
+      "same": false,
+      "version": null
+     }
+    ],
+    "graph": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "golden": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": null
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": true,
+     "cuts": [
+      "prompt:greeter-words",
+      "graph",
+      "golden",
+      "template"
+     ],
+     "lines": [
+      "the prompt greeter-words as version 1",
+      "the graph greeter.v0 as version 1",
+      "the golden set greeter as version 1",
+      "the agent greeter as version 1 -> the experiment"
+     ],
+     "reason": null,
+     "text": "putting greeter to work - the prompt greeter-words as version 1 \u00b7 the graph greeter.v0 as version 1 \u00b7 the golden set greeter as version 1 \u00b7 the agent greeter as version 1 -> the experiment"
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: W149 - a prompt and a skill the graph names stand on the shelf: lines, not cuts (one unchanged draft skipped)",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "greeter",
+    "refs": [
+     {
+      "kind": "prompt",
+      "name": "greeter-words",
+      "draft": true,
+      "same": true,
+      "version": 1
+     },
+     {
+      "kind": "skill",
+      "name": "shelf",
+      "draft": false,
+      "same": false,
+      "version": 2
+     }
+    ],
+    "graph": {
+     "draft": true,
+     "same": false,
+     "version": 1
+    },
+    "golden": {
+     "draft": false,
+     "same": false,
+     "version": 1
+    },
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": 1
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": true,
+     "cuts": [
+      "graph",
+      "template"
+     ],
+     "lines": [
+      "the prompt greeter-words stands (version 1) - unchanged, skipped",
+      "the skill shelf stands (version 2)",
+      "the graph greeter.v0 as version 2",
+      "the golden set greeter stands (version 1)",
+      "the agent greeter as version 2 -> the experiment"
+     ],
+     "reason": null,
+     "text": "putting greeter to work - the prompt greeter-words stands (version 1) - unchanged, skipped \u00b7 the skill shelf stands (version 2) \u00b7 the graph greeter.v0 as version 2 \u00b7 the golden set greeter stands (version 1) \u00b7 the agent greeter as version 2 -> the experiment"
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: W149 - a prompt the graph names that is neither drafted nor standing refuses in words",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "greeter",
+    "refs": [
+     {
+      "kind": "prompt",
+      "name": "greeter-words",
+      "draft": false,
+      "same": false,
+      "version": null
+     }
+    ],
+    "graph": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "golden": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": null
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": false,
+     "cuts": [
+      "graph",
+      "golden",
+      "template"
+     ],
+     "lines": [
+      "the prompt greeter-words: none",
+      "the graph greeter.v0 as version 1",
+      "the golden set greeter as version 1",
+      "the agent greeter as version 1 -> the experiment"
+     ],
+     "reason": "the graph names prompt greeter-words, which is neither a draft on the bench nor on the shelf - draft it on the bench, or name one that stands",
+     "text": ""
+    }
+   }
   }
  ]
 }

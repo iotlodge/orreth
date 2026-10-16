@@ -50,10 +50,34 @@ fn plain_of(name: &str, kind: &str) -> String {
 /// `{draft, same, version}` — whether a draft lies on the bench, whether its bytes equal the
 /// shelf's, the shelf's standing version. Returns `{ok, cuts, lines, reason, text}`: the cuts in
 /// order, a line per craft for the card, the one reason when the chain refuses, the held act's words.
-pub fn plan_work(name: &str, graph: &Value, golden: &Value, template: &Value) -> Value {
+/// W149 (sp11, 2026-10-16): `refs` are the prompts and skills the graph NAMES, in its order —
+/// `[{kind, name, draft, same, version}]` — cut BEFORE the graph (a ref's cut is "kind:name"); one
+/// neither drafted nor standing refuses. Null or absent: none.
+pub fn plan_work(name: &str, graph: &Value, golden: &Value, template: &Value, refs: &Value) -> Value {
     let mut lines: Vec<String> = Vec::new();
     let mut cuts: Vec<String> = Vec::new();
     let mut reason: Option<String> = None;
+    for r in refs.as_array().cloned().unwrap_or_default() {
+        let kind = r["kind"].as_str().unwrap_or("").to_string();
+        let rname = r["name"].as_str().unwrap_or("").to_string();
+        let has = r["draft"].as_bool().unwrap_or(false);
+        let same = r["same"].as_bool().unwrap_or(false);
+        let ver = r["version"].as_i64();
+        let what = format!("the {kind} {rname}");
+        if has && !same {
+            cuts.push(format!("{kind}:{rname}"));
+            lines.push(format!("{what} as version {}", ver.unwrap_or(0) + 1));
+        } else if has && same {
+            lines.push(format!("{what} stands (version {}) - unchanged, skipped", ver.map(|v| v.to_string()).unwrap_or_else(|| "None".into())));
+        } else if let Some(v) = ver.filter(|v| *v != 0) {
+            lines.push(format!("{what} stands (version {v})"));
+        } else {
+            reason.get_or_insert(format!(
+                "the graph names {kind} {rname}, which is neither a draft on the bench nor on the shelf - draft it on the bench, or name one that stands"
+            ));
+            lines.push(format!("{what}: none"));
+        }
+    }
     for kind in WORK_ORDER {
         let c = match kind {
             "graph" => graph,

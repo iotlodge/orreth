@@ -219,7 +219,7 @@ pub async fn close(g: &mut Ground, w: &World, person: &str, name: &str, reason: 
 
 /// `benches.work_check`: what "put <name> to work" would do, read off the bench and the shelf — or
 /// why it refuses, in words. The chain's drafts are validated here, as a cut would.
-pub async fn work_check<C: GenericClient>(c: &C, w: &World, person: &str, name: &str) -> Result<Value, RoadError> {
+pub async fn work_check<C: GenericClient>(c: &C, w: &World, person: &str, name: &str, answering: Option<&str>) -> Result<Value, RoadError> {
     let Some(b) = get(c, &w.scope, person, name).await? else {
         return Err(refused(format!("no open bench named {} under your seat", crate::py::repr_str(name))));
     };
@@ -234,12 +234,72 @@ pub async fn work_check<C: GenericClient>(c: &C, w: &World, person: &str, name: 
             python_str(&x["experiment_id"])
         )));
     }
+    // W148 (sp11's proof, 2026-10-16): one chain, ONE hold — filed twice, the door (and the maker) doubled the
+    // hold; while the bench's ask still awaits the human, the pending one is the answer (`answering`: the
+    // settle reads the chain for the hold it is answering)
+    if let Some(hold) = b["hold"].as_str().filter(|h| Some(*h) != answering) {
+        let st = c
+            .query_opt("SELECT status FROM spine_asks WHERE ask_id = $1 AND scope = $2", &[&hold, &w.scope])
+            .await?
+            .map(|r| r.get::<_, String>(0));
+        if st.as_deref() == Some("awaiting-confirm") {
+            return Err(refused(format!(
+                "put {name} to work is already held ({hold}) — the human's Yes is pending; answer that hold, or cancel it, before filing again"
+            )));
+        }
+    }
     let mut by_kind: std::collections::HashMap<String, Value> = std::collections::HashMap::new();
     for d in wh["drafts"].as_array().cloned().unwrap_or_default() {
         by_kind.entry(python_str(&d["kind"])).or_insert(d); // newest first
     }
     let mut ins = serde_json::Map::new();
     let mut drafts = serde_json::Map::new();
+    // W149: the prompts and skills the GRAPH names — read off the bench's graph draft, or the graph standing on
+    // the shelf when the bench has no graph draft — each a cut before the graph, or a line, or a refusal
+    let all_drafts = wh["drafts"].as_array().cloned().unwrap_or_default();
+    let gbody: Value = match by_kind.get("graph") {
+        Some(d) if d["body"].is_object() => d["body"].clone(),
+        _ => match crate::services_live::get(c, &w.scope, &crate::crafts::craft_name(&format!("{name}.v0"), "graph").map_err(refused)?).await? {
+            Some(r) if r["kind"] == json!("graph") => r["manifest"].clone(),
+            _ => Value::Null,
+        },
+    };
+    let mut refs: Vec<Value> = Vec::new();
+    for node in gbody["nodes"].as_array().cloned().unwrap_or_default() {
+        for rk in ["prompt", "skill"] {
+            let rn = node[rk].as_str().unwrap_or("").trim().to_string();
+            if !rn.is_empty() && !refs.iter().any(|r| r["kind"] == json!(rk) && r["name"] == json!(rn)) {
+                refs.push(json!({"kind": rk, "name": rn}));
+            }
+        }
+    }
+    for r in refs.iter_mut() {
+        let (rk, rn) = (python_str(&r["kind"]), python_str(&r["name"]));
+        let d = all_drafts.iter().find(|x| x["kind"] == json!(rk) && x["name"] == json!(rn)).cloned(); // newest first
+        let row = crate::services_live::get(c, &w.scope, &crate::crafts::craft_name(&rn, &rk).map_err(refused)?).await?;
+        if let Some(x) = &row {
+            if x["kind"] != json!(rk) {
+                return Err(refused(format!("{} is on the shelf as a {} — a name wears one kind", python_str(&x["name"]), python_str(&x["kind"]))));
+            }
+            if x["state"] == json!("retired") {
+                return Err(refused(format!("{} is retired — restore it first, then put {name} to work", python_str(&x["name"]))));
+            }
+        }
+        if let Some(d) = &d {
+            let v = crate::crafts::validate(&rk, &d["body"]);
+            if v["ok"] != json!(true) {
+                return Err(refused(format!("the {rn} {rk} draft does not read whole yet: {}", python_str(&v["reason"]))));
+            }
+            drafts.insert(format!("{rk}:{rn}"), d["draft_id"].clone());
+        }
+        let same = match (&d, &row) {
+            (Some(d), Some(x)) => x["manifest_hash"] == json!(crate::crafts::pin(&d["body"])),
+            _ => false,
+        };
+        r["draft"] = json!(d.is_some());
+        r["same"] = json!(same);
+        r["version"] = json!(row.as_ref().and_then(|x| x["version"].as_i64()));
+    }
     for kind in crate::benches::WORK_ORDER {
         let cname = if kind == "graph" { format!("{name}.v0") } else { name.to_string() };
         let row = crate::services_live::get(c, &w.scope, &crate::crafts::craft_name(&cname, kind).map_err(refused)?).await?;
@@ -273,7 +333,7 @@ pub async fn work_check<C: GenericClient>(c: &C, w: &World, person: &str, name: 
         };
         ins.insert(kind.into(), json!({"draft": d.is_some(), "same": same, "version": row.as_ref().and_then(|r| r["version"].as_i64())}));
     }
-    let plan = crate::benches::plan_work(name, &ins["graph"], &ins["golden"], &ins["template"]);
+    let plan = crate::benches::plan_work(name, &ins["graph"], &ins["golden"], &ins["template"], &Value::Array(refs));
     if plan["ok"] != json!(true) {
         return Err(refused(plan["reason"].as_str().unwrap_or("nothing to put to work")));
     }
@@ -293,7 +353,7 @@ pub async fn work_check<C: GenericClient>(c: &C, w: &World, person: &str, name: 
 /// `benches.hold_work`: ONE hold for the chain (L2) — the card's lines are the held act's words;
 /// the bench keeps the ask it holds at the step CUT. 202 `{held, level, class, lines, cuts}`.
 pub async fn hold_work(g: &mut Ground, w: &World, person: &str, name: &str, session: Option<&str>) -> Result<Value, RoadError> {
-    let c = work_check(g.client(), w, person, name).await?;
+    let c = work_check(g.client(), w, person, name, None).await?;
     let held = crate::proof_live::hold_kernel_act(
         g,
         w,
@@ -316,7 +376,7 @@ pub async fn hold_work(g: &mut Ground, w: &World, person: &str, name: &str, sess
 pub async fn work_in(tx: &Transaction<'_>, w: &World, args: &Value, by: &str, ask: Option<&str>, marker: Option<&str>) -> Result<String, RoadError> {
     let person = if args["person"].as_str().map(|s| !s.is_empty()).unwrap_or(false) { python_str(&args["person"]) } else { by.to_string() };
     let name = python_str(&args["bench"]);
-    let c = work_check(tx, w, &person, &name).await?;
+    let c = work_check(tx, w, &person, &name, ask).await?;
     let mut said: Vec<String> = Vec::new();
     for kind in c["plan"]["cuts"].as_array().cloned().unwrap_or_default() {
         let kind = python_str(&kind);

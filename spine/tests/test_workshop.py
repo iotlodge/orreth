@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 THE WORKSHOP sp3, THE WORKSHOP v0 · 2026-10-06
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — THE WIZARD held to the kernel's laws and to W118's (JB's lock 2026-10-12) · 2026-10-12
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE STUDIO sp11 THE AGENT MAKES IT ALL: the maker's proof (canon 0011 §6) · 2026-10-16
 """THE WORKSHOP v0 on the reference (canon 0010 lock 6 · lock 8 · 0005 Phase 8 sp3): the graph declaration
 BRANCHES (a way out wears `when`: the hull's edge · the ask's words · the last reply; one default at most;
 forward only) and the hull picks the way out as the run goes, saying each pick in the journey; a node's refs
@@ -225,3 +226,100 @@ def test_the_wizard_stands_on_the_first_screen_and_goes_through_the_chats_own_do
     assert "wsNewAgent" in html and re.search(r"new\\s\+agent", html), "the chat hears “new agent”"
     for words in ("held at the interlock: click Yes — do it in the chat", "where the next life stands", "JOINED · a life begins"):
         assert words in html, words
+
+# ---- THE STUDIO sp11 — THE AGENT MAKES IT ALL (canon 0011 §6, JB's lock 2026-10-13: "fully auto means I as human can draft a prompt
+# around an Agent, Skill, Prompt, Bindings, Graphs … and the workshop agent will perform this for me"; Opus by stock) ----
+
+
+def test_the_workshop_agent_makes_an_agent_whole_from_a_brief_and_files_one_held_act(pg, monkeypatch):
+    """One brief, one bench, every craft a draft ON the bench, ONE held act — the kernel's own `bench.work`
+    hold at L2 (the SAME hold the bench's button files) under the human's seat for the human's single Yes;
+    nothing on the shelf before it; the Yes cuts in order and opens the Experiment. The maker's hands are
+    `draft` (now filing on a bench) and `bench` (open · read · work · close), both routine; the three modes law
+    holds: the tool never cuts, never answers, and `work` is a governing seat's word."""
+    from orreth_spine import benches, dispatch, envelope as ev, experiments, levels, proof, seat, services
+    _world(monkeypatch)
+    ground.ensure_all(pg); services.seed(pg)
+    levels.ensure_universe(pg, ev.universe()); levels.declare(pg, ev.universe(), {"levels": [{"at": "f:ops"}], "seats": []})
+    seats = body.crew(SPINE)
+    ws = [s for s in seats if s["binding"] and s["binding"].name == "workshop.v0.json"][0]
+    r = resident.Resident(ws["template"], binding=ws["binding"])
+    # the binding by stock: Opus for the making, twelve rounds, the bench and the docs tools on the door, the maker's charge
+    assert r.template["mind"]["model"] == "claude-opus-5-5" and r.rounds == 12
+    for cap in ("tools:draft", "tools:bench", "tools:search-docs-by-lang-chain", "tools:search-api"):
+        assert cap in r.template["capabilities"]
+    assert "MAKE: when the human gives you a BRIEF" in r.charge and "never answer it" in r.charge and "THE HARNESS'S LAW" in r.charge
+    draft, bench = tools.TOOLS["draft"], tools.TOOLS["bench"]
+    assert tools.consequence_of(bench) == "routine" and bench["ground"] is True and "bench" in draft["input_schema"]["properties"]
+    # the human behind the ask governs (the ceremony's owner); `work` is a governing seat's word, like the door's
+    assert seat.declare_owner(pg, PERSON) and proof.governs(pg, PERSON)
+    cur = pg.cursor()
+    [ask_id] = dispatch.submit_ask(pg, "make an agent called greeter that answers hello, with one golden case, on the haiku stall",
+                                   person=PERSON, to=["workshop"])
+    by = r.identity.did
+    name = "greeter"
+    # (1) the bench opens under the ask's person; a draft on a bench not open refuses in words first
+    with pytest.raises(RuntimeError, match="no open bench named 'greeter'"):
+        draft["fn"]({"name": "greeter.v0", "kind": "graph", "body": {"entry": "say", "nodes": [{"id": "say", "kind": "echo"}], "edges": []}, "bench": name, "_ask": ask_id, "_by": by}, pg)
+    out = bench["fn"]({"action": "open", "name": name, "_ask": ask_id, "_by": by}, pg)
+    assert out.startswith("the greeter bench is open under the human's seat, at NAME")
+    assert benches.get(pg, PERSON, name)["state"] == "open" and benches.get(pg, "did:orreth:person:other", name) is None   # AG-9
+    # work before the bench is whole: refused in words, no hold filed
+    out = bench["fn"]({"action": "work", "name": name, "_ask": ask_id, "_by": by}, pg)
+    assert out.startswith("refused — ") and "no graph" in out
+    # (2)–(5) every craft ONE draft call, on the bench; a draft not whole is said, then fixed with another call
+    # W149 (JB's walk, 2026-10-16): the graph NAMES a prompt the maker wrote — it is cut with the chain, before the graph
+    g = {"format": G, "name": "greeter.v0", "entry": "say", "nodes": [{"id": "say", "kind": "echo", "prompt": "greeter-words"}], "edges": []}
+    out = draft["fn"]({"name": "greeter.v0", "kind": "graph", "body": g, "bench": name, "_ask": ask_id, "_by": by}, pg)
+    assert out.startswith("saved the greeter.v0 graph draft") and "on the greeter bench" in out and "it reads whole" in out and "action=work" in out
+    out = draft["fn"]({"name": "greeter-words", "kind": "prompt", "body": {"text": "Greet in three languages."}, "bench": name, "_ask": ask_id, "_by": by}, pg)
+    assert "it reads whole" in out
+    out = draft["fn"]({"name": "greeter", "kind": "golden", "body": {"template": "greeter", "cases": []}, "bench": name, "_ask": ask_id, "_by": by}, pg)
+    assert "not whole yet" in out
+    out = draft["fn"]({"name": "greeter", "kind": "golden", "body": {"template": "greeter", "cases": [{"ask": "hello", "expect": ["HELLO"]}]}, "bench": name, "_ask": ask_id, "_by": by}, pg)
+    assert out.startswith("updated the greeter golden draft") and "it reads whole" in out
+    out = draft["fn"]({"name": "greeter", "kind": "template", "bench": name, "_ask": ask_id, "_by": by,
+                       "body": {"name": "greeter", "kind": "agent", "graph": "greeter.v0", "nature": "answers hello", "mind": {"model": "claude-haiku-4-5-20251001"}, "capabilities": ["ask"]}}, pg)
+    assert "it reads whole" in out
+    out = bench["fn"]({"action": "read", "name": name, "_ask": ask_id, "_by": by}, pg)
+    assert out.startswith("the greeter bench is open, at NAME — drafts: ") and "greeter template (reads whole)" in out and "no experiment" in out
+    w = benches.whole(pg, PERSON, benches.get(pg, PERSON, name))
+    assert sorted(d["kind"] for d in w["drafts"]) == ["golden", "graph", "prompt", "template"] and all(d["bench"] == name for d in w["drafts"])
+    # the maker's recall: THE STABLE's stalls and YOUR BENCHES, under the ask's person alone
+    r.load_policy(POLICY); r._serve_conn = pg; r._current_ask = ask_id
+    notes = " ".join(r._graph.invoke({"text": "what stands on my bench?", "reply": "", "steps": [], "notes": [], "hold": None, "read": [], "edge": ""})["notes"])
+    r._serve_conn = None; r._current_ask = None
+    assert "THE STABLE's standing stalls" in notes and "YOUR BENCHES — the human's open benches: greeter at NAME · drafts:" in notes and "greeter template (whole)" in notes
+    # (6) ONE held act — the kernel's own bench.work hold under the human, in the ask's session; nothing on the shelf
+    out = bench["fn"]({"action": "work", "name": name, "_ask": ask_id, "_by": by}, pg)
+    assert out.startswith("filed ONE held act for the human's Yes in the chat — put greeter to work: the prompt greeter-words as version 1; the graph greeter.v0 as version 1; the golden set greeter as version 1; the agent greeter as version 1 -> the experiment")
+    assert "never answer it" in out
+    b = benches.get(pg, PERSON, name)
+    assert b["step"] == "cut" and b["hold"]
+    cur.execute("SELECT status, served_by, held, person, text FROM spine_asks WHERE ask_id = %s", (b["hold"],))
+    status, served_by, held, person, text = cur.fetchone()
+    assert (status, served_by, person) == ("awaiting-confirm", proof.KERNEL, PERSON)
+    assert {k: json.loads(held)[k] for k in ("tool", "args")} == {"tool": "bench.work", "args": {"bench": name, "person": PERSON, "filed_by": by}}   # the record says who filed it
+    assert text.startswith("putting greeter to work - the prompt greeter-words as version 1 · the graph greeter.v0 as version 1")
+    assert services.get(pg, "greeter.v0.graph") is None and services.get(pg, "greeter.golden") is None and services.get(pg, "greeter-words.prompt") is None
+    # W148 (found by this proof): filed twice is refused in words, never doubled — one chain, ONE hold
+    out = bench["fn"]({"action": "work", "name": name, "_ask": ask_id, "_by": by}, pg)
+    assert out.startswith(f"refused — put greeter to work is already held ({b['hold']})")
+    cur.execute("SELECT count(*) FROM spine_asks WHERE status = 'awaiting-confirm' AND served_by = %s AND scope = %s", (proof.KERNEL, ev.universe()))
+    assert cur.fetchone()[0] == 1                                                          # this world's holds alone: the suite's other worlds keep theirs
+    # the Yes is the human's: through the kernel's own settle — the cuts in order, the Experiment opened, the bench at THE CARD
+    settled = proof.settle_kernel_act(pg, b["hold"], approve=True, by=PERSON)
+    assert settled["status"] == "replied" and "greeter.v0.graph is on the shelf as version 1" in settled["reply"]
+    assert services.get(pg, "greeter.v0.graph")["version"] == 1 and services.get(pg, "greeter.golden")["version"] == 1
+    assert services.get(pg, "greeter-words.prompt")["version"] == 1 and "greeter-words.prompt is on the shelf as version 1" in settled["reply"]   # W149: the prompt landed first
+    assert [x["state"] for x in experiments.listing(pg, agent=name)] == ["running"]
+    assert benches.get(pg, PERSON, name)["step"] == "card"
+    # the three modes law at the tool: no human behind the ask → nothing done; a reading seat's ask → work refused in words
+    with pytest.raises(RuntimeError, match="no human behind it"):
+        bench["fn"]({"action": "open", "name": "x", "_by": by}, pg)
+    [other] = dispatch.submit_ask(pg, "put it to work", person="did:orreth:person:reader", to=["workshop"])
+    assert bench["fn"]({"action": "open", "name": "mine", "_ask": other, "_by": by}, pg).startswith("the mine bench is open")
+    out = bench["fn"]({"action": "work", "name": "mine", "_ask": other, "_by": by}, pg)
+    assert out.startswith("refused — put to work is a governing seat's word")
+    assert bench["fn"]({"action": "close", "name": "mine", "_ask": other, "_by": by}, pg).startswith("the mine bench is let go — 0 drafts discarded")
+    assert bench["fn"]({"action": "sing", "name": "mine", "_ask": other, "_by": by}, pg) == "a bench act is one of open · read · work · close"

@@ -6,6 +6,7 @@
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8, the weather tool reads the asker's own place (W58) · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 row 2, the tool door moves: the declarations are DATA (`spine/tools.v0.json`) both kernels read; the executors bind to them here · 2026-09-26
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch Phase 8 sp1 THE PATH: this module's reads and writes stand at the UNIVERSE (`ev.universe()`) — a body seated on a floor shares them · 2026-10-05
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE STUDIO sp11 THE AGENT MAKES IT ALL (canon 0011 §6): the bench tool · the draft tool files on a bench · 2026-10-16
 """The tool door v0 (canon 0004): a resident acts only through a
 governed door.
 
@@ -441,32 +442,99 @@ def _services_tool(args: dict, conn) -> str:
         for s in rows) if rows else "nothing on the shelf"
 
 
+def _asker(args: dict, conn) -> tuple[str | None, str | None]:
+    """The human behind the ask a tool serves — the ask's person and its session (AG-9: a body's
+    hand on a draft or a bench writes under THAT seat alone); (None, None) for a run with no human
+    behind it (a duty's)."""
+    if args.get("_ask") and conn is not None:
+        cur = conn.cursor()
+        cur.execute("SELECT person, session FROM spine_asks WHERE ask_id = %s", (args["_ask"],))
+        r = cur.fetchone()
+        if r:
+            return r[0], r[1]
+    return None, None
+
+
 def _draft_tool(args: dict, conn) -> str:
     """Phase 8 sp3, THE WORKSHOP: the Workshop agent's one tool — a DRAFT saved under the human
     whose ask it serves (the ask's person; a run with no human behind it — a duty's — saves
     nothing and says so). Routine (L1): a draft is private, unversioned state under the seat
     (AG-9); the same name and kind updates that human's existing draft. The cut stays the
-    human's — this tool never touches the shelf."""
-    from . import crafts
-    person = None
-    if args.get("_ask") and conn is not None:
-        cur = conn.cursor()
-        cur.execute("SELECT person FROM spine_asks WHERE ask_id = %s", (args["_ask"],))
-        r = cur.fetchone()
-        person = r[0] if r else None
+    human's — this tool never touches the shelf. THE STUDIO sp11: `bench` files the draft on
+    the human's open bench of that name (one effort, one place); a bench not open refuses in
+    words — the agent opens it first."""
+    from . import benches, crafts
+    person, _session = _asker(args, conn)
     if not person:
         raise RuntimeError("a draft lives under a person — this ask has no human behind it, so nothing was saved")
     body = args.get("body")
     if isinstance(body, str):
         body = json.loads(body)
     kind, name = str(args.get("kind") or ""), str(args.get("name") or "")
+    bench = str(args.get("bench") or "").strip().lower() or None
+    if bench:
+        b = benches.get(conn, person, bench)
+        if b is None or b["state"] != "open":
+            raise RuntimeError(f"no open bench named {bench!r} under the human's seat — open it first "
+                               "(the bench tool, action open), then file the draft on it")
     prior = next((d for d in crafts.drafts(conn, person) if d["name"] == name and d["kind"] == kind), None)
     d = crafts.save_draft(conn, person, kind, name, body, words=args.get("words"),
-                          draft_id=prior["draft_id"] if prior else None)
+                          draft_id=prior["draft_id"] if prior else None, bench=bench)
     v = crafts.validate(kind, d["body"])
-    return (f"{'updated' if prior else 'saved'} the {name} {kind} draft ({d['draft_id']}) under the human's seat — "
+    return (f"{'updated' if prior else 'saved'} the {name} {kind} draft ({d['draft_id']}) under the human's seat"
+            + (f" on the {d['bench']} bench" if d.get("bench") else "") + " — "
             + ("it reads whole" if v["ok"] else f"not whole yet: {v['reason']}")
-            + f"; the cut is the human's: say “cut the {name} draft”")
+            + (f"; when the bench is whole, call the bench tool with action=work" if d.get("bench")
+               else f"; the cut is the human's: say “cut the {name} draft”"))
+
+
+def _bench_tool(args: dict, conn) -> str:
+    """THE STUDIO sp11, THE AGENT MAKES IT ALL (canon 0011 §6): the Workshop agent's second tool —
+    THE BENCH under the human whose ask it serves. open · read · close are routine (L1), as a
+    draft's save and discard are. `work` files the kernel's ONE held act for the chain
+    (`benches.hold_work` — the SAME hold the door `POST /benches/<name>/work` files, at L2 under
+    the kernel's own name) for the human's single Yes in the chat; the agent never answers it
+    (the three modes law — the Yes is the human's, in every mode). A governing seat's word, like
+    the door's; a bench not whole refuses in words before any hold. No human behind the ask:
+    nothing done, said."""
+    from . import benches, crafts, proof
+    person, session = _asker(args, conn)
+    if not person:
+        raise RuntimeError("a bench lives under a person — this ask has no human behind it, so nothing was done")
+    act, name = str(args.get("action") or "").strip().lower(), str(args.get("name") or "").strip().lower()
+    try:
+        if act == "open":
+            b = benches.open_bench(conn, person, name, words=args.get("words"))
+            return (f"the {b['name']} bench is open under the human's seat, at {str(b['step']).upper()} — "
+                    f"file every draft on it (`bench`: {b['name']!r}); when it is whole, action=work")
+        if act == "read":
+            b = benches.get(conn, person, name)
+            if b is None:
+                return f"no bench named {name!r} under the human's seat — open one (action=open) to make {name}"
+            w = benches.whole(conn, person, b)
+            drafts = "; ".join(f"{d['name']} {d['kind']} ({'reads whole' if crafts.validate(d['kind'], d['body'])['ok'] else 'not whole yet: ' + str(crafts.validate(d['kind'], d['body'])['reason'])})"
+                               for d in w["drafts"]) or "no drafts yet"
+            xs = "; ".join(f"{x['experiment_id']} {x['state']}" + (f", leaning {x['leaning']}" if x.get("leaning") else "")
+                           for x in w["experiments"]) or "no experiment"
+            seat = (f"seated: {w['seat']}" if w.get("seat") else "not yet seated")
+            return (f"the {name} bench is {b['state']}, at {str(b['step']).upper()}"
+                    + (f", holding {b['hold']} for the human's Yes" if b.get("hold") else "")
+                    + f" — drafts: {drafts} — experiments: {xs} — {seat}")
+        if act == "work":
+            if not proof.governs(conn, person):
+                return ("refused — put to work is a governing seat's word (the owner's, a declared master's); "
+                        "the human behind this ask reads here. Say so; nothing was filed")
+            held = benches.hold_work(conn, person, name, session=session, filed_by=str(args.get("_by") or "") or None)
+            return (f"filed ONE held act for the human's Yes in the chat — put {name} to work: "
+                    + "; ".join(held["lines"])
+                    + f". It holds at the interlock ({held['level']}, ask {held['held']}); the Yes is the human's alone — "
+                    "never answer it, never ask for it twice. Say what you made and that the Yes is theirs")
+        if act == "close":
+            out = benches.close(conn, person, name, reason=args.get("words"))
+            return out["words"]
+        return "a bench act is one of open · read · work · close"
+    except benches.BenchRefused as e:
+        return f"refused — {e}"
 
 
 def _propose_tool(args: dict, conn) -> str:
@@ -528,6 +596,9 @@ _BODIES: dict[str, dict] = {
     },
     # Phase 8 sp3: the Workshop agent's one tool — a draft under the human's seat (routine, L1)
     "draft": {"fn": _draft_tool},
+    # THE STUDIO sp11: the Workshop agent's second tool — THE BENCH under the human's seat; `work` files the
+    # kernel's one held act for the chain (routine here: the consequential act is the kernel's, held at L2)
+    "bench": {"fn": _bench_tool},
     # Phase 8 sp5: the critic's one tool — a draft proposed under the agent's owner (routine, L1)
     "propose": {"fn": _propose_tool},
     # P6.5 sp2: the Tools keeper's one tool — the shelf tended on the human's word

@@ -318,7 +318,7 @@ def test_fixture(contract, case):
     elif kind == "bench_name":
         assert benches.name_ok(inp["name"]) == exp["ok"]
     elif kind == "bench_work_plan":                  # THE STUDIO sp10 ONE WORD TO WORK: the chain's plan
-        assert benches.plan_work(inp["name"], inp["graph"], inp["golden"], inp["template"]) == exp["plan"]
+        assert benches.plan_work(inp["name"], inp["graph"], inp["golden"], inp["template"], inp.get("refs")) == exp["plan"]   # W149: the refs the graph names
     elif kind == "schema_version":
         assert ground.SCHEMA_VERSION == exp["version"]
     elif kind == "schema_tables":

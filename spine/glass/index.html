@@ -558,10 +558,12 @@
     font-size:11px;margin-top:6px}
   #composer{display:flex;gap:8px;padding:12px 14px;border-top:1px solid
     var(--seam)}
-  #composer input{flex:1;font:inherit;color:var(--ink);
+  #composer textarea{flex:1;font:inherit;color:var(--ink);
     background:var(--field);border:1px solid var(--seam);border-radius:8px;
-    padding:9px 12px;outline:none}
-  #composer input:focus{border-color:var(--amber-dim)}
+    padding:9px 12px;outline:none;line-height:1.35;
+    resize:vertical;min-height:38px;max-height:60vh;overflow-y:auto}   /* JB (2026-10-16): the ask RESIZES — drag its corner for a long ask; the height is remembered in this browser; Enter sends, Shift+Enter breaks a line */
+  #composer textarea:focus{border-color:var(--amber-dim)}
+  #composer{align-items:flex-end}
   #composer button{font:inherit;background:var(--amber-dim);
     color:var(--btn-ink);border:none;border-radius:8px;padding:0 18px;
     cursor:pointer;letter-spacing:.1em}
@@ -878,9 +880,9 @@
   </div>
   <div id="pin" title="a held act waits for your word here — it never scrolls away"></div>
   <div id="composer">
-    <input id="chat-in" placeholder="ask anything — every reply arrives whole"
-           autocomplete="off">
-    <button onclick="send()">ASK</button>
+    <textarea id="chat-in" rows="1" placeholder="ask anything — every reply arrives whole · Enter sends · Shift+Enter breaks a line · drag the corner to size it"
+           autocomplete="off" spellcheck="true"></textarea>
+    <button onclick="send()" title="Enter sends too">ASK</button>
   </div>
   <div id="kind"><span>KIND</span><b id="kind-word" title="click to flip — or type “objective: …” / “intention: …”">THOUGHT</b>
     <span class="hint" id="kind-hint">the words propose it · click to flip · the marker is minted with the ask</span>
@@ -1772,10 +1774,16 @@ async function onNotice(n){
     const body = (vh.person || "").startsWith("did:orreth:agent:");               // a body proposed it: the human cuts
     // W64 (walk #18): a PERSON's grave act whose code is right now waits for a declared master — it reaches every other seated glass, the master's road to the ask
     const forMaster = !body && vh.hold.level === "L3-master" && vh.hold.code_ok === true && PERSON && vh.person !== PERSON;
-    if (!body && !forMaster) return;
+    // THE STUDIO sp11 (canon 0011 §6): the Workshop agent MADE an agent on your brief and filed "put <name> to work" under YOUR
+    // seat — the kernel's own hold (the same one the bench's button files), for your single Yes; this chat never typed it
+    const made = !body && vh.hold.tool === "bench.work" && (vh.hold.args || {}).filed_by && PERSON && vh.person === PERSON;   // the record says who filed it; the bench's own button files none
+    if (!body && !forMaster && !made) return;
     const atDoor = vh.hold.tool === "join.admit";                                    // P7 sp8 row 3b: a body at the join desk — a governing seat admits it
     el("msg mine", `<em>${esc(forMaster ? whoIs(vh.person) + " asks · their code was right · a declared master's click runs it"
-                              : atDoor ? ((vh.hold.args || {}).name || whoIs(vh.person)) + " asks to join · the desk" : whoIs(vh.person) + " proposes · the shelf")}</em><div class="meta">${esc(vh.text)}</div>`);
+                              : atDoor ? ((vh.hold.args || {}).name || whoIs(vh.person)) + " asks to join · the desk"
+                              : made ? whoIs(vh.hold.args.filed_by) + " made " + (vh.hold.args.bench || "an agent") + " on your brief · files put it to work · your Yes"
+                              : whoIs(vh.person) + " proposes · the shelf")}</em><div class="meta">${esc(vh.text)}</div>`);
+    if (made) refreshPulls();                                                       // the bench and its drafts on the rail at once
     PENDING[n.ref] = el("journey", "held at the interlock — cancel is the default…");
     renderOutcome(n.ref, vh, PENDING[n.ref]);
     return;
@@ -2099,7 +2107,19 @@ function offerSummarize(fan){
 }
 
 document.getElementById("chat-in").addEventListener("keydown",
-  e => { if (e.key === "Enter") send(); });
+  e => { if (e.key === "Enter" && !e.shiftKey){ e.preventDefault(); send(); } });   // JB (2026-10-16): the ask is a textarea — Enter sends, Shift+Enter breaks a line
+(function(){                                        // the ask's height is a per-browser convenience (like the theme and the chat's place): remembered when dragged, applied on load
+  const ta = document.getElementById("chat-in"); if (!ta) return;
+  let h = null; try { h = localStorage.getItem("orreth.chat.ask.h"); } catch (e) {}
+  if (h && Number(h) > 0) ta.style.height = Number(h) + "px";
+  let before = null;
+  ta.addEventListener("pointerdown", () => { before = ta.offsetHeight; });
+  document.addEventListener("pointerup", () => {   // a drag on the corner ends here: a changed height is kept
+    if (before === null) return;
+    const now = ta.offsetHeight; const was = before; before = null;
+    if (now && Math.abs(now - was) > 2){ h = String(now); try { localStorage.setItem("orreth.chat.ask.h", h); } catch (e) {} }
+  });
+})();
 
 function whoIs(did){                              // a name for a self, never 8 chars
   if (!did) return "?";
@@ -3045,7 +3065,7 @@ const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words
                     start: "the graph's own start", end: "the graph's own end", node: "a node of the code", callable: "a plain callable — the words in, the words out", graph: "A GRAPH INSIDE · a subgraph of the code"};   // sp9b THE GRAPH MODEL: one drawer, the code's kinds too
 var WZ = null;   // THE WIZARD's state — one agent in flight, kept while the human looks at other drafts and resumed from "+ new agent"
 function workshopFocus(){ return {kind: "workspace", id: "ws_workshop", name: "workshop", window: null,
-               label: "the Workshop · its agent, workshop — with a draft open, say what to change and it edits it on your words"}; }
+               label: "the Workshop · its agent, workshop — give it a brief and it makes the agent on a bench for your one Yes; with a draft open, say what to change and it edits it on your words"}; }
 function toggleWorkshop(open){
   if (!workshopPull){ workshopPull = document.getElementById("workshop"); if (!workshopPull) return; }
   const was = workshopPull.classList.contains("open");
@@ -3264,7 +3284,7 @@ function refsOf(n){
 function drawCanvas(){
   const box = document.getElementById("ws-canvas"); box.innerHTML = "";
   if (!WS.open){   // THE FIRST SCREEN (JB's lock 2026-10-12): the wizard's door first, the hand's way beside it
-    box.innerHTML = `<div class="ws-empty">THE WORKSHOP · to make an agent, click <b>+ new agent</b> on the left — THE WIZARD takes you from a name to the body joined in one flow, no JSON, and what it makes are ordinary drafts you can still edit by hand · or pick a draft of yours or a craft from the shelf on the left: a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the workshop” any time, or “load the librarian template in the workshop”<br><button class="ws-btn p" data-wizard>+ new agent — the wizard</button></div>`;
+    box.innerHTML = `<div class="ws-empty">THE WORKSHOP · to make an agent, click <b>+ new agent</b> on the left — THE WIZARD takes you from a name to the body joined in one flow, no JSON, and what it makes are ordinary drafts you can still edit by hand · <b>or give its agent a brief in the chat</b> — “make an agent called greeter that answers hello in three languages, with a golden case per language, on the opus stall” — and the workshop agent opens the bench, makes every craft and files “put greeter to work” for your one Yes · or pick a draft of yours or a craft from the shelf on the left: a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the workshop” any time, or “load the librarian template in the workshop”<br><button class="ws-btn p" data-wizard>+ new agent — the wizard</button></div>`;
     const b = box.querySelector("[data-wizard]"); if (b) b.onclick = wsNewAgent; return; }
   if (WS.open.source === "rest"){ box.innerHTML = `<div class="ws-empty">THE BENCH AT REST · <b>${esc(WS.open.name)}</b> — its record is on the right: the step it reached, its experiments, where its agent stands. Its drafts are spent; what reached the shelf stands under THE SHELF. A new effort under the same name is a new bench — the wizard skips what already stands.</div>`; return; }   // W139
   if (WS.open.source === "new"){ box.innerHTML = `<div class="ws-empty">a new draft — name it in the inspector; a graph starts as one think node (the metered mind), a template as an agent wearing mind.v0</div>`; return; }

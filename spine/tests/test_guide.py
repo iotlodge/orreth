@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — the guide held to the glass (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing) · 2026-10-06
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — THE WIZARD's words (new agent · make an agent · open the wizard) · 2026-10-12
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — THE STUDIO sp11: the brief is a body's sentence, named · 2026-10-16
 """THE GUIDE NEVER DRIFTS FROM THE GLASS (JB, 2026-10-06, after the sp2 walk: "ensure that it
 remains updated so it doesn't drift too far from what we know we can do").
 
@@ -45,6 +46,7 @@ BODY_OR_DOOR = (
     "expected impact", "run the harness", "keep this world resilient", "propose a watch that", "watch for asks left waiting",
     "schedule an ask", "cancel", "yes — do it", "take my seat", "enroll",
     "librarian, forget",                                             # the librarian's purge, held at the interlock — a body's word
+    "make an agent called",                                          # THE STUDIO sp11: a BRIEF to the Workshop's agent — the wizard's parser is anchored to the line's end, so the brief passes it to the body
 )
 
 
