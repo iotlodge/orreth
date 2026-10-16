@@ -90,6 +90,15 @@ until the fourth is proven; the book and the demo turn then (the
 release-alignment law). LangGraph is the graph language of the agents Orreth
 hosts; the kernel is their hull, their gate, their record and their Studio.
 
+**The word turned 2026-10-16** (JB: "Let's do all of these"), the fourth
+claim proven by SPEC-STUDIO-01 Part B: the glass says Studio everywhere a
+person reads it, hears "open the studio" beside the old word, the guide is
+0.17.0; the agent that serves it is still named `workshop` and the binding
+and skill keep their file names (machinery, not words). The book turns with
+it (the Studio section, the architecture pages with the kernel map drawn, the
+interoperability modes page, a photograph of the Studio); the demo turns on
+JB's word (0005).
+
 ### 2. The bench — one effort, one place (recommended)
 
 - A **bench** is a named effort under a person's seat: the agent's name is
@@ -408,6 +417,33 @@ its own on his word; none is built; the plan (0005) places them after sp11.
    declares them, how a floor's rails and a room's compose) are a design of
    their own. JB: "this would allow for guardrails to be layered (kernel
    guardrails vs those engineered into the langgraph itself)."
+
+4. **The two minds, and a mind policy at the intent level (JB, 2026-10-16,
+   after Part B: "There's a difference between the mind of the workshop and
+   the mind OR MINDS applied to the langgraph agent that is created by the
+   workshop mind").** What stands: the maker thinks on the Studio's stall
+   (the binding's Opus by stock, the MIND chip's assignment over it) and
+   chooses nothing for the agent it makes; the made agent's minds live in its
+   crafts — the template's `mind.model` is the body's default, every think
+   node of its declared graph may pin a stall by name, and the Stable's
+   assignment by subject and class (fast · standard) overrides a body's
+   default; one law resolves every think (pin → assignment → the template's
+   model → the cheapest standing stall of the class, confessed), said in the
+   journey. The maker's charge now says so in words (each node its own stall;
+   the agent's default never the maker's own). TWO GAPS, named: (a) no walk
+   has proven a multi-node, multi-stall brief — SPEC-STUDIO-01 Part C
+   (experience-specs) is written for it, OWED; (b) an import node's own
+   LangGraph code calls whatever its own client points at, on its own keys,
+   OFF THE METER — rule 5's universal meter does not reach inside imported
+   code today (the hops are recorded, the spend is not); the cure is the
+   import path handing the code the gateway as its client, a spoonful of its
+   own. THE SEED: a mind policy at the INTENT level — an intention (above
+   objectives, flowing across them, or one objective) declares what the work
+   under it thinks with, the Stable resolves it as a class, a body under
+   that intention wears it unless a node pins harder; "intent creates
+   energy/action" (JB) — the hull already routes the work edge by the
+   intention it serves, so the policy hangs where the hull reads. A design
+   of its own, after Part C.
 
 Taken the same day, in sp10 (W145 · W146 · sp10b in 0005): a new name at NAME
 moves the effort; the hull's own hops; the chat's card picks where the next life

@@ -12,7 +12,7 @@
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, PANEL sp2: THE DAYLIGHT GLASS (light mode — JB's ask, the old glass's paper · ink · bronze carried to the panel; every colour a token; remembered in this browser, the system's preference otherwise) · the feed widened to thirty-three topics lights the presence and scheduler tracks, the shelf's tool lamps, the desk and the meter · the lever-pulled and lease facts · the fact door read once per notice · one shared /ask read between the chat and the panel · 2026-09-28 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — rearch P7 sp8 walk #17/#18 cures (glass): W61 a cancelled hold wears no proof word · W62 a retired service is at rest · W63 the YOU tag wears the seat's name · W64 a person's hold whose code is right reaches every other seated glass for a declared master's click · W65/W66 the stop grammar takes "stopping" · "start" and ignores state words · W67 the master reads the master's words · W68 a hold the clock ended says so · W69 a seat that only reads and writes is shown a hold and no button · 2026-09-27 -->
 <!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — THE SPECTATOR (the refresh season's step 3, JB 2026-09-30: "on the demo site, as before, we need the github star feature, docs link"): demo.orreth.ai is a PHOTOGRAPH of a kernel that really ran — with `window.ORRETH_DEMO` injected by scripts/snapshot_glass.py, every read comes from a captured fixture, every write is refused with one face, the captured minutes of the feed replay on a loop, the clock reads the photograph's moment, the seat form never opens, and THE TOUR opens itself for a first visit; the sill carries the book (📖 docs.orreth.ai) and the source (★ GitHub) on every kernel · 2026-09-30 -->
-<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — THE WIZARD (JB's lock 2026-10-12 after THE ONE WALK: "a very difficult process … not a good experience … we're going to have to create a wizard"): the Workshop's FIRST SCREEN — "+ new agent" beside "+ new draft" — one flow, no JSON, from a name to the body joined: NAME → GRAPH (echo · think · import, a source picked from the shelf or registered inline) → GOLDEN CASES as a form → SAVE (three ordinary drafts under your seat) → CUT (three cuts held at the interlock in the chat; the agent's opens the Experiment) → THE CARD inline → PROMOTE with where the next life stands → "<name> joined"; the canvas, the inspector and the declaration filled as it goes; `import` a node kind in the inspector with a source picker; the cut, the promotion and a source's registration each ONE door for a typed word and a button · 2026-10-12 -->
+<!-- Amended: Claude Fable 5.1 (claude-fable-5-1) — THE WIZARD (JB's lock 2026-10-12 after THE ONE WALK: "a very difficult process … not a good experience … we're going to have to create a wizard"): the Studio's FIRST SCREEN — "+ new agent" beside "+ new draft" — one flow, no JSON, from a name to the body joined: NAME → GRAPH (echo · think · import, a source picked from the shelf or registered inline) → GOLDEN CASES as a form → SAVE (three ordinary drafts under your seat) → CUT (three cuts held at the interlock in the chat; the agent's opens the Experiment) → THE CARD inline → PROMOTE with where the next life stands → "<name> joined"; the canvas, the inspector and the declaration filled as it goes; `import` a node kind in the inspector with a source picker; the cut, the promotion and a source's registration each ONE door for a typed word and a button · 2026-10-12 -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -794,7 +794,7 @@
     <span id="specband" title="this page is a photograph: every number, every body, every fact was read from a kernel that really ran, at the moment named here — the feed replays its captured minutes on a loop; you may look at everything and move nothing">…</span>
     <button class="tog wall-only" onclick="toggleChat()" title="the chat — every reply arrives whole">CHAT ▾</button>
     <button class="tog wall-only" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">ANALYZER ▴</button>
-    <button class="tog wall-only" onclick="toggleWorkshop()" title="the Workshop — where a craft is authored">WORKSHOP ▸</button>
+    <button class="tog wall-only" onclick="toggleWorkshop()" title="the Studio — where a craft is authored">WORKSHOP ▸</button>
   </div>
   <div class="strip"></div>
   <div id="floor" onclick="toggleBand()" title="the Analyzer — everything born in the chat, by origin">A N A L Y Z E R ▴</div>
@@ -812,14 +812,14 @@
   <div id="views"></div>
 </div>
 
-<div id="workshop-tab" onclick="toggleWorkshop()" title="the Workshop — where a craft is authored: your drafts, the shelf's crafts, the graph drawn from its declaration, the cut">W O R K S H O P</div>
-<div id="workshop" role="region" aria-label="the Workshop">
+<div id="workshop-tab" onclick="toggleWorkshop()" title="the Studio — where an agent is made: the bench, the true graph, one word to work, the agent that makes it all (the Workshop until 2026-10-16)">S T U D I O</div>
+<div id="workshop" role="region" aria-label="the Studio">
   <header>
-    <span>THE WORKSHOP <span class="sub">· the one place where all mutability occurs — a draft is yours until the cut</span></span>
-    <span id="ws-chip" title="the Workshop agent's mind — assigned through the Stable's own held door">MIND <select id="ws-mind"><option value="">…</option></select><span id="ws-mind-card"></span></span>
+    <span>THE STUDIO <span class="sub">· the one place where all mutability occurs — a draft is yours until the cut</span></span>
+    <span id="ws-chip" title="the Studio agent's mind — assigned through the Stable's own held door">MIND <select id="ws-mind"><option value="">…</option></select><span id="ws-mind-card"></span></span>
     <span class="x" onclick="wsLayoutReset()" title="every pane back to its stock size">⟲ layout</span>
     <span class="x" style="margin-left:0" onclick="toggleChat()" title="the chat — C opens and closes it">CHAT ▾</span>
-    <span class="x" style="margin-left:0" onclick="toggleWorkshop(false)" title="close the Workshop">Esc · ▾ close</span>
+    <span class="x" style="margin-left:0" onclick="toggleWorkshop(false)" title="close the Studio">Esc · ▾ close</span>
   </header>
   <div id="ws-body">
     <div id="ws-rail" class="ws-pane"><div class="ws-pane-h" id="ws-rail-h"><b>THE SHELF</b><input id="ws-filter" placeholder="find a draft or a craft" title="by name, kind or words" autocomplete="off"></div><div class="ws-scroll"><div id="ws-list"></div></div></div>
@@ -864,7 +864,7 @@
        aria-label="resize the chat" role="separator"></div>
   <header><span id="chat-head">THE ONE CHAT · u:dev</span>
     <span class="hint"><a id="ses-list">sessions</a> · <a id="ses-new">new session</a>
-      <span id="chat-pin-wrap" hidden>· <a id="chat-pin" class="win" title="pin this window into the Workshop as its own column (the panes make room) — pinned, unpin lets it float again">⌖ pin</a> </span>· <a onclick="toggleChat(false)" title="close the chat, keep the pulls">▾ close</a>
+      <span id="chat-pin-wrap" hidden>· <a id="chat-pin" class="win" title="pin this window into the Studio as its own column (the panes make room) — pinned, unpin lets it float again">⌖ pin</a> </span>· <a onclick="toggleChat(false)" title="close the chat, keep the pulls">▾ close</a>
       · [Esc] returns to the bridge · <span id="chat-pulse" title="the kernel's feed, as this page hears it — a pointer per event; away while the browser or the kernel sleeps">…</span></span></header>
   <div id="focus"><span>FOCUS</span><span id="focus-what"></span>
     <span class="hint">[Esc] returns the bridge, scope restored</span></div>
@@ -2422,11 +2422,11 @@ function workspaceWords(text){
   const t = text.toLowerCase().replace(/[.!?]+$/, "").trim();
   if (/^((open|show)( me)?( the)? crew|crew|the crew)$/.test(t)) { toggleCrew(true); return true; }
   if (/^((open|show)( me)?( the)? (monitor|monitoring)|monitor|monitoring)$/.test(t)) { toggleMonitor(true); return true; }
-  if (/^((open|show)( me)?( the)? workshop|workshop|the workshop)$/.test(t)) { toggleWorkshop(true); return true; }        // Phase 8 sp3
-  if (/^close the workshop$/.test(t)) { toggleWorkshop(false); return true; }
-  if (/^(?:close\s+(?:the\s+)?(?:draft|craft)|clear\s+(?:the\s+)?(?:workshop|canvas|draft)|(?:the\s+)?first\s+screen)$/.test(t)) { toggleWorkshop(true); wsCloseOpen(); return true; }   // W127 (JB, 2026-10-12): back to the first screen, the draft kept under your seat
+  if (/^((open|show)( me)?( the)? (?:workshop|studio)|workshop|studio|the (?:workshop|studio))$/.test(t)) { toggleWorkshop(true); return true; }        // Phase 8 sp3
+  if (/^close the (?:workshop|studio)$/.test(t)) { toggleWorkshop(false); return true; }
+  if (/^(?:close\s+(?:the\s+)?(?:draft|craft)|clear\s+(?:the\s+)?(?:workshop|studio|canvas|draft)|(?:the\s+)?first\s+screen)$/.test(t)) { toggleWorkshop(true); wsCloseOpen(); return true; }   // W127 (JB, 2026-10-12): back to the first screen, the draft kept under your seat
   if (/^(?:(?:make|create|build)\s+(?:an?\s+)?(?:new\s+)?agent|new\s+agent|(?:open\s+)?the\s+wizard|wizard)$/.test(t)) { toggleWorkshop(true); wsNewAgent(); return true; }   // THE WIZARD (JB's lock 2026-10-12): "new agent" · "make an agent" · "open the wizard"
-  const lw = t.match(/^(?:load|open)\s+(?:the\s+|my\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+(template|prompt|skill|policy|graph|binding|golden|draft))?\s+in\s+(?:the\s+)?workshop$/);   // W112: "in workshop" too
+  const lw = t.match(/^(?:load|open)\s+(?:the\s+|my\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+(template|prompt|skill|policy|graph|binding|golden|draft))?\s+in\s+(?:the\s+)?(?:workshop|studio)$/);   // W112: "in workshop" too
   if (lw){ el("msg mine", esc(text)); workshopLoad(lw[1], lw[2] || null); return true; }   // "load the librarian template in the workshop" · "load my bob draft in the workshop"
   return false;
 }
@@ -2534,7 +2534,7 @@ function serviceCard(s){
                      : s.kind === "golden" ? ` · ${(m.cases || []).length} case${(m.cases || []).length === 1 ? "" : "s"} for the ${esc(m.template || "?")} template` : s.kind === "policy" ? ` · ${(m.rules || []).length} rules · v${esc(m.version || "?")}`
                      : s.kind === "binding" ? ` · the ${esc(m.pull || "?")} pull` : s.kind === "prompt" ? ` · “${esc(String(m.text || "").slice(0, 90))}${String(m.text || "").length > 90 ? "…" : ""}”` : ` · ${esc(m.words || "")}`) +
                     ` <span class="assist" data-wear title="who wears this component now, by life and version — from /wear">who wears it?</span>` +
-                    ` · <span class="assist" data-ws title="open this craft in the Workshop — its declaration drawn, read-only; draft from it there">open in the Workshop</span></div>` : "";
+                    ` · <span class="assist" data-ws title="open this craft in the Studio — its declaration drawn, read-only; draft from it there">open in the Studio</span></div>` : "";
   d.innerHTML = `<h5><span class="kind">${esc(s.kind)}</span>${esc(isCraft ? s.craft || s.name : s.name)} <span class="meta">· ${esc(stateWords(s))}</span></h5>` +
     `<div class="meta">${isCraft ? "address " + esc(s.did) + " (no self — a craft is addressed, never minted)" : "self …" + esc(s.did.slice(-8))} · pin ${esc(s.manifest_hash.slice(7, 19))} · v${s.version} · by ${esc(whoIs(s.by))}</div>` +
     craftLine + mcpLine + under + mindLine +
@@ -2553,7 +2553,7 @@ async function loadShelf(box){
   const st = await fetch("/minds").then(x=>x.json()).catch(()=>null);      // P6.5 sp3: the Stable's spend rides the mind cards
   if (r && st) for (const s of r.services) if (s.kind === "mind"){ const m = (st.minds || []).find(x => x.name === s.name); if (m) s.spend = m.spend; }
   const head = document.createElement("div"); head.className = "shelf-head";
-  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind (an LLM) — and every CRAFT a body is made of — template · prompt · skill · policy · graph · binding · golden set (addressed by name and pin, never a self; worn by N bodies) · one ladder: registered → versioned → healthy | unhealthy → retired · a draft lives under YOU until you cut it onto the shelf (“my drafts” · “cut the <name> draft”) · THE WORKSHOP (the tab on the right, or “open the workshop”) draws a craft's declaration and edits your drafts";
+  head.textContent = "THE SHELF · every service the kernel governs — tool · mcp · store · source · mind (an LLM) — and every CRAFT a body is made of — template · prompt · skill · policy · graph · binding · golden set (addressed by name and pin, never a self; worn by N bodies) · one ladder: registered → versioned → healthy | unhealthy → retired · a draft lives under YOU until you cut it onto the shelf (“my drafts” · “cut the <name> draft”) · THE STUDIO (the tab on the right, or “open the workshop”) draws a craft's declaration and edits your drafts";
   box.appendChild(head);
   if (!r){ box.insertAdjacentHTML("beforeend", `<div class="meta">the shelf door did not answer</div>`); return; }
   if (!r.services.length){ box.insertAdjacentHTML("beforeend", `<div class="meta">nothing on the shelf yet — the kernel registers its built-ins at boot</div>`); return; }
@@ -2688,7 +2688,7 @@ async function serviceWords(text){                 // "what services are here?" 
     el("msg mine", esc(text));
     const r = await fetch("/benches").then(x=>x.json()).catch(()=>null);
     const bs = r && r.benches || [];
-    if (!r) sysline("the benches door did not answer"); else if (!bs.length) sysline("no bench under your seat — “+ new agent” in the Workshop opens one");
+    if (!r) sysline("the benches door did not answer"); else if (!bs.length) sysline("no bench under your seat — “+ new agent” in the Studio opens one");
     else sysline("your benches: " + bs.map(b => `<b>${esc(b.name)}</b> · ${b.state === "open" ? "at " + esc(wizStepWords(b.step)) : "at rest"} · ${(b.drafts || []).length} draft${(b.drafts || []).length === 1 ? "" : "s"}${(b.experiments || []).some(x => ["running", "proposed"].includes(x.state)) ? " · an experiment open" : ""}`).join(" · ") + " — “open the <name> bench”");
     return true;
   }
@@ -3065,7 +3065,7 @@ const KIND_WORDS = {think: "THINK · the metered mind", echo: "ECHO · the words
                     start: "the graph's own start", end: "the graph's own end", node: "a node of the code", callable: "a plain callable — the words in, the words out", graph: "A GRAPH INSIDE · a subgraph of the code"};   // sp9b THE GRAPH MODEL: one drawer, the code's kinds too
 var WZ = null;   // THE WIZARD's state — one agent in flight, kept while the human looks at other drafts and resumed from "+ new agent"
 function workshopFocus(){ return {kind: "workspace", id: "ws_workshop", name: "workshop", window: null,
-               label: "the Workshop · its agent, workshop — give it a brief and it makes the agent on a bench for your one Yes; with a draft open, say what to change and it edits it on your words"}; }
+               label: "the Studio · its agent, workshop — give it a brief and it makes the agent on a bench for your one Yes; with a draft open, say what to change and it edits it on your words"}; }
 function toggleWorkshop(open){
   if (!workshopPull){ workshopPull = document.getElementById("workshop"); if (!workshopPull) return; }
   const was = workshopPull.classList.contains("open");
@@ -3099,7 +3099,7 @@ async function loadWorkshop(){
     if (!d){ sysline(`your ${esc(WS.open.name)} ${esc(WS.open.kind)} draft is no longer under your seat (cut or discarded) — the canvas cleared`); WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null; }   // W117: a spent draft leaves nothing unsaved
     else {
       if (d.updated_at !== WS.open.draft.updated_at && !WS.dirty){ WS.decl = JSON.parse(JSON.stringify(d.body)); WS.sel = null; WS.selEdge = null;
-        sysline(`your ${esc(d.name)} ${esc(d.kind)} draft changed under your seat (the Workshop agent's hand, or another of your sessions) — the canvas redrew`); }
+        sysline(`your ${esc(d.name)} ${esc(d.kind)} draft changed under your seat (the Studio agent's hand, or another of your sessions) — the canvas redrew`); }
       WS.open.draft = d;
     }
   }
@@ -3174,7 +3174,7 @@ function houseCraft(s){                       // THE HOUSE (canon 0011 §3): a c
   return ["skill", "prompt"].includes(s.kind) && (s.worn_by || 0) > 0;
 }
 function wsCloseOpen(){                        // W127: the first screen again — the draft stays under your seat, the craft on the shelf; nothing is discarded
-  if (!WS.open){ sysline("the Workshop's first screen — nothing is open; + new agent (the wizard) or + new draft on the left"); return; }
+  if (!WS.open){ sysline("the Studio's first screen — nothing is open; + new agent (the wizard) or + new draft on the left"); return; }
   if (WS.dirty && !confirmLeave()) return;             // W117's guard
   const was = WS.open;
   WS.open = null; WS.decl = null; WS.dirty = false; WS.sel = null; WS.selEdge = null;
@@ -3284,7 +3284,7 @@ function refsOf(n){
 function drawCanvas(){
   const box = document.getElementById("ws-canvas"); box.innerHTML = "";
   if (!WS.open){   // THE FIRST SCREEN (JB's lock 2026-10-12): the wizard's door first, the hand's way beside it
-    box.innerHTML = `<div class="ws-empty">THE WORKSHOP · to make an agent, click <b>+ new agent</b> on the left — THE WIZARD takes you from a name to the body joined in one flow, no JSON, and what it makes are ordinary drafts you can still edit by hand · <b>or give its agent a brief in the chat</b> — “make an agent called greeter that answers hello in three languages, with a golden case per language, on the opus stall” — and the workshop agent opens the bench, makes every craft and files “put greeter to work” for your one Yes · or pick a draft of yours or a craft from the shelf on the left: a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the workshop” any time, or “load the librarian template in the workshop”<br><button class="ws-btn p" data-wizard>+ new agent — the wizard</button></div>`;
+    box.innerHTML = `<div class="ws-empty">THE STUDIO · to make an agent, click <b>+ new agent</b> on the left — THE WIZARD takes you from a name to the body joined in one flow, no JSON, and what it makes are ordinary drafts you can still edit by hand · <b>or give its agent a brief in the chat</b> — “make an agent called greeter that answers hello in three languages, with a golden case per language, on the opus stall” — and the workshop agent opens the bench, makes every craft and files “put greeter to work” for your one Yes · or pick a draft of yours or a craft from the shelf on the left: a graph draws itself here; its nodes and ways out open in the inspector on the right · say “open the studio” any time (the old word, “open the workshop”, is still heard), or “load the librarian template in the studio”<br><button class="ws-btn p" data-wizard>+ new agent — the wizard</button></div>`;
     const b = box.querySelector("[data-wizard]"); if (b) b.onclick = wsNewAgent; return; }
   if (WS.open.source === "rest"){ box.innerHTML = `<div class="ws-empty">THE BENCH AT REST · <b>${esc(WS.open.name)}</b> — its record is on the right: the step it reached, its experiments, where its agent stands. Its drafts are spent; what reached the shelf stands under THE SHELF. A new effort under the same name is a new bench — the wizard skips what already stands.</div>`; return; }   // W139
   if (WS.open.source === "new"){ box.innerHTML = `<div class="ws-empty">a new draft — name it in the inspector; a graph starts as one think node (the metered mind), a template as an agent wearing mind.v0</div>`; return; }
@@ -3656,7 +3656,7 @@ function drawInspector(){
   }
   if (WS.open.source === "new"){
     const benchOpts = WS.benches.filter(b => b.state === "open").map(b => `<option value="${esc(b.name)}">the ${esc(b.name)} bench</option>`).join("");
-    box.innerHTML = `<div class="ws-h">A NEW DRAFT · yours alone until the cut</div><label>kind</label><select id="ws-new-kind">${opt(CRAFT_KINDS, "graph")}</select><label>name · lowercase letters, digits, - _ .</label><input id="ws-new-name" placeholder="bob.v0"><label>bench · the effort it files on (sp8)</label><select id="ws-new-bench"><option value="">loose — on no bench</option>${benchOpts}</select><div class="acts"><button class="ws-btn p" id="ws-new-go">start the draft</button></div><div class="meta">saved under your seat at once (routine, L1); the Workshop agent can edit it on your words; “cut the &lt;name&gt; draft” puts it on the shelf (held at the interlock)</div>`;
+    box.innerHTML = `<div class="ws-h">A NEW DRAFT · yours alone until the cut</div><label>kind</label><select id="ws-new-kind">${opt(CRAFT_KINDS, "graph")}</select><label>name · lowercase letters, digits, - _ .</label><input id="ws-new-name" placeholder="bob.v0"><label>bench · the effort it files on (sp8)</label><select id="ws-new-bench"><option value="">loose — on no bench</option>${benchOpts}</select><div class="acts"><button class="ws-btn p" id="ws-new-go">start the draft</button></div><div class="meta">saved under your seat at once (routine, L1); the Studio's agent can edit it on your words; “cut the &lt;name&gt; draft” puts it on the shelf (held at the interlock)</div>`;
     box.querySelector("#ws-new-go").onclick = async () => {
       const kind = box.querySelector("#ws-new-kind").value, name = box.querySelector("#ws-new-name").value.trim().toLowerCase();
       if (!/^[a-z0-9][a-z0-9._-]{0,63}$/.test(name)){ sysline("a draft's name is a short lowercase name: letters, digits, dashes, dots, underscores"); return; }
@@ -3724,7 +3724,7 @@ function drawInspector(){
     h += `<div class="ws-h">THE DRAFT · yours alone until the cut</div><div class="ws-kv"><span>what</span><b>${esc(plainKind(d.kind))} ${esc(d.name)}</b></div><div class="ws-kv"><span>id</span><b>${esc(d.draft_id)}</b></div><div class="ws-kv"><span>saved</span><b>${hhmm(d.updated_at)}${WS.dirty ? " · <i>unsaved changes here</i>" : ""}</b></div>` +
          (d.words ? `<div class="ws-text">${esc(d.words)}</div>` : "") +
          `<div class="meta">${editable ? "click a node or an arrow to edit it; add a node after the selected one; the declaration box below is the same truth as JSON." : "edit the declaration in the box below — the same truth as the canvas."} The cut checks it whole (the kernel's law, both kernels); a half-made draft saves fine.</div>` +
-         `<div class="meta">THE AGENT: with the Workshop open the chat speaks to <b>workshop</b> — say “add an echo node after think” or “wire a way out of think to greet when the ask says hello”; it edits this draft through its draft tool and the canvas redraws.</div>`;
+         `<div class="meta">THE AGENT: with the Studio open the chat speaks to <b>workshop</b> — say “add an echo node after think” or “wire a way out of think to greet when the ask says hello”; it edits this draft through its draft tool and the canvas redraws.</div>`;
     if (editable && g && !(g.nodes || []).length) h += `<div class="acts"><button class="ws-btn" id="ws-n-first">add the first node</button></div>`;
   }
   box.innerHTML = h;
@@ -3848,11 +3848,15 @@ function drawMindChip(){
   const stalls = (WS.minds.minds || []).filter(m => m.state !== "retired");
   const a = (WS.minds.assignments || []).find(x => x.subject === "workshop") || (WS.minds.assignments || []).find(x => x.subject === "*");
   const cur = a ? a.stall : "";
-  sel.innerHTML = `<option value="">${cur ? "" : "the template's own (haiku) · "}pick a stall…</option>` + stalls.map(m => `<option value="${esc(m.name)}" ${m.name === cur ? "selected" : ""}>${esc(m.name)} · ${esc((m.manifest || {}).model || "?")}${(m.manifest || {}).provider === "anthropic" ? " · Claude the model" : ""}</option>`).join("");
-  sel.title = "THE MIND CHIP — which stall of the Stable the Workshop agent thinks with: assigning is consequential and holds at the interlock in the chat (L2). An Anthropic stall here is Claude the MODEL, metered like every mind. Claude the DEVELOPER (repo access, the factories' hands) is Phase 9 — not this chip. “stablekeeper, add the LLM anthropic <model> as <name>” adds a frontier stall.";
+  // W151 (JB's Part B walk, 2026-10-16): with no assignment the seat wears the BINDING's mind by stock (opus, canon 0011 §6), never the
+  // workspace template's haiku — read off the workshop binding on the shelf, named by the stall whose model it is
+  const bm = (((WS.shelf || []).find(x => x.name === "workshop.binding") || {}).manifest || {}).mind || {};
+  const stock = bm.model ? ((stalls.find(m => (m.manifest || {}).model === bm.model) || {}).name || bm.model) : "haiku";
+  sel.innerHTML = `<option value="">${cur ? "" : `the binding's own by stock (${esc(stock)}) · `}pick a stall…</option>` + stalls.map(m => `<option value="${esc(m.name)}" ${m.name === cur ? "selected" : ""}>${esc(m.name)} · ${esc((m.manifest || {}).model || "?")}${(m.manifest || {}).provider === "anthropic" ? " · Claude the model" : ""}</option>`).join("");
+  sel.title = "THE MIND CHIP — which stall of the Stable the Studio's agent thinks with: assigning is consequential and holds at the interlock in the chat (L2). An Anthropic stall here is Claude the MODEL, metered like every mind. Claude the DEVELOPER (repo access, the factories' hands) is Phase 9 — not this chip. “stablekeeper, add the LLM anthropic <model> as <name>” adds a frontier stall.";
   sel.onchange = () => { const stall = sel.value; if (!stall) return;
-    mindDoor("/minds/assign", {subject: "workshop", stall, klass: "any"}, `assigning the Workshop agent to the ${esc(stall)} stall is consequential — the kernel holds it at the interlock (L2)…`); };
-  const card = document.getElementById("ws-mind-card"); if (card) card.textContent = cur ? `· ${cur}` : "· the template's own";
+    mindDoor("/minds/assign", {subject: "workshop", stall, klass: "any"}, `assigning the Studio's agent to the ${esc(stall)} stall is consequential — the kernel holds it at the interlock (L2)…`); };
+  const card = document.getElementById("ws-mind-card"); if (card) card.textContent = cur ? `· ${cur}` : `· ${stock} by stock`;
 }
 /* ---- the words: open · close · load Y in the Workshop ---- */
 async function workshopLoad(name, kind){
@@ -3904,11 +3908,27 @@ async function wizOpenBench(name){              // sp8 THE BENCH: the wizard whe
   }
   WZ = Object.assign(wizFresh(), b.body || {}, {name: b.name, benchName: b.name, step: b.step, held: b.hold || null, bench: b.bench_id, force: false, note: "", noteHue: ""});   // W145: the bench's own name, for a rename at NAME
   if (WZ.regOpen) WZ.source = "";               // W141: the register form open means no source picked
+  if (!b.body || !Object.keys(b.body).length) await wizFromBench(b);   // W150: a bench the AGENT made carries no wizard state — read its crafts, never draw the stock
   toggleWorkshop(true);
   WS.open = {source: "wizard", kind: "graph", name: WZ.name}; WS.sel = null; WS.selEdge = null; WS.dirty = false;
   WS.decl = WZ.step === "name" ? null : wizGraphDecl();
   drawWorkshopRail(); drawWorkshop();
   if (WZ.held) wizHoldRead();                   // a hold from before: still waiting (the card's second face), or settled while the page was away
+}
+async function wizFromBench(b){                 // W150 (JB's Part B walk, 2026-10-16: greeter at THE CARD drew an echo "say" and a haiku template while the shelf held a think
+  if (!WS.shelf.length) await loadWorkshop();   // node on opus with its prompt): the wizard's view is derived from the BENCH — its drafts first, then the shelf's standing crafts
+  const drafts = b.drafts || [];
+  const pick = (kind, name) => { const d = drafts.find(x => x.kind === kind && x.name === name); if (d) return d.body;
+                                 const s = WS.shelf.find(x => x.kind === kind && x.name === `${name}.${kind}`); return s ? s.manifest : null; };
+  const g = pick("graph", `${b.name}.v0`), gold = pick("golden", b.name), t = pick("template", b.name);
+  if (g && Array.isArray(g.nodes) && g.nodes.length){
+    const n = g.nodes.find(x => x.id === g.entry) || g.nodes[0];
+    if (NODE_KINDS.includes(n.kind)) WZ.shape = n.kind;
+    WZ.prompt = n.prompt || ""; WZ.mind = n.mind || ""; WZ.source = n.source || "";
+    if (g.nodes.length > 1 || (g.edges || []).length) WZ.graphBody = g;            // more than the wizard's one node: drawn whole
+  }
+  if (gold && Array.isArray(gold.cases)) WZ.cases = gold.cases.map(c => ({ask: String(c.ask || ""), expect: (c.expect || []).join(", ")}));
+  if (t && typeof t === "object"){ WZ.words = t.nature || WZ.words || ""; WZ.templateBody = t; }   // the agent's own template — its mind, its persona
 }
 async function benchLetGo(name){                // "let the <name> bench go" · the card's button — routine like discard and decline: its drafts discarded, its open experiment declined, the bench closed
   const r = await fetch("/benches/" + encodeURIComponent(name) + "/close", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({person: PERSON})}).then(x=>x.json()).catch(()=>null);
@@ -4004,6 +4024,7 @@ async function wizTick(){
 }
 function wizNameOk(){ return /^[a-z0-9][a-z0-9_-]{0,63}$/.test(WZ.name); }
 function wizGraphDecl(){                        // the graph as the wizard shapes it — one entry node of the chosen kind; a hand adds more on the canvas after
+  if (WZ.graphBody) return JSON.parse(JSON.stringify(WZ.graphBody));   // W150: a graph the agent (or a hand) made whole is drawn as it stands
   const id = WZ.shape === "echo" ? "say" : WZ.shape === "think" ? "think" : "run";
   const n = {id, kind: WZ.shape};
   if (WZ.shape === "think"){ if (WZ.prompt) n.prompt = WZ.prompt; if (WZ.mind) n.mind = WZ.mind; }
@@ -4012,7 +4033,8 @@ function wizGraphDecl(){                        // the graph as the wizard shape
 }
 function wizExpect(s){ return String(s || "").split(/\s*[,·;]\s*/).map(x => x.trim()).filter(Boolean); }
 function wizGoldenDecl(){ return {format: "orreth-golden/1", template: WZ.name, cases: WZ.cases.map(c => ({ask: String(c.ask || "").trim(), expect: wizExpect(c.expect)}))}; }
-function wizTemplateDecl(){ const t = skeleton("template", WZ.name); t.graph = `${WZ.name}.v0`; t.nature = WZ.words || ""; return t; }
+function wizTemplateDecl(){ if (WZ.templateBody){ const t = JSON.parse(JSON.stringify(WZ.templateBody)); t.name = WZ.name; t.graph = `${WZ.name}.v0`; return t; }   // W150: the agent's own template, as it stands
+  const t = skeleton("template", WZ.name); t.graph = `${WZ.name}.v0`; t.nature = WZ.words || ""; return t; }
 function wizDefaultCases(){                     // a first case per shape — the human edits it; an echo's pass by the echo's own law
   if (WZ.shape === "echo") return [{ask: `hello ${WZ.name}`, expect: "hello"}, {ask: "say moon", expect: "moon"}];
   if (WZ.shape === "think") return [{ask: `hello ${WZ.name}`, expect: "hello"}];
@@ -4364,9 +4386,9 @@ function wsPinFace(){                                               // the pin o
   if (!w || !b) return;
   const open = workshopPull && workshopPull.classList.contains("open");
   w.hidden = !open;
-  b.textContent = wsPinned() ? "⌖ unpin" : "⌖ pin to the Workshop";
-  b.title = wsPinned() ? "unpin this window — it floats over the Workshop again, where you last left it"
-                       : "pin this window into the Workshop as its own column (the panes make room)";
+  b.textContent = wsPinned() ? "⌖ unpin" : "⌖ pin to the Studio";
+  b.title = wsPinned() ? "unpin this window — it floats over the Studio again, where you last left it"
+                       : "pin this window into the Studio as its own column (the panes make room)";
 }
 function wsDocked(){ return workshopPull && workshopPull.classList.contains("open") && chat.classList.contains("open") && wsPinned(); }
 /* THE WORKSPACE PASS (JB, 2026-10-09): the chat, docked, is the Workshop's FIFTH COLUMN — the grid reserves the column
@@ -4399,7 +4421,7 @@ function wsLayoutApply(){
   layoutWorkshop();
 }
 function wsLayoutWrite(k, n){ const v = wsLayoutRead(); v[k] = n; try { localStorage.setItem("orreth.ws.layout", JSON.stringify(v)); } catch (e) {} }
-function wsLayoutReset(){ try { localStorage.removeItem("orreth.ws.layout"); } catch (e) {} wsLayoutApply(); sysline("the Workshop's panes are back to their stock sizes"); }
+function wsLayoutReset(){ try { localStorage.removeItem("orreth.ws.layout"); } catch (e) {} wsLayoutApply(); sysline("the Studio's panes are back to their stock sizes"); }
 (function wsSplitters(){
   document.querySelectorAll("#workshop .ws-split").forEach(sp => {
     const k = sp.dataset.split, horizontal = k === "decl";

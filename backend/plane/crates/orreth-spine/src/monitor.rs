@@ -361,6 +361,7 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
         .filter(|s| matches!(s["state"].as_str(), Some("rested") | Some("decommissioned")))
         .filter_map(|s| s["name"].as_str().map(str::to_string))
         .collect();
+    #[cfg(feature = "bridge")] // W152 (2026-10-16): the crew's handle is the bridge's — a rails-only build (the rails proof) had not compiled since W120
     let starting: std::collections::HashSet<String> = crate::bodies::handle()
         .map(|h| {
             h.view()
@@ -370,6 +371,8 @@ pub async fn snapshot(g: &Ground, w: &World, rails: bool) -> Result<Value, RoadE
                 .collect()
         })
         .unwrap_or_default();
+    #[cfg(not(feature = "bridge"))]
+    let starting: std::collections::HashSet<String> = Default::default(); // no crew to spawn without the bridge: nothing is starting
     let dormant = bodies
         .iter()
         .filter(|b| b["alive"] != json!(true))

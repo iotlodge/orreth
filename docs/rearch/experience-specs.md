@@ -520,15 +520,17 @@ typed sentence stands alone in a code block; the Yes is a click, never Enter.
 4. **The Yes.** Click Yes on either face. PASS: one line per landing in the chat — the graph and the
    golden set on the shelf as version 1, the experiment opened on greeter in its room; the bench at THE
    CARD; the canvas lights the trial's hops through the work box as the room's record lands.
-5. **The gate.** PASS: within a minute the card reads `candidate: 3 passed, 0 failed` (or names the
-   case that failed, in the harness's words — a fail is a PASS of the gate, not of the agent: say
+5. **The gate.** PASS: within a minute the card reads `candidate: 3 passed, 0 failed`, the four
+   reviewers signed, the leaning to promote. Go to step 6. **Only if a case FAILED** (the card names
+   it in the harness's words — a fail is a PASS of the gate, not of the agent) say
 
    ```
    workshop, fix the greeter golden set so every case expects words the reply contains
    ```
 
-   and the agent updates the draft on the bench; "fix the golden cases" on the card declines and puts
-   it to work again), the four reviewers signed, the leaning to promote.
+   and the agent updates the draft on the bench; then "fix the golden cases" on the card declines
+   the experiment and puts greeter to work again. With every case passed this sentence does
+   nothing useful: the agent saves the same cases and files nothing, as it should.
 6. **The promotion and the ask.** Click PROMOTE (or the chat's card's promote with where the next life
    stands), Yes. Then:
 
@@ -573,6 +575,29 @@ blocking, for the glass: W150 — a bench the agent made, opened at THE CARD, dr
 template's own (haiku)" while the seat wears the binding's opus by stock. Named: the critic's missing
 verdict line after its propose call; the standing proposal re-pinned at the chat's foot (JB: the
 chat's promote was far up the scroll — the bench's card carried it, by design).
+
+### Part C — two nodes, two stalls, by the agent (the two minds; OWED)
+
+Proves that the maker's mind and the made agent's minds are kept apart, and that a brief can
+shape a graph of more than one node with a stall per node (canon 0011 §9.4).
+
+1. **The brief.** With the Studio open:
+
+   ```
+   make an agent called poly on the sonnet stall: a first node that answers hello in English, then a second node on the haiku stall that adds the same greeting in Spanish; one golden case per language
+   ```
+
+   PASS: the bench `poly` with a graph of TWO think nodes and one way out (forward), the first
+   node's `mind` sonnet (or none, the template's default), the second's `mind` haiku; a prompt per
+   node when the agent gave each its words; the template's `mind.model` the sonnet stall's model —
+   never claude-opus-5-5, the maker's own; the hold's lines name every prompt first, then the
+   graph, the golden set, the agent.
+2. **The gate and the ask.** Yes; the trial passes both cases; promote; `say hello to poly`. PASS:
+   the journey names "node … mind pinned to the haiku stall" for the second node and the sonnet
+   stall for the first; the Panel's gateway organ shows spend on both stalls; the canvas lights
+   both hops in order.
+3. **The measure.** Which stall thought where, read off the meter — the maker's opus calls
+   separate from poly's sonnet and haiku calls.
 
 ## Walk records
 
