@@ -1,6 +1,6 @@
 {
   "format": "orreth-guide/1",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "title": "THE GUIDE · what you can say here, and what happens",
   "kept_by": "the kernel — the same words on every door; Fable keeps it current with each spoonful (JB's law 2026-10-06: the guide turns with every word the glass learns or stops hearing — test_guide holds it to the parsers)",
   "sections": [
@@ -492,7 +492,7 @@
       "entries": [
         {
           "say": "new agent · make an agent · open the wizard · open the jonathan bench · resume the jonathan bench · my benches · let the jonathan bench go · close the jonathan bench",
-          "does": "“new agent” (or “+ new agent” on the left) opens a NEW BENCH with the wizard on it: name → graph → golden cases → SAVE → CUT → the card → PROMOTE → joined. “open the <name> bench” opens a bench where it stands (its row on the left does the same; typing an open bench's name at NAME opens it too). “my benches” lists them with their step, their drafts and whether an experiment is open. “let the <name> bench go” (or the card's button) is routine like discard: its drafts are discarded, its open experiment declined, the bench closed — what reached the shelf stands; a bench also closes by itself when its agent joins. The chat's words below remain the record and the walker's way."
+          "does": "“new agent” (or “+ new agent” on the left) opens a NEW BENCH with the wizard on it: name → graph → golden cases → SAVE → PUT TO WORK (one Yes for the chain) → the card → PROMOTE → joined. “open the <name> bench” opens a bench where it stands (its row on the left does the same; typing an open bench's name at NAME opens it too). “my benches” lists them with their step, their drafts and whether an experiment is open. “let the <name> bench go” (or the card's button) is routine like discard: its drafts are discarded, its open experiment declined, the bench closed — what reached the shelf stands; a bench also closes by itself when its agent joins. The chat's words below remain the record and the walker's way."
         },
         {
           "say": "(+ new agent — the wizard's steps)",
@@ -534,6 +534,10 @@
       "title": "The Experiment and the cut — how an agent's change is tried, judged, promoted, rested and retired",
       "lead": "An AGENT's template never cuts straight onto the shelf. “cut the bob draft” on an agent template OPENS THE EXPERIMENT (held at the interlock, L2): first the evidence must stand — bob's GOLDEN SET on the shelf (every engineered agent is born with one) and the graph its template names. On your yes an EXPERIMENT ROOM opens on a floor of the path (room exp-bob-1 on floor ops) and two arms run there: the CANDIDATE — your draft, instantiated as a trial life of bob's own self in the room, running the golden set through its own graph — and the CURRENT, the standing version (a first version has one arm, said honestly). Then the kernel asks the GRADER and the CRITIC under the experiment's marker; each reads the kernel's record of the arms — never its own words — and writes a SIGNED verdict under its own name (the grader a grade A–F per arm and a side; the critic what changed and a risk: low · medium · high). Since spoonful 6 THE TWO CHIPS review beside them: the IDENTITY chip judges the trial life's claims from the kernel's record — who it joined as (bob's own self, never a new one), what it said it stands on, where it stood, that it left whole — and signs `identity: kept` or `identity: broken`; the SECURITY chip reads what the candidate may do that the standing version may not (every capability widened, the graph, the mind, the policy) against the refusals ground and signs `security: clear` or `security: concern`. Broken claims or a concern hold the promotion; a chip not seated or silent is said as missing, never guessed. Resiliency is whether a watch turned red while the arms ran. THE VERDICT IS A PROPOSAL — THE EXPERIMENT card reaches your chat with the arms, every reviewer by name and where the evidence leans (promote · hold · unsure). The promotion is yours. A promoted agent has a SEAT: where its life stands (a field of the promotion) and its rung on the ladder: active → rested → decommissioned; restore is a new life, never a revival. The prune beat retires, hourly, the crafts nobody wears any more.",
       "entries": [
+        {
+          "say": "put bob to work",
+          "does": "ONE WORD TO WORK (canon 0011 §5): one consequential act, held ONCE at the interlock (L2). The kernel cuts what changed on bob's bench in order — the graph bob.v0, the golden set bob, then the bob template itself — skips what already stands on the shelf with the same bytes (a line on the hold, not a refusal), and opens THE EXPERIMENT on bob's own cut. The hold names every cut before your Yes; each cut is still its own fact on the shelf. Refused in words before the hold when something is missing (no graph, no golden set, no template draft), when nothing changed (an experiment needs a change to judge), or while an experiment on bob is already running. The bench's PUT TO WORK button and this word are one door; a governing seat's word, like the cut."
+        },
         {
           "say": "cut the bob draft",
           "does": "On an AGENT template: opens the Experiment instead of cutting — held at L2 in plain words (the room, the arms, the golden set's size, the reviewers). Refused in words before the hold when bob has no golden set on the shelf or its graph is not there. On any other craft the cut lands the version as before."

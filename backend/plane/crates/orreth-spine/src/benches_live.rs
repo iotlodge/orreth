@@ -214,3 +214,126 @@ pub async fn close(g: &mut Ground, w: &World, person: &str, name: &str, reason: 
     );
     Ok(json!({"bench": get(g.client(), &w.scope, person, name).await?, "discarded": discarded, "declined": declined, "words": words}))
 }
+
+// ---- THE STUDIO sp10 — ONE WORD TO WORK (canon 0011 §5, JB's lock 2026-10-13: ONE Yes for the chain; built 2026-10-14) ----
+
+/// `benches.work_check`: what "put <name> to work" would do, read off the bench and the shelf — or
+/// why it refuses, in words. The chain's drafts are validated here, as a cut would.
+pub async fn work_check<C: GenericClient>(c: &C, w: &World, person: &str, name: &str) -> Result<Value, RoadError> {
+    let Some(b) = get(c, &w.scope, person, name).await? else {
+        return Err(refused(format!("no open bench named {} under your seat", crate::py::repr_str(name))));
+    };
+    if b["state"] != json!("open") {
+        return Err(refused(format!("no open bench named {} under your seat", crate::py::repr_str(name))));
+    }
+    let wh = whole(c, &w.scope, person, &b).await?;
+    if let Some(x) = wh["experiments"].as_array().and_then(|xs| xs.iter().find(|x| x["state"] == json!("running") || x["state"] == json!("proposed"))) {
+        return Err(refused(format!(
+            "an experiment on {name} is already {} ({}) — its card is the next step; decline it to start over",
+            python_str(&x["state"]),
+            python_str(&x["experiment_id"])
+        )));
+    }
+    let mut by_kind: std::collections::HashMap<String, Value> = std::collections::HashMap::new();
+    for d in wh["drafts"].as_array().cloned().unwrap_or_default() {
+        by_kind.entry(python_str(&d["kind"])).or_insert(d); // newest first
+    }
+    let mut ins = serde_json::Map::new();
+    let mut drafts = serde_json::Map::new();
+    for kind in crate::benches::WORK_ORDER {
+        let cname = if kind == "graph" { format!("{name}.v0") } else { name.to_string() };
+        let row = crate::services_live::get(c, &w.scope, &crate::crafts::craft_name(&cname, kind).map_err(refused)?).await?;
+        let d = by_kind.get(kind);
+        if let Some(d) = d {
+            if d["name"] != json!(cname) {
+                return Err(refused(format!(
+                    "the {kind} draft on the {name} bench is named {} — a bench's crafts wear the agent's name ({cname})",
+                    crate::py::repr_str(&python_str(&d["name"]))
+                )));
+            }
+        }
+        if let Some(r) = &row {
+            if r["kind"] != json!(kind) {
+                return Err(refused(format!("{} is on the shelf as a {} — a name wears one kind", python_str(&r["name"]), python_str(&r["kind"]))));
+            }
+            if r["state"] == json!("retired") {
+                return Err(refused(format!("{} is retired — restore it first, then put {name} to work", python_str(&r["name"]))));
+            }
+        }
+        if let Some(d) = d {
+            let v = crate::crafts::validate(kind, &d["body"]);
+            if v["ok"] != json!(true) {
+                return Err(refused(format!("the {} draft does not read whole yet: {}", crate::benches::plain_words(name, kind), python_str(&v["reason"]))));
+            }
+            drafts.insert(kind.into(), d["draft_id"].clone());
+        }
+        let same = match (d, &row) {
+            (Some(d), Some(r)) => r["manifest_hash"] == json!(crate::crafts::pin(&d["body"])),
+            _ => false,
+        };
+        ins.insert(kind.into(), json!({"draft": d.is_some(), "same": same, "version": row.as_ref().and_then(|r| r["version"].as_i64())}));
+    }
+    let plan = crate::benches::plan_work(name, &ins["graph"], &ins["golden"], &ins["template"]);
+    if plan["ok"] != json!(true) {
+        return Err(refused(plan["reason"].as_str().unwrap_or("nothing to put to work")));
+    }
+    let t = &by_kind["template"]["body"];
+    if !t.is_object() || t["kind"] != json!("agent") || t["name"] != json!(name) {
+        return Err(refused(format!("the {name} template is not an agent of that name — the wizard writes it so; fix the draft")));
+    }
+    if t["graph"] != json!(format!("{name}.v0")) {
+        return Err(refused(format!(
+            "the {name} template names graph {} — a bench's agent wears its own graph, {name}.v0",
+            crate::py::repr_str(&python_str(&t["graph"]))
+        )));
+    }
+    Ok(json!({"bench": b, "plan": plan, "drafts": drafts}))
+}
+
+/// `benches.hold_work`: ONE hold for the chain (L2) — the card's lines are the held act's words;
+/// the bench keeps the ask it holds at the step CUT. 202 `{held, level, class, lines, cuts}`.
+pub async fn hold_work(g: &mut Ground, w: &World, person: &str, name: &str, session: Option<&str>) -> Result<Value, RoadError> {
+    let c = work_check(g.client(), w, person, name).await?;
+    let held = crate::proof_live::hold_kernel_act(
+        g,
+        w,
+        &python_str(&c["plan"]["text"]),
+        person,
+        crate::benches::WORK_TOOL,
+        json!({"bench": name, "person": person}),
+        crate::benches::WORK_LEVEL,
+        session,
+        crate::benches::WORK_CLASS,
+        false,
+    )
+    .await?;
+    move_bench(g, w, person, name, Some("cut"), None, Some(&held), None).await?;
+    Ok(json!({"held": held, "level": crate::benches::WORK_LEVEL, "class": crate::benches::WORK_CLASS, "lines": c["plan"]["lines"], "cuts": c["plan"]["cuts"]}))
+}
+
+/// `benches.work_in` inside `tx` (the settle arm): the cuts in order — each its own fact on the
+/// shelf — then the Experiment opened on the agent's own; the bench at THE CARD, its hold cleared.
+pub async fn work_in(tx: &Transaction<'_>, w: &World, args: &Value, by: &str, ask: Option<&str>, marker: Option<&str>) -> Result<String, RoadError> {
+    let person = if args["person"].as_str().map(|s| !s.is_empty()).unwrap_or(false) { python_str(&args["person"]) } else { by.to_string() };
+    let name = python_str(&args["bench"]);
+    let c = work_check(tx, w, &person, &name).await?;
+    let mut said: Vec<String> = Vec::new();
+    for kind in c["plan"]["cuts"].as_array().cloned().unwrap_or_default() {
+        let kind = python_str(&kind);
+        let draft_id = c["drafts"][&kind].clone();
+        if kind == "template" {
+            said.push(crate::experiments_live::open_in(tx, w, &json!({"draft_id": draft_id, "person": person}), by, ask, marker).await?);
+        } else {
+            let words = crate::crafts_live::cut_in(tx, w, &json!({"draft_id": draft_id, "person": person}), by).await?;
+            said.push(words.split(" (").next().unwrap_or(&words).to_string());
+        }
+    }
+    let skipped: Vec<String> = c["plan"]["lines"].as_array().cloned().unwrap_or_default().iter().map(python_str).filter(|l| l.contains("stands")).collect();
+    tx.execute(
+        "UPDATE spine_benches SET step = 'card', hold = NULL, updated_at = clock_timestamp() WHERE bench_id = $1",
+        &[&python_str(&c["bench"]["bench_id"])],
+    )
+    .await?;
+    Ok(format!("{name} is put to work — {}{}", said.join("; "), if skipped.is_empty() { String::new() } else { format!(" ({})", skipped.join("; ")) }))
+}
+

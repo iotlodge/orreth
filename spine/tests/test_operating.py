@@ -304,3 +304,26 @@ def test_summon_is_generalized_and_a_repo_graph_runs_inside_the_hull(pg, monkeyp
     reply, said = op.run_import(pg, {"id": "run", "source": "bob-src"}, "x")
     assert reply.startswith("CANNOT ACT: the imported graph bob-src runs only in a dev universe at v0")
     imp._serve_conn = None
+
+
+def test_w146_the_hull_records_a_hop_for_every_node_it_walks(pg):
+    """W146 (JB, SPEC-STUDIO-01 step 11, 2026-10-14: "If the experiment was meant to be seen, it either didn't happen, i missed
+    it, or …"): sp9b recorded hops from an import node's compiled code alone — a declared graph's run (an echo, no code) landed
+    none, so a trial never lit the canvas. The hull records a hop for EVERY node its work stage walks, under the graph's own
+    name — by the ask it served, or by the harness run and its case — through the same door, the same replay."""
+    from orreth_spine import harness as _hz
+    g = {"format": "orreth-graph/1", "name": "hop1.v0", "entry": "say", "nodes": [{"id": "say", "kind": "echo"}], "edges": []}
+    services.register(pg, "hop1.v0.graph", "graph", g, by=PERSON)
+    b = resident.Resident({"format": "orreth-resident-template/1", "name": "hop1", "graph": "hop1.v0", "capabilities": ["ask"]})
+    b.load_policy(POLICY)
+    b._serve_conn = pg
+    b._current_ask = "ask_hop146"
+    out = b._graph.invoke({"text": "hello hop1", "reply": "", "steps": [], "notes": [], "hold": None, "read": [], "edge": ""})
+    assert "hello hop1" in out["reply"]
+    hops = op.hops_for(pg, ask="ask_hop146")
+    assert [(h["node"], h["source"], h["agent"], h["ok"], h["step"]) for h in hops] == [("say", "hop1.v0", "hop1", True, 1)]
+    assert isinstance(hops[0]["took_ms"], int) and hops[0]["in_hash"] and hops[0]["out_hash"] and hops[0]["at"]
+    b._current_ask = None                                    # a trial's cases land by the run and its case — the card's "replay case N"
+    _hz.run(pg, b, cases=[{"ask": "hello", "expect": ["hello"]}, {"ask": "moon", "expect": ["moon"]}], run_id="run_hop146")
+    assert [h["node"] for h in op.hops_for(pg, run="run_hop146", case=2)] == ["say"]
+    assert len(op.hops_for(pg, run="run_hop146")) == 2 and op.hops_for(pg, run="run_hop146", case=1)[0]["ok"] is True

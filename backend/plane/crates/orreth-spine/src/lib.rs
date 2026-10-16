@@ -99,7 +99,7 @@ pub mod crafts; // Phase 8 sp2: THE SHELF WIDENED — the craft kinds' pure laws
 pub mod experiments; // Phase 8 sp4: THE EXPERIMENT AND THE CUT — the pure laws
 pub mod operating; // Phase 8 sp5: THE OPERATING STATE — the pure laws
 pub mod chips; // Phase 8 sp6
-pub mod benches; // Phase 8 sp8 THE BENCH (canon 0011): THE TWO CHIPS — the pure laws (the claims, the diff, the forms, the key-check)
+pub mod benches; // Phase 8 sp8 THE BENCH (canon 0011): the pure laws — the name, the steps; sp10 ONE WORD TO WORK: the plan of the chain
 pub mod levers;
 pub mod markers; // re-base sp1: the kind-name law, pure
 pub mod mcp;
@@ -163,7 +163,8 @@ pub mod experiments_live; // Phase 8 sp4: the experiments, the verdicts, the sea
 pub mod operating_live; // Phase 8 sp5: the five measured, the watches and the intention at light, feedback, summon, the grade beat
 #[cfg(feature = "rails")]
 pub mod chips_live; // Phase 8 sp6
-pub mod benches_live; // Phase 8 sp8 THE BENCH (canon 0011): THE TWO CHIPS — the chips' evidence off the record, the key-check beat
+#[cfg(feature = "rails")] // W147 (2026-10-16): the gate every live module wears — without it a feature-less `cargo test` never compiled since sp8
+pub mod benches_live; // Phase 8 sp8 THE BENCH (canon 0011): the bench on the ground; sp10: the chain checked, held and run
 #[cfg(feature = "rails")]
 pub mod levers_live;
 #[cfg(feature = "rails")]

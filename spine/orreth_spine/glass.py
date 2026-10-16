@@ -1317,6 +1317,10 @@ def make_glass_handler(feed: bridgefeed.Feed, dsn: str, bodies: dict | None = No
                         name = segs[2]
                         if len(segs) > 3 and segs[3] == "close":      # let the effort go
                             return self._json(200, _bench.close(conn, person, name, reason=str(p.get("reason") or "") or None))
+                        if len(segs) > 3 and segs[3] == "work":       # THE STUDIO sp10 ONE WORD TO WORK: one hold for the chain (L2), a governing seat's word like the cut
+                            if not proof.governs(conn, person):
+                                return self._json(403, {"error": "an agent is put to work on a governing seat's word — yours reads and writes"})
+                            return self._json(202, _bench.hold_work(conn, person, name, session=str(p.get("session") or "") or None))
                         body_ = p.get("body")
                         b = _bench.move(conn, person, name, step=str(p["step"]) if p.get("step") is not None else None,
                                         body=body_ if isinstance(body_, dict) else None,

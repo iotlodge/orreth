@@ -843,9 +843,13 @@ class Resident:
                 + (f" · branches at {', '.join(br)} — the way out picked as the run goes" if br else "")]}
             cur_state = dict(s, steps=out["steps"])
             cur, visited = g.get("entry"), 0
-            while cur is not None and visited <= len(g.get("nodes", [])):
-                visited += 1
+            hops: list[dict] = []                    # W146 (JB, SPEC-STUDIO-01 step 11, 2026-10-14: "If the experiment was meant to be seen, it either didn't
+            while cur is not None and visited <= len(g.get("nodes", [])):   # happen, i missed it, or …"): the hull records a hop for EVERY node it walks — echo · think ·
+                visited += 1                          # import alike — under the graph's own name, so a declared graph's run and its trial light the canvas as code does
                 n = crafts.node(g, cur)
+                t0 = time.monotonic()
+                hop = {"node": str(cur), "ns": [], "step": visited, "at": datetime.now(timezone.utc).isoformat(),
+                       "took_ms": None, "ok": None, "in_hash": ev.content_hash(str(cur_state.get("text") or "")), "out_hash": None}
                 if n["kind"] == "echo":
                     part = {"reply": echo_reply(self.name, cur_state["text"]),
                             "steps": cur_state["steps"] + [f"echoed every word — none summarized away "
@@ -861,6 +865,11 @@ class Resident:
                     part = think(cur_state, n)
                 cur_state.update(part)
                 out.update(part)
+                reply_now = str(part.get("reply") or "")
+                hop["took_ms"] = int((time.monotonic() - t0) * 1000)
+                hop["ok"] = not part.get("hold") and not reply_now.startswith("CANNOT ACT")
+                hop["out_hash"] = ev.content_hash(reply_now)
+                hops.append(hop)
                 if part.get("hold"):
                     break                                # a held act stops the line at a safe boundary
                 cur, why = crafts.next_node(g, cur, {"edge": cur_state.get("edge"), "ask": cur_state["text"],
@@ -868,6 +877,14 @@ class Resident:
                 if why:
                     cur_state["steps"] = cur_state["steps"] + [why]
                     out["steps"] = cur_state["steps"]
+            if hops and self._serve_conn is not None:   # W146: the record and the feed's pointer, under the graph's name — never the run's failure
+                try:
+                    from . import operating as _op
+                    _op.record_hops(self._serve_conn, {"ask": self._current_ask, "run": getattr(self, "_current_run", None),
+                                                       "case": getattr(self, "_current_case", None), "agent": self.name, "scope": self.scope,
+                                                       "chain": list(getattr(self, "_current_chain", None) or [])}, str(g["name"]), hops)
+                except Exception:                        # noqa: BLE001
+                    pass
             return out
 
         def think(s: _State, node: dict | None = None) -> dict:

@@ -1,7 +1,7 @@
 {
  "contract": "orreth.benches/1",
  "version": 0,
- "generated_by": "orreth_spine.benches (the Python reference) - Phase 8 sp8 THE BENCH (canon 0011)",
+ "generated_by": "orreth_spine.benches (the Python reference) - Phase 8 sp8 THE BENCH (canon 0011); sp10 ONE WORD TO WORK (canon 0011 section 5): the chain's plan",
  "generated_at": "2026-10-13",
  "cases": [
   {
@@ -234,6 +234,257 @@
    },
    "expect": {
     "door": "POST /benches/:id"
+   }
+  },
+  {
+   "name": "bench_work_plan: a fresh bench - three cuts, the agent's own opens the experiment",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "jonathan",
+    "graph": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "golden": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": null
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": true,
+     "cuts": [
+      "graph",
+      "golden",
+      "template"
+     ],
+     "lines": [
+      "the graph jonathan.v0 as version 1",
+      "the golden set jonathan as version 1",
+      "the agent jonathan as version 1 -> the experiment"
+     ],
+     "reason": null,
+     "text": "putting jonathan to work - the graph jonathan.v0 as version 1 \u00b7 the golden set jonathan as version 1 \u00b7 the agent jonathan as version 1 -> the experiment"
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: the graph changed, the golden set stands with the same bytes (skipped as a line), the agent's next version",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "jonathan",
+    "graph": {
+     "draft": true,
+     "same": false,
+     "version": 1
+    },
+    "golden": {
+     "draft": true,
+     "same": true,
+     "version": 1
+    },
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": 1
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": true,
+     "cuts": [
+      "graph",
+      "template"
+     ],
+     "lines": [
+      "the graph jonathan.v0 as version 2",
+      "the golden set jonathan stands (version 1) - unchanged, skipped",
+      "the agent jonathan as version 2 -> the experiment"
+     ],
+     "reason": null,
+     "text": "putting jonathan to work - the graph jonathan.v0 as version 2 \u00b7 the golden set jonathan stands (version 1) - unchanged, skipped \u00b7 the agent jonathan as version 2 -> the experiment"
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: nothing changed on the bench - refused in words, no hold",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "jonathan",
+    "graph": {
+     "draft": false,
+     "same": false,
+     "version": 2
+    },
+    "golden": {
+     "draft": false,
+     "same": false,
+     "version": 1
+    },
+    "template": {
+     "draft": true,
+     "same": true,
+     "version": 3
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": false,
+     "cuts": [],
+     "lines": [
+      "the graph jonathan.v0 stands (version 2)",
+      "the golden set jonathan stands (version 1)",
+      "the agent jonathan stands unchanged (version 3)"
+     ],
+     "reason": "the jonathan template stands unchanged (version 3) - an experiment needs a change to judge: change what jonathan is for, or its graph, then put it to work again",
+     "text": ""
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: no graph under the bench or on the shelf - refused: SAVE the graph first",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "jonathan",
+    "graph": null,
+    "golden": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": null
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": false,
+     "cuts": [
+      "golden",
+      "template"
+     ],
+     "lines": [
+      "the graph jonathan.v0: none",
+      "the golden set jonathan as version 1",
+      "the agent jonathan as version 1 -> the experiment"
+     ],
+     "reason": "no graph jonathan.v0 - SAVE the graph first",
+     "text": ""
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: no golden set anywhere - refused: every engineered agent is born with one",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "imp2",
+    "graph": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "golden": null,
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": null
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": false,
+     "cuts": [
+      "graph",
+      "template"
+     ],
+     "lines": [
+      "the graph imp2.v0 as version 1",
+      "the golden set imp2: none",
+      "the agent imp2 as version 1 -> the experiment"
+     ],
+     "reason": "no golden set imp2 - every engineered agent is born with one; SAVE its cases first",
+     "text": ""
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: the graph and the golden set stand on the shelf from an earlier walk, only the agent is new",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "imp2",
+    "graph": {
+     "draft": false,
+     "same": false,
+     "version": 1
+    },
+    "golden": {
+     "draft": false,
+     "same": false,
+     "version": 2
+    },
+    "template": {
+     "draft": true,
+     "same": false,
+     "version": null
+    }
+   },
+   "expect": {
+    "plan": {
+     "ok": true,
+     "cuts": [
+      "template"
+     ],
+     "lines": [
+      "the graph imp2.v0 stands (version 1)",
+      "the golden set imp2 stands (version 2)",
+      "the agent imp2 as version 1 -> the experiment"
+     ],
+     "reason": null,
+     "text": "putting imp2 to work - the graph imp2.v0 stands (version 1) \u00b7 the golden set imp2 stands (version 2) \u00b7 the agent imp2 as version 1 -> the experiment"
+    }
+   }
+  },
+  {
+   "name": "bench_work_plan: no template draft - refused: SAVE first",
+   "kind": "bench_work_plan",
+   "input": {
+    "name": "imp2",
+    "graph": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "golden": {
+     "draft": true,
+     "same": false,
+     "version": null
+    },
+    "template": null
+   },
+   "expect": {
+    "plan": {
+     "ok": false,
+     "cuts": [
+      "graph",
+      "golden"
+     ],
+     "lines": [
+      "the graph imp2.v0 as version 1",
+      "the golden set imp2 as version 1",
+      "the agent imp2: no draft"
+     ],
+     "reason": "no template draft for imp2 - SAVE first",
+     "text": ""
+    }
    }
   }
  ]

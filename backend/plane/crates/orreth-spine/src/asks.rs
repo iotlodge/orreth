@@ -891,6 +891,10 @@ pub async fn settle_kernel_act(
                 // Phase 8 sp4: an agent's cut OPENS the Experiment — the room, the arms, the marker
                 crate::experiments_live::open_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
             }
+            t if t == crate::benches::WORK_TOOL => {
+                // THE STUDIO sp10 ONE WORD TO WORK: the chain — the cuts in order, the Experiment opened, the bench at THE CARD
+                crate::benches_live::work_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?
+            }
             t if t == crate::experiments::PROMOTE_TOOL => {
                 // Phase 8 sp4: THE STAMPED PROMOTION — the sibling version, the seat, the next life
                 crate::experiments_live::promote_in(&tx, w, &held["args"], &asker, Some(ask_id), marker_id.as_deref()).await?

@@ -3,6 +3,7 @@
 step and the wizard's state, files drafts on itself, reads whole (its drafts · its experiments ·
 its seat), and is let go with its drafts discarded — what reached the shelf untouched (AG-9: a
 bench is its owner's alone)."""
+import json
 import secrets
 
 import pytest
@@ -59,3 +60,53 @@ def test_the_schema_counts_the_bench(pg, monkeypatch):
     assert ground.SCHEMA_VERSION >= 10 and "spine_benches" in ground.TABLES and "benches" in ground.TAGS
     cur = pg.cursor(); cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'spine_drafts' AND column_name = 'bench'")
     assert cur.fetchone(), "the drafts table wears its bench column"
+
+
+def test_one_word_to_work_cuts_in_order_skips_what_stands_and_opens_the_experiment(pg, monkeypatch):
+    """THE STUDIO sp10 ONE WORD TO WORK (canon 0011 §5): one hold for the chain — the card's lines
+    BEFORE the hold, every cut its own fact on the Yes, the Experiment opened on the agent's own,
+    the bench at THE CARD; what stands with the same bytes is skipped as a line; the refusals of
+    the walks are lines, not walls."""
+    from orreth_spine import envelope as ev, experiments, levels, proof, services
+    _world(monkeypatch); ground.ensure_all(pg)
+    levels.ensure_universe(pg, ev.universe()); levels.declare(pg, ev.universe(), {"levels": [{"at": "f:ops"}], "seats": []})   # the floor the room opens on
+    name = "wk" + secrets.token_hex(2)
+    benches.open_bench(pg, PERSON, name)
+    with pytest.raises(benches.BenchRefused, match="no graph"):
+        benches.work_check(pg, PERSON, name)                                             # an empty bench refuses in words
+    graph = {"entry": "say", "nodes": [{"id": "say", "kind": "echo"}], "edges": []}
+    crafts.save_draft(pg, PERSON, "graph", name + ".v0", graph, bench=name)
+    crafts.save_draft(pg, PERSON, "template", name, {"kind": "agent", "name": name, "graph": name + ".v0", "nature": "answers hello", "capabilities": ["ask"]}, bench=name)
+    with pytest.raises(benches.BenchRefused, match="no golden set"):
+        benches.work_check(pg, PERSON, name)
+    crafts.save_draft(pg, PERSON, "golden", name, {"template": name, "cases": [{"ask": "hello", "expect": ["HELLO"]}]}, bench=name)
+    c = benches.work_check(pg, PERSON, name)
+    assert c["plan"]["cuts"] == ["graph", "golden", "template"] and c["plan"]["lines"][2] == f"the agent {name} as version 1 -> the experiment"
+    held = benches.hold_work(pg, PERSON, name)
+    assert held["level"] == "L2" and held["lines"] == c["plan"]["lines"]
+    b = benches.get(pg, PERSON, name)
+    assert b["step"] == "cut" and b["hold"] == held["held"]                               # the bench keeps the ask it holds
+    cur = pg.cursor()
+    cur.execute("SELECT held, text FROM spine_asks WHERE ask_id = %s", (held["held"],))
+    h, text = cur.fetchone()
+    assert json.loads(h)["tool"] == "bench.work" and text.startswith(f"putting {name} to work - the graph {name}.v0 as version 1")
+    assert services.get(pg, name + ".v0.graph") is None                                 # nothing lands before the Yes
+    out = proof.settle_kernel_act(pg, held["held"], approve=True, by=PERSON)
+    assert out["status"] == "replied" and f"{name}.v0.graph is on the shelf as version 1" in out["reply"] and "experiment room" in out["reply"]
+    assert services.get(pg, name + ".v0.graph")["version"] == 1 and services.get(pg, name + ".golden")["version"] == 1
+    xs = experiments.listing(pg, agent=name)
+    assert len(xs) == 1 and xs[0]["state"] == "running"                                 # the Experiment opened on the agent's own cut
+    b = benches.get(pg, PERSON, name)
+    assert b["step"] == "card" and b["hold"] is None
+    w = benches.whole(pg, PERSON, b)
+    assert [d["kind"] for d in w["drafts"]] == ["template"] and len(w["experiments"]) == 1   # the cut drafts are spent; the agent's stays for the experiment
+    # while the experiment runs the chain refuses in words before any hold; the same bytes are a skipped line (W124's law)
+    crafts.save_draft(pg, PERSON, "graph", name + ".v0", graph, bench=name)
+    with pytest.raises(benches.BenchRefused, match="already running"):
+        benches.work_check(pg, PERSON, name)
+    experiments.decline(pg, PERSON, xs[0]["experiment_id"], reason="the test starts over")
+    c2 = benches.work_check(pg, PERSON, name)
+    assert c2["plan"]["cuts"] == ["template"] and c2["plan"]["lines"][0] == f"the graph {name}.v0 stands (version 1) - unchanged, skipped"
+    # a changed graph with the template unchanged still refuses: an experiment needs a change to judge
+    plan = benches.plan_work(name, {"draft": True, "same": False, "version": 1}, {"draft": False, "same": False, "version": 1}, {"draft": True, "same": True, "version": 1})
+    assert not plan["ok"] and plan["cuts"] == ["graph"] and "stands unchanged" in plan["reason"]

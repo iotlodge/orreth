@@ -128,6 +128,11 @@ def open_words(agent: str, room: str, current_version: int | None, golden_n: int
             "the verdict is a proposal and the promotion is yours")
 
 
+HARNESS_LAW = ("THE HARNESS'S LAW: a case passes when every expected phrase appears somewhere in the reply, in any case — "
+               "'HELLO' inside 'hello work1' passes by law, not by accident. Read a pass as a pass; judge the reply's substance, "
+               "never the letter-case of the match.")   # the same words on both kernels (experiments.rs)
+
+
 def review_ask(reviewer: str, exp: dict) -> str:
     """The kernel's ask of a reviewer (grader · critic · identity · security), with the evidence IN
     the ask — the arms' runs case by case; for the chips the trial life's claims and the candidate's
@@ -149,6 +154,7 @@ def review_ask(reviewer: str, exp: dict) -> str:
         for i, d in enumerate(a.get("details") or [], 1):
             lines.append(f"  case {i}: asked {d.get('ask')!r}; expected {', '.join(map(str, d.get('expect') or []))}; "
                          f"replied {str(d.get('reply') or '')[:200]!r} — {'passed' if d.get('ok') else 'FAILED'}")
+    lines.append(HARNESS_LAW)                       # JB (SPEC-STUDIO-01 step 11, 2026-10-14): the critic read a lawful pass as a broken yardstick — the law is told
     if reviewer == "identity":
         lines.append("THE TRIAL LIFE'S CLAIMS, from the kernel's record — " + chips.claims_words(exp.get("claims") or []))
         lines.append(chips.review_form("identity"))

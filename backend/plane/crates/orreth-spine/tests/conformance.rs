@@ -649,6 +649,7 @@ fn check(kind: &str, inp: &Value, exp: &Value) -> Result<(), String> {
         // ---- orreth.benches/1 (Phase 8 sp8): THE BENCH's pure laws ----
         "bench_step" => same!(json!(benches::step_ok(s(&inp["step"]))), exp["ok"], "ok"),
         "bench_name" => same!(json!(benches::name_ok(s(&inp["name"]))), exp["ok"], "ok"),
+        "bench_work_plan" => same!(benches::plan_work(s(&inp["name"]), &inp["graph"], &inp["golden"], &inp["template"]), exp["plan"], "the plan"),
         // ---- orreth.schema/1 (row 4, re-base sp1, lock 2): THE MIGRATOR's contract ----
         "schema_version" => {
             same!(

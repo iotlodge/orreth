@@ -8,7 +8,7 @@ reference door's live numbers to the kernel's own constants, and holds `GET /map
 import json
 import urllib.request
 
-import seats
+from tests import seats  # ONE seat helper, ONE memory of the owner — `import seats` made a second module whose ceremony was already closed (2026-10-14)
 from orreth_spine import doors, glass, ground
 
 

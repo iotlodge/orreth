@@ -517,6 +517,9 @@ def settle_kernel_act(conn, ask_id: str, *, approve: bool, by: str,
             elif held["tool"] == "experiment.open":      # Phase 8 sp4: an agent's cut OPENS the Experiment — the room, the arms, the marker
                 from . import experiments
                 result = experiments.open_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
+            elif held["tool"] == "bench.work":           # THE STUDIO sp10 ONE WORD TO WORK: the chain — the cuts in order, the Experiment opened, the bench at THE CARD
+                from . import benches
+                result = benches.work_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])
             elif held["tool"] == "experiment.promote":   # Phase 8 sp4: THE STAMPED PROMOTION — the sibling version, the seat, the next life
                 from . import experiments
                 result = experiments.promote_in(conn, held["args"], by=asker, ask=ask_id, marker=row[3])

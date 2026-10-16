@@ -1001,6 +1001,7 @@ fn router(app: Arc<App>) -> Router {
         .route("/benches", get(benches_door).post(benches_post)) // Phase 8 sp8 THE BENCH (canon 0011): one effort, one row — the seat's own benches
         .route("/benches/:name", get(benches_door).post(benches_post)) // one bench whole · its step, state and hold kept (routine)
         .route("/benches/:name/close", post(benches_post)) // let the effort go — routine, like discard and decline
+        .route("/benches/:name/work", post(benches_post)) // THE STUDIO sp10 ONE WORD TO WORK: one hold for the chain (L2)
         .route("/wear", get(wear_door)) // THE WEAR TABLE — which body wears which component at which version
         .route("/experiments", get(experiments_door)) // Phase 8 sp4: THE EXPERIMENT — this universe's experiments, one whole by id
         .route("/hops", get(hops_door)) // Phase 8 sp9b THE REPLAY (canon 0011 §4b): the hops a compiled graph took — by ask, or by run and case
@@ -2611,6 +2612,13 @@ async fn benches_post(State(app): State<Arc<App>>, Extension(seated): Extension<
         let name = segs[1].to_string();
         if segs.len() > 2 && segs[2] == "close" {
             return Ok((200, crate::benches_live::close(&mut g, w, &person, &name, s_opt(&p, "reason").as_deref()).await?));
+        }
+        if segs.len() > 2 && segs[2] == "work" {
+            // THE STUDIO sp10 ONE WORD TO WORK: one hold for the chain (L2), a governing seat's word like the cut
+            if !desk_live::governs(g.client(), sc, &person).await? {
+                return Ok((403, json!({"error": "an agent is put to work on a governing seat's word — yours reads and writes"})));
+            }
+            return Ok((202, crate::benches_live::hold_work(&mut g, w, &person, &name, s_opt(&p, "session").as_deref()).await?));
         }
         let body_v = p.get("body").filter(|v| v.is_object()).cloned();
         let b = crate::benches_live::move_bench(

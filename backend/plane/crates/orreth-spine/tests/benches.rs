@@ -88,7 +88,7 @@ async fn a_bench_is_one_effort_one_place_under_the_seat() {
     std::env::set_var("SPINE_TOOL_CHECK_S", "3600");
     std::env::remove_var("SPINE_MODE");
     let crew = home.join("crew.v0.json");
-    std::fs::write(&crew, json!({"format": "orreth-crew/1", "seats": [{"template": "templates/echo-resident.v0.json"}]}).to_string()).unwrap();
+    std::fs::write(&crew, json!({"format": "orreth-crew/1", "levels": [{"at": "f:ops"}], "seats": [{"template": "templates/echo-resident.v0.json"}]}).to_string()).unwrap();   // sp10: the floor the experiment room opens on
     std::env::set_var("SPINE_CREW", &crew);
     let lit = light(Config {
         port: 0, world: world.clone(), glass: glass_path(), masters: String::new(), human_zone: "America/Denver".into(),
@@ -157,6 +157,52 @@ async fn a_bench_is_one_effort_one_place_under_the_seat() {
     let states: Vec<&str> = r["benches"].as_array().unwrap().iter().map(|b| b["state"].as_str().unwrap()).collect();
     assert_eq!(states, vec!["open", "closed"]);
     println!("benches · jonathan opened once, kept its place, let go with its draft, opened again — quinn saw none of it");
+
+    // 6. THE STUDIO sp10 ONE WORD TO WORK (canon 0011 §5): the chain refuses in words while something is missing;
+    //    then ONE hold names every cut; the Yes cuts in order, opens the Experiment and moves the bench to THE CARD
+    let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await;
+    assert_eq!(s, 400, "{r}");
+    assert!(r["error"].as_str().unwrap().contains("no graph jonathan.v0"), "{r}");
+    for (kind, name, body) in [
+        ("graph", "jonathan.v0", json!({"entry": "say", "nodes": [{"id": "say", "kind": "echo"}], "edges": []})),
+        ("template", "jonathan", json!({"kind": "agent", "name": "jonathan", "graph": "jonathan.v0", "nature": "answers hello", "capabilities": ["ask"]})),
+    ] {
+        let (s, r) = knock(port, "POST", "/drafts", Some(&json!({"kind": kind, "name": name, "bench": "jonathan", "body": body})), &jb).await;
+        assert_eq!(s, 201, "{r}");
+    }
+    let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await;
+    assert_eq!(s, 400, "{r}");
+    assert!(r["error"].as_str().unwrap().contains("no golden set"), "{r}");
+    let (s, r) = knock(port, "POST", "/drafts", Some(&json!({"kind": "golden", "name": "jonathan", "bench": "jonathan", "body": {"template": "jonathan", "cases": [{"ask": "hello", "expect": ["HELLO"]}]}})), &jb).await;
+    assert_eq!(s, 201, "{r}");
+    let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &quinn).await;
+    assert_eq!(s, 403, "a reading seat may not put an agent to work: {r}");
+    let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await;
+    assert_eq!(s, 202, "{r}");
+    let lines: Vec<&str> = r["lines"].as_array().unwrap().iter().map(|l| l.as_str().unwrap()).collect();
+    assert_eq!(lines, vec!["the graph jonathan.v0 as version 1", "the golden set jonathan as version 1", "the agent jonathan as version 1 -> the experiment"]);
+    assert_eq!((r["level"].as_str(), r["cuts"].as_array().unwrap().len()), (Some("L2"), 3));
+    let held = r["held"].as_str().unwrap().to_string();
+    let (_, b) = knock(port, "GET", "/benches/jonathan", None, &jb).await;
+    assert_eq!((b["bench"]["step"].as_str(), b["bench"]["hold"].as_str()), (Some("cut"), Some(held.as_str())), "{b}");
+    let (s, _) = knock(port, "GET", "/services/jonathan.v0.graph", None, &jb).await;
+    assert_ne!(s, 200, "nothing lands before the Yes");
+    knock(port, "POST", "/confirm", Some(&json!({"ask_id": held, "approve": true})), &jb).await;
+    let t0 = std::time::Instant::now();
+    let mut v = Value::Null;
+    while t0.elapsed() < Duration::from_secs(30) {
+        let (_, x) = knock(port, "GET", &format!("/ask/{held}"), None, &jb).await;
+        if x["status"] == json!("replied") { v = x; break; }
+        tokio::time::sleep(Duration::from_millis(400)).await;
+    }
+    let reply = v["reply"].as_str().unwrap_or_default().to_string();
+    assert!(reply.contains("jonathan.v0.graph is on the shelf as version 1") && reply.contains("experiment room"), "{v}");
+    let (_, b) = knock(port, "GET", "/benches/jonathan", None, &jb).await;
+    assert_eq!((b["bench"]["step"].as_str(), b["bench"]["hold"].is_null(), b["bench"]["experiments"].as_array().unwrap().len()), (Some("card"), true, 1), "{b}");
+    let (s, r) = knock(port, "POST", "/benches/jonathan/work", None, &jb).await;
+    assert_eq!(s, 400, "{r}");
+    assert!(r["error"].as_str().unwrap().contains("already running"), "{r}");
+    println!("benches · ONE WORD TO WORK: refused in words until the chain stood, one hold named three cuts, the Yes cut them in order and opened the experiment — the bench at THE CARD");
 
     lit.stop().await;
 }

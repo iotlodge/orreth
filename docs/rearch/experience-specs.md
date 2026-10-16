@@ -455,6 +455,38 @@ The measure is JB's: *"how well Orreth can do it vs YOU"*. Part A is by hand on 
    PASS: the window closes and nothing else does. Click HOW IT WORKS on the sill. PASS: the same
    window opens. Reload the page on :4601 (the Python reference) and say it again. PASS: the same
    map, the line naming `reference` — the declaration is one, served by both.
+11. **One word to work (sp10).** "+ new agent" → `work1`, GRAPH echo, one golden case `hello` →
+   `HELLO`, SAVE. PASS: the strip reads 5 PUT TO WORK (not CUT); the step says one word, one Yes,
+   and offers one button "put work1 to work → the interlock". Click it. PASS: the chat holds ONE
+   act whose words name the whole chain — "Putting work1 to work - the graph work1.v0 as version 1
+   · the golden set work1 as version 1 · the agent work1 as version 1 -> the experiment" — and the
+   bench lists the same three lines with ▸; nothing is on the shelf yet (THE SHELF's graphs count
+   is unchanged). Click "Yes — do it". PASS: ONE "Done, on your word" line names the graph and the
+   golden set on the shelf as version 1 and the experiment room open; the tape reads `service
+   registered work1.v0.graph`, `service registered work1.golden`, `experiment opened`; the bench
+   moves to THE CARD by itself. Say `put work1 to work` in the chat now. PASS: refused in words —
+   "an experiment on work1 is already running … its card is the next step". After PROMOTE and
+   JOINED, "+ new agent" → `work1` again (a new bench, same name), GRAPH echo, the same golden case,
+   SAVE, click PUT TO WORK. PASS: refused before any hold — "the work1 template stands unchanged
+   (version 1) - an experiment needs a change to judge: change what work1 is for, or its graph,
+   then put it to work again". Change the words at NAME, SAVE, PUT TO WORK. PASS: the hold's lines
+   read "the graph work1.v0 stands (version 1) - unchanged, skipped · the golden set work1 stands
+   (version 1) - unchanged, skipped · the agent work1 as version 2 -> the experiment".
+   **WALKED by JB 2026-10-14 — PASS**, validated on the ground (one hold at 00:27:40; the graph and
+   the golden set on the shelf at the Yes, 00:28:04, one transaction; the experiment proposed at
+   00:28:18 with four signed reviewers; promoted at 00:39:13, the template landing then; work1
+   seated on floor three; the second try refused "template stands unchanged"). Found and cured the
+   same day: **W145** — "back" to NAME then a new name forked the bench (now: the effort moves, the
+   old bench let go with a line); **W146** — the trial lit nothing on the canvas (no hops for a
+   declared graph's own nodes; now: every node the hull walks is a hop under the graph's name).
+   The critic read the lawful pass ("HELLO" inside "hello work1") as a broken yardstick — every
+   reviewer is now told the harness's law. Walk again after the cure: "+ new agent" → `work3`,
+   GRAPH echo, SAVE, PUT TO WORK, Yes. PASS: while the trial runs the canvas lights `say` inside
+   the work box (the ring with it); the card's "replay case 1" plays it again; the chat's card
+   carries a picker for where the next life stands, and its promote button says the pick as a
+   word. Then "+ new agent" → `work4`, next, back, change the name to `work5`, next. PASS: one
+   line — "the work4 bench let go — the effort continues as work5"; THE SHELF lists one bench,
+   `work5`, none named work4; the golden case reads "hello work5".
 
 ## Walk records
 

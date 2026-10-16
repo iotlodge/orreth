@@ -36,6 +36,7 @@ COMMAND_HEADS = (
     "close the draft", "clear the workshop",                                     # W127: the first screen again (JB, 2026-10-12)
     "open the ", "resume the ", "my benches", "let the ", "close the ",          # Phase 8 sp8 THE BENCH (canon 0011)
     "how the kernel", "how does the kernel", "the map",                         # THE STUDIO sp9c: HOW THE KERNEL WORKS (canon 0011 §4c)
+    "put ",                                                                     # THE STUDIO sp10: ONE WORD TO WORK (canon 0011 §5)
 )
 # lines the glass hears through a body or a door, not a parser — named, never silently skipped
 BODY_OR_DOOR = (

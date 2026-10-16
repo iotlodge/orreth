@@ -83,6 +83,9 @@ fn head(s: &str, n: usize) -> String {
 }
 
 /// `experiments.review_ask`: the kernel's ask of a reviewer, with the evidence in it and the form.
+/// The same words as the Python reference's `experiments.HARNESS_LAW` — told to every reviewer.
+pub const HARNESS_LAW: &str = "THE HARNESS'S LAW: a case passes when every expected phrase appears somewhere in the reply, in any case — 'HELLO' inside 'hello work1' passes by law, not by accident. Read a pass as a pass; judge the reply's substance, never the letter-case of the match.";
+
 pub fn review_ask(reviewer: &str, exp: &Value) -> String {
     let arms = &exp["arms"];
     let cv = exp["current_version"].as_i64();
@@ -120,6 +123,7 @@ pub fn review_ask(reviewer: &str, exp: &Value) -> String {
             ));
         }
     }
+    lines.push(HARNESS_LAW.into()); // JB (SPEC-STUDIO-01 step 11, 2026-10-14): the critic read a lawful pass as a broken yardstick — the law is told
     if reviewer == "identity" {
         // Phase 8 sp6: the identity chip judges THE TRIAL LIFE'S CLAIMS the beat read off the record
         lines.push(format!("THE TRIAL LIFE'S CLAIMS, from the kernel's record — {}", crate::chips::claims_words(&exp["claims"])));

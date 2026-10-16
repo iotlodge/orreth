@@ -73,7 +73,7 @@ def owner(port: int) -> str:
             return _OWNER[sc]
         person = f"did:orreth:person:owner-{_secrets.token_hex(3)}"
         s, b = _raw(port, "POST", "/enroll", {"person": person})          # the ceremony: the door stands open
-        assert s == 201, f"the ceremony's enroll refused in {sc}: {s} {b}"
+        assert s == 201, f"the ceremony's enroll refused in {sc}: {s} {b} — owners known {dict(_OWNER)} secrets {list(_SECRETS)}"
         _SECRETS[(sc, person)] = b["secret"]
         s, b = _raw(port, "POST", "/enroll/confirm", {"person": person, "code": proof.totp(b["secret"])})
         assert s == 200, f"the ceremony's confirm refused: {s} {b}"

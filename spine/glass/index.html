@@ -469,9 +469,15 @@
   #ws-insp{grid-column:5;overflow:hidden} #ws-insp .ws-scroll{overflow-y:auto;padding:4px 14px 16px;font-size:12px;color:var(--ink);min-height:0;flex:1}
   #ws-decl .ws-pane-h{flex-wrap:wrap;height:auto;white-space:normal;row-gap:6px} #ws-decl .ws-pane-h .acts{margin:0 0 0 auto;gap:5px;flex-wrap:wrap;min-width:0}
   #ws-decl .ws-pane-h .acts .ws-btn{white-space:nowrap}
-  #ws-decl textarea{flex:1;min-height:0;font:inherit;font-size:12px;line-height:1.45;color:var(--ink);background:var(--field);border:none;border-top:1px solid var(--seam);
-    padding:10px 14px;resize:none;outline:none;white-space:pre;overflow:auto;tab-size:2} #ws-decl textarea.ro{opacity:.75}
+  /* JB (SPEC-STUDIO-01 step 11, 2026-10-14: "Would really like some colored formating in the Declaration"): the JSON painted in a pre BEHIND the
+     textarea — keys amber, strings jade, numbers cyan, true·false·null violet, the braces dim; the textarea's own ink transparent, its caret kept */
+  #ws-decl .ws-code{flex:1;min-height:0;position:relative;background:var(--field);border-top:1px solid var(--seam)} #ws-decl .ws-code.ro{opacity:.75}
+  #ws-decl .ws-code pre,#ws-decl textarea{position:absolute;inset:0;margin:0;font:inherit;font-size:12px;line-height:1.45;padding:10px 14px;white-space:pre;tab-size:2;overflow:auto;box-sizing:border-box}
+  #ws-decl .ws-code pre{color:var(--dim);pointer-events:none;overflow:hidden}
+  #ws-decl textarea{color:transparent;caret-color:var(--ink);background:transparent;border:none;resize:none;outline:none}
+  #ws-decl textarea::selection{background:rgba(232,168,76,.28)}
   #ws-decl textarea:focus{box-shadow:inset 0 0 0 1px var(--amber-dim)}
+  .jk{color:var(--amber)} .js{color:var(--jade)} .jn{color:var(--cyan)} .jb{color:var(--violet)}
   #workshop>header .sub{color:var(--dim);letter-spacing:.06em;font-size:10.5px;font-weight:normal}
   .ws-h{font-size:10.5px;letter-spacing:.2em;color:var(--dim);margin:10px 0 4px} .ws-h.sub{margin:6px 0 2px;letter-spacing:.14em;opacity:.8}
   .ws-row{padding:4px 7px;border-radius:6px;cursor:pointer;color:var(--ink);display:flex;gap:8px;align-items:baseline;border-left:2px solid transparent}
@@ -820,7 +826,7 @@
       <div id="ws-canvas-card" class="ws-pane"><div class="ws-pane-h" id="ws-canvas-h"><b>THE CANVAS</b><span id="ws-canvas-words">the graph drawn from its declaration · click a node or a way out to inspect it</span><span class="hint">entry ringed cyan · a violet arrow wears a when · the plain arrow is the default way out</span></div>
       <div id="ws-canvas"></div></div>
       <div class="ws-split h" id="ws-split-decl" data-split="decl" title="drag to size THE DECLARATION · double-click for the stock height"></div>
-      <div id="ws-decl" class="ws-pane"><div class="ws-pane-h"><b>THE DECLARATION</b><span id="ws-decl-h">the same truth as the canvas</span><div class="acts" id="ws-acts"></div><button class="ws-btn" id="ws-decl-max" title="the declaration alone in the middle — click again for the canvas back">⤢</button></div><textarea id="ws-json" spellcheck="false" readonly></textarea></div>
+      <div id="ws-decl" class="ws-pane"><div class="ws-pane-h"><b>THE DECLARATION</b><span id="ws-decl-h">the same truth as the canvas</span><div class="acts" id="ws-acts"></div><button class="ws-btn" id="ws-decl-max" title="the declaration alone in the middle — click again for the canvas back">⤢</button></div><div class="ws-code" id="ws-code"><pre id="ws-json-hl" aria-hidden="true"></pre><textarea id="ws-json" spellcheck="false" readonly></textarea></div></div>
     </div>
     <div class="ws-split" data-split="insp" title="drag to size THE INSPECTOR · double-click for the stock width"></div>
     <div id="ws-insp" class="ws-pane"><div class="ws-pane-h"><b>THE INSPECTOR</b><span class="hint">the craft · a node · a way out</span></div><div class="ws-scroll" id="ws-insp-in"></div></div>
@@ -2881,6 +2887,8 @@ async function serviceWords(text){                 // "what services are here?" 
     sysline(`${prior ? "updated" : "saved"} your ${esc(kind)} draft <b>${esc(name)}</b> (${esc(r.draft.draft_id)}) — under your seat alone, not on the shelf; say “cut the ${esc(name)} draft” to put it there (held at the interlock)`);
     return true;
   }
+  m = t.match(/^put\s+([a-z0-9_-]+)\s+to\s+work$/);                 // sp10 ONE WORD TO WORK: the bench's chain, one hold
+  if (m){ el("msg mine", esc(text)); await putToWork(m[1]); return true; }
   m = t.match(/^(cut|discard)\s+(?:the\s+)?(?:draft\s+)?([a-z0-9][a-z0-9._-]*)(?:\s+draft)?$/);
   if (m){
     el("msg mine", esc(text)); toggleChat(true);
@@ -3280,8 +3288,14 @@ function drawCanvas(){
   const g = gf.g;
   const stage = document.createElement("div"); stage.className = "gstage"; box.appendChild(stage);
   const order = [];                                                   // every lit hop as a path in THIS drawing: an import node at P with source S lights P:hop
-  const walkLit = (gg, prefix) => { for (const n of (gg.nodes || [])){ if (!n) continue; const p = prefix ? prefix + ":" + n.id : String(n.id);
-    if (n.kind === "import" && n.source) for (const h of (WS.lit[n.source] || [])) order.push(p + ":" + String((h && h.node) || h));
+  const codeLit = (n, p) => { if (n.kind === "import" && n.source) for (const h of (WS.lit[n.source] || [])) order.push(p + ":" + String((h && h.node) || h)); };
+  const walkLit = (gg, prefix) => {
+    if (prefix === DECL && (WS.lit[g.name] || []).length){           // W146: the hull's own hops under the graph's name — every node walked, in the order it ran; an import's code hops under their node
+      for (const h of WS.lit[g.name]){ const id = String((h && h.node) || h); order.push(prefix + ":" + id); const n = (gg.nodes || []).find(x => x && String(x.id) === id); if (n) codeLit(n, prefix + ":" + id); }
+      return;
+    }
+    for (const n of (gg.nodes || [])){ if (!n) continue; const p = prefix ? prefix + ":" + n.id : String(n.id);
+    if (n.kind === "import" && n.source) codeLit(n, p);
     else if (n.graph && n.kind !== "import") walkLit(n.graph, p); } };
   walkLit(root, "");
   const ring = order.length ? ["hull:hear", "hull:recall", "hull:route", "hull:work"] : [];   // a run through the code ran the ring first
@@ -3295,7 +3309,7 @@ function drawCanvas(){
     onBlank: () => { if (WS.sel != null || WS.selEdge != null){ WS.sel = null; WS.selEdge = null; drawWorkshop(); } },
   });
   const spine = defaultLine(g);
-  const seen = []; for (const p of order){ const id = p.split(":").slice(3).join(":"); if (seen[seen.length - 1] !== id) seen.push(id); }
+  const seen = []; for (const p of order){ const id = p.split(":").slice(2).join(":"); if (id && seen[seen.length - 1] !== id) seen.push(id); }   // W146: a hop's name below the work stage — "say", or "run:greet" for code
   if (order.length) order.push("hull:reply");                                                   // the reply closes the ring
   box.insertAdjacentHTML("beforeend", `<div class="ws-legend">THE HULL is the outer box — <b>hear → recall → route → work → the reply</b>, the kernel's ring every body runs; your graph is the box inside <b>work</b> · entry ringed cyan · a plain arrow is the default way out (“otherwise”) · a violet arrow wears a <b>when</b> (the hull's edge · the ask's words · the last reply) · the default line: ${esc(spine.join(" → ") || "—")}${[...R.branching].some(p => p.startsWith(DECL + ":")) ? ` · branches at ${esc([...R.branching].filter(p => p.startsWith(DECL + ":")).map(p => p.slice(DECL.length + 1)).join(", "))}` : ""} · forward only (a loop refuses at the cut) · a box with a graph inside folds by its header${seen.length ? ` · <b>the last run took ${seen.length} hop${seen.length === 1 ? "" : "s"}: ${esc(seen.join(" → "))}</b> — lit above` : " · ask the agent (in the chat, or from its bench) and the hops its code takes light up here; a card's “replay case N” plays a recorded run"} · drag to pan, wheel to zoom, fit on the right</div>`);
   const legend = box.querySelector(".ws-legend"), banner = box.querySelector(".ws-banner");
@@ -3325,7 +3339,7 @@ function playHops(source, hops){               // THE RUN OVERLAY: the hops ligh
   if (WS.play && WS.play.timer) clearTimeout(WS.play.timer);
   const shown = workshopPull && workshopPull.classList.contains("open");
   if (!shown){ WS.lit[source] = names; return; }
-  if (!((WS.sources || []).find(s => s.name === source) || {}).shape) loadWorkshop().then(drawCanvas);   // the shape landed with this run: the shelf re-read once
+  const srcRow = (WS.sources || []).find(s => s.name === source); if (srcRow && !srcRow.shape) loadWorkshop().then(drawCanvas);   // the shape landed with this run: the shelf re-read once (W146: a graph's own hops name no source)
   WS.lit[source] = []; WS.play = {source, i: 0, timer: null};
   const step = () => {
     if (!WS.play || WS.play.source !== source) return;
@@ -3751,7 +3765,25 @@ function drawInspector(){
   if (q("ws-e-rm")) q("ws-e-rm").onclick = () => mutate(gg => { gg.edges.splice(WS.selEdge, 1); WS.selEdge = null; });
 }
 /* ---- the declaration box: the same truth as JSON; SAVE · CUT · DISCARD ---- */
-function drawDecl(){
+function declPaint(){                           // the coloured declaration: the textarea's text, tokenised, painted in the pre behind it; synced on input and scroll
+  const ta = document.getElementById("ws-json"), pre = document.getElementById("ws-json-hl"), wrap = document.getElementById("ws-code");
+  if (!ta || !pre) return;
+  if (!ta._painted){ ta._painted = true; ta.addEventListener("input", declPaint); ta.addEventListener("scroll", () => { pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft; }); }
+  const rx = /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false|null)\b|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g;
+  let out = "", last = 0, m; const t = ta.value;
+  while ((m = rx.exec(t))){
+    out += esc(t.slice(last, m.index));
+    if (m[1] !== undefined) out += m[2] ? `<span class="jk">${esc(m[1])}</span>${esc(m[2])}` : `<span class="js">${esc(m[1])}</span>`;
+    else if (m[3] !== undefined) out += `<span class="jb">${esc(m[3])}</span>`;
+    else out += `<span class="jn">${esc(m[4])}</span>`;
+    last = rx.lastIndex;
+  }
+  pre.innerHTML = out + esc(t.slice(last)) + "\n";
+  if (wrap) wrap.classList.toggle("ro", ta.readOnly);
+  pre.scrollTop = ta.scrollTop; pre.scrollLeft = ta.scrollLeft;
+}
+function drawDecl(){ _drawDecl(); declPaint(); }
+function _drawDecl(){
   const ta = document.getElementById("ws-json"), acts = document.getElementById("ws-acts"), head = document.getElementById("ws-decl-h");
   if (!ta) return;
   if (WS.open && WS.open.source === "wizard"){   // THE WIZARD fills the declaration as it goes — the step's own truth, read-only here; after SAVE each is an ordinary draft on the left
@@ -3828,7 +3860,7 @@ function workshopWire(text, to){        // the open draft rides the ask BY ID so
    LIFE STANDS → "<name> joined". Glass-only: the kernel's doors already serve every step (/drafts · /drafts/cut ·
    /experiments · /experiments/promote · /services); the chat's words remain the record and the walker's way, and the
    wizard goes through the SAME doors a typed word reaches (cutDraft · promoteAgent · registerSource — W118's law). ---- */
-const WZ_STEPS = [["name", "NAME"], ["graph", "GRAPH"], ["golden", "GOLDEN CASES"], ["save", "SAVE"], ["cut", "CUT"], ["card", "THE CARD"], ["promote", "PROMOTE"], ["joined", "JOINED"]];
+const WZ_STEPS = [["name", "NAME"], ["graph", "GRAPH"], ["golden", "GOLDEN CASES"], ["save", "SAVE"], ["cut", "PUT TO WORK"], ["card", "THE CARD"], ["promote", "PROMOTE"], ["joined", "JOINED"]];
 function wizStepWords(s){ return (WZ_STEPS.find(x => x[0] === s) || [s, s])[1]; }
 function wizFresh(){ return {step: "name", name: "", words: "", shape: "echo", prompt: "", mind: "", source: "", regOpen: false, reg: {name: "", repo: "", commit: "", entry: ""},
                              cases: [], graph: null, golden: null, template: null, drafts: {}, chain: [], cut: [], held: null, heldKind: null, gate: null,
@@ -3850,7 +3882,7 @@ async function wizOpenBench(name){              // sp8 THE BENCH: the wizard whe
     WS.open = {source: "rest", bench: b, kind: "bench", name: b.name}; WS.decl = null; WS.sel = null; WS.selEdge = null; WS.dirty = false;
     drawWorkshopRail(); drawWorkshop(); return;
   }
-  WZ = Object.assign(wizFresh(), b.body || {}, {name: b.name, step: b.step, held: b.hold || null, bench: b.bench_id, force: false, note: "", noteHue: ""});
+  WZ = Object.assign(wizFresh(), b.body || {}, {name: b.name, benchName: b.name, step: b.step, held: b.hold || null, bench: b.bench_id, force: false, note: "", noteHue: ""});   // W145: the bench's own name, for a rename at NAME
   if (WZ.regOpen) WZ.source = "";               // W141: the register form open means no source picked
   toggleWorkshop(true);
   WS.open = {source: "wizard", kind: "graph", name: WZ.name}; WS.sel = null; WS.selEdge = null; WS.dirty = false;
@@ -3864,6 +3896,24 @@ async function benchLetGo(name){                // "let the <name> bench go" · 
   sysline(esc(r.words));
   if (WZ && WZ.name === name){ WZ = null; if (WS.open && WS.open.source === "wizard"){ WS.open = null; WS.decl = null; } }
   if (workshopPull && workshopPull.classList.contains("open")){ await loadWorkshop(); drawWorkshop(); }
+  return true;
+}
+async function wizRename(old){                   // W145 (JB, SPEC-STUDIO-01 step 11, 2026-10-14: "if I changed NAME via 'back', should work1 still be or will it be removed?"):
+  const r = await fetch("/benches/" + encodeURIComponent(old)).then(x=>x.json()).catch(()=>null);   // a bench is its agent's name — "next" with a new name MOVES the effort: the old bench is let go
+  const b = r && r.bench;                        // (the wizard's own drafts discarded — nothing had reached the shelf; a draft edited by hand is kept as a loose draft under its own name),
+  if (b && b.state === "open"){                  // the default golden case is made again for the new name; the wizard's fields carry over
+    const kept = [];
+    for (const d of (b.drafts || [])){ const own = (WZ.drafts || {})[d.kind]; if (own && JSON.stringify(own.body) !== JSON.stringify(d.body)) kept.push(d); }
+    const words = await fetch("/benches/" + encodeURIComponent(old) + "/close", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({person: PERSON})}).then(x=>x.json()).catch(()=>null);
+    if (!words || !words.bench){ wizNote(words && words.error ? esc(words.error) : "the benches door did not answer", "red"); wizDraw(); return false; }
+    for (const d of kept) await fetch("/drafts", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({kind: d.kind, name: d.name, body: d.body, person: PERSON, words: `kept from the ${old} bench — edited by hand`})}).catch(()=>null);
+    const gone = (b.drafts || []).length - kept.length;
+    sysline(`the <b>${esc(old)}</b> bench let go — the effort continues as <b>${esc(WZ.name)}</b>: ${gone ? `${gone} draft${gone === 1 ? "" : "s"} the wizard made discarded, nothing had reached the shelf` : "nothing had been saved yet"}${kept.length ? `; kept as loose drafts under your seat, edited by hand: ${kept.map(d => `${esc(plainKind(d.kind))} ${esc(d.name)}`).join(", ")}` : ""}`);
+  }
+  const was = WZ.name; WZ.name = old; const olds = JSON.stringify(wizDefaultCases()); WZ.name = was;
+  if (JSON.stringify(WZ.cases || []) === olds) WZ.cases = wizDefaultCases();   // the stock case named the old agent — made again for the new
+  WZ.graph = null; WZ.golden = null; WZ.template = null; WZ.drafts = {}; WZ.cut = []; WZ.bench = null; WZ.benchName = null; WZ.held = null; WZ.heldKind = null; WZ.work = null;
+  if (workshopPull && workshopPull.classList.contains("open")) await loadWorkshop();
   return true;
 }
 function wizLeave(){ WS.open = null; WS.decl = null; WS.sel = null; WS.selEdge = null; drawWorkshopRail(); drawWorkshop(); }   // the wizard's state stays for "+ new agent" to resume
@@ -3983,10 +4033,11 @@ function wizInspector(box){
       const r = await fetch("/seats").then(x=>x.json()).catch(()=>null);
       const s = r && (r.seats || []).find(x => x.name === WZ.name);
       WZ.seat = s || null;
+      if (WZ.bench && WZ.benchName && WZ.benchName !== WZ.name && !(await wizRename(WZ.benchName))) return;   // W145: a bench is its agent's name — a new name MOVES the effort
       const ob = await fetch("/benches", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({name: WZ.name, words: WZ.words, person: PERSON})}).then(x=>x.json()).catch(()=>null);   // sp8: the bench opens here
       if (!ob || !ob.bench){ wizNote(ob && ob.error ? esc(ob.error) : "the benches door did not answer", "red"); wizDraw(); return; }
       if (ob.bench.step !== "name" || (ob.bench.drafts || []).length){ sysline(`a bench named <b>${esc(WZ.name)}</b> already stands open at ${esc(wizStepWords(ob.bench.step))} — opened where it stands (“let the ${esc(WZ.name)} bench go” starts over)`); wizOpenBench(WZ.name); return; }
-      WZ.bench = ob.bench.bench_id;
+      WZ.bench = ob.bench.bench_id; WZ.benchName = WZ.name;
       wizNote(s ? `<b>${esc(WZ.name)}</b> already holds a seat here (${esc(s.template || WZ.name + ".template")}${s.version ? " v" + s.version : ""}) — this wizard makes its NEXT version: the Experiment will run two arms, the standing version and the candidate` : "", s ? "" : "");
       WZ.step = "graph"; wizDraw();
     };
@@ -4097,16 +4148,15 @@ function wizInspector(box){
     q("wz-leave").onclick = wizLeave;
     return;
   }
-  if (WZ.step === "cut"){
-    const order = [["graph", `the graph ${WZ.name}.v0`], ["golden", `the golden set ${WZ.name}`], ["template", `the agent ${WZ.name} itself — its cut OPENS THE EXPERIMENT`]];
-    const next = order.find(([k]) => !WZ.cut.includes(k));
-    h += `<div class="ws-h sub">CUT · onto the shelf, through the interlock</div>` +
-         `<div class="meta">Three cuts, in order, each held at the interlock in the chat — your Yes is a click there, never Enter. The third is the agent's own: a trial life of ${esc(WZ.name)} in an experiment room, judged on its golden cases by the grader, the critic, the identity chip and the security chip, each under its own name.</div>` +
-         `<div class="wz-chain">${order.map(([k, w]) => `<div class="${WZ.cut.includes(k) ? "done" : WZ.heldKind === k ? "on" : "todo"}">${WZ.cut.includes(k) ? "✓" : WZ.heldKind === k ? "▸" : "·"} ${esc(w)}${WZ.heldKind === k ? " — <b>held at the interlock: click Yes — do it in the chat</b>" : (WZ.standing || []).includes(k) ? " — already on the shelf with these exact bytes, it stands" : ""}</div>`).join("")}</div>` +
+  if (WZ.step === "cut"){                      // THE STUDIO sp10 ONE WORD TO WORK (canon 0011 §5, JB's lock: ONE Yes for the chain)
+    const lines = (WZ.work && WZ.work.lines) || [];
+    h += `<div class="ws-h sub">PUT TO WORK · one word, one Yes</div>` +
+         `<div class="meta">“put ${esc(WZ.name)} to work” is ONE consequential act, held once at the interlock in the chat — your Yes is a click there, never Enter. The kernel cuts what changed on this bench in order — the graph, the golden set, then ${esc(WZ.name)} itself — skips what already stands with the same bytes (a line, not a wall), and opens THE EXPERIMENT on ${esc(WZ.name)}'s own cut: a trial life in an experiment room, judged on its golden cases by the grader, the critic, the identity chip and the security chip, each under its own name. The hold names every cut before you say Yes; each cut is still its own fact on the shelf.</div>` +
+         (lines.length ? `<div class="wz-chain">${lines.map(l => `<div class="${/ as version /.test(l) ? "on" : "done"}">${/ as version /.test(l) ? "▸" : "·"} ${esc(l)}</div>`).join("")}${WZ.held ? `<div class="on"><b>held at the interlock: click Yes — do it in the chat</b></div>` : ""}</div>` : "") +
          holdSlot +
-         `<div class="acts">${WZ.held ? "" : next ? `<button class="ws-btn hold" id="wz-cut">CUT — ${esc(WZ.cut.length ? "go on with " + next[1].split(" — ")[0] : "start with the graph")} → the interlock</button>` : ""}${WZ.held ? "" : `<button class="ws-btn" id="wz-back">back${WZ.cut.length ? " — change something" : ""}</button>`}${leave}</div>`;
+         `<div class="acts">${WZ.held ? "" : `<button class="ws-btn hold" id="wz-work">put ${esc(WZ.name)} to work → the interlock</button><button class="ws-btn" id="wz-back">back — change something</button>`}${leave}</div>`;
     box.innerHTML = h;
-    if (q("wz-cut")) q("wz-cut").onclick = wizCut;
+    if (q("wz-work")) q("wz-work").onclick = wizCut;
     if (q("wz-back")) q("wz-back").onclick = () => { WZ.step = "save"; wizDraw(); };
     q("wz-leave").onclick = wizLeave;
     return;
@@ -4168,7 +4218,12 @@ function wizInspector(box){
   q("wz-again").onclick = () => { wsNewAgent(); };
   q("wz-close").onclick = () => { WZ = null; wizLeave(); };
 }
-function wizCut(){ WZ.chain = ["graph", "golden", "template"].filter(k => !WZ.cut.includes(k)); wizNote(""); wizCutNext(); }
+async function wizCut(){                       // sp10: ONE WORD TO WORK — the bench's button and the chat's word go through one door
+  wizNote(""); WZ.work = null;
+  const r = await putToWork(WZ.name);
+  if (!r || !r.held){ wizNote(r && r.error ? esc(r.error) : "the bench did not answer", "red"); wizDraw(); return; }
+  WZ.held = r.held; WZ.heldKind = "work"; WZ.work = r; WZ.cutAt = Date.now(); wizDraw();
+}
 async function wizCutNext(){                    // the chain: one cut at a time, each through the chat's own door, the next after the Yes
   const k = WZ.chain[0]; if (!k){ WZ.step = "card"; wizDraw(); return; }
   const d = WZ.drafts[k];
@@ -4189,15 +4244,16 @@ async function wizCutNext(){                    // the chain: one cut at a time,
 }
 function wizOutcome(id, v){                     // a hold the wizard filed settled (renderOutcome's hook)
   if (!WZ || WZ.held !== id) return;
-  const k = WZ.heldKind; WZ.held = null; WZ.heldKind = null;
+  const k = WZ.heldKind || (WZ.step === "cut" ? "work" : null); WZ.held = null; WZ.heldKind = null;   // a hold resumed from the bench row at PUT TO WORK is the chain's
   if (v.status === "replied"){
+    if (k === "work"){ WZ.cut = ["graph", "golden", "template"]; WZ.work = null; WZ.step = "card"; wizNote(""); wizDraw(); return; }   // sp10: the chain landed — the card is next
     if (k === "promote"){ WZ.promoted = v.reply || ""; if (WZ.step !== "joined") WZ.step = "promote"; wizDraw(); return; }
     if (!WZ.cut.includes(k)) WZ.cut.push(k); WZ.chain = WZ.chain.filter(x => x !== k);
     if (k === "template"){ if (WZ.step === "cut") WZ.step = "card"; wizNote(""); wizDraw(); }
     else wizCutNext();
     return;
   }
-  if (v.status === "cancelled") wizNote(k === "promote" ? "you cancelled — nothing ran; PROMOTE again when ready" : `you cancelled ${esc(plainKind(k))}'s cut — nothing ran; CUT goes on from here when you are ready`, "red");
+  if (v.status === "cancelled") wizNote(k === "promote" ? "you cancelled — nothing ran; PROMOTE again when ready" : k === "work" ? `you cancelled — nothing ran; put ${esc(WZ.name)} to work again when you are ready` : `you cancelled ${esc(plainKind(k))}'s cut — nothing ran; CUT goes on from here when you are ready`, "red");
   else wizNote(`refused at the door — ${esc(v.reply || "nothing ran")}`, "red");
   if (k !== "promote") WZ.step = "cut"; else WZ.step = "card";
   wizDraw();
@@ -4206,7 +4262,7 @@ function wizExperiment(n, x){                   // the kernel's facts on the wiz
   if (!WZ || !x || x.agent !== WZ.name || !["cut", "card", "promote"].includes(WZ.step)) return;
   WZ.experiment = x;
   if (x.state === "promoted"){ if (WZ.step !== "promote") WZ.step = "promote"; wizDraw(); return; }
-  if (WZ.step === "cut" && (WZ.heldKind === "template" || WZ.cut.includes("template"))) WZ.step = "card";
+  if (WZ.step === "cut" && (WZ.heldKind === "template" || WZ.heldKind === "work" || WZ.cut.includes("template"))) WZ.step = "card";
   if (WZ.step === "card") wizDraw(); else wizKeep();
 }
 function wizVerdict(){ if (WZ && WZ.step === "card" && WZ.experiment && WZ.experiment.state === "running"){ WZ.verdicts += 1; wizDraw(); } }
@@ -4235,6 +4291,19 @@ async function cutDraft(d){                     // "cut the <name> draft" · the
     return r;
   }
   sysline(r && r.error ? esc(r.error) : "the draft shelf did not answer");
+  return r;
+}
+async function putToWork(name){               // "put <name> to work" · the bench's button — ONE hold for the chain (canon 0011 §5): the cuts in order, what stands skipped, the Experiment opened
+  toggleChat(true);
+  const r = await fetch("/benches/" + encodeURIComponent(name) + "/work", {method:"POST", headers:{"content-type":"application/json"}, body: JSON.stringify({person: PERSON, session: SESSION || undefined})}).then(x=>x.json()).catch(()=>null);
+  if (r && r.held){
+    PENDING[r.held] = el("journey", `putting ${esc(name)} to work is one consequential act — ${esc((r.lines || []).join(" · "))} — the kernel holds it at the interlock (${esc(r.level)})…`);
+    const v = await fetch("/ask/" + r.held).then(x=>x.json()).catch(()=>null);
+    if (v && v.status === "awaiting-confirm") renderOutcome(r.held, v, PENDING[r.held]);
+    if (WZ && WZ.name === name && (WZ.step !== "cut" || WZ.held !== r.held)){ WZ.step = "cut"; WZ.held = r.held; WZ.heldKind = "work"; WZ.work = r; wizDraw(); }   // said in the chat: the bench follows
+    return r;
+  }
+  sysline(r && r.error ? esc(r.error) : "the bench did not answer");
   return r;
 }
 async function promoteAgent(name, at){         // "promote <name> [to floor <f>]" · the card's PROMOTE · the wizard's — held at the interlock (L2)
@@ -4565,11 +4634,23 @@ function experimentCard(id, x, into, bare){          // Phase 8 sp4: THE EXPERIM
     `<div>${arm("candidate", arms.candidate)} · ${arm("current", arms.current)}</div>` +
     `<div class="meta">${who("the grader", rv.grader)} · ${who("the critic", rv.critic)} · ${who("the identity chip", rv.identity)} · ${who("the security chip", rv.security)}</div>` +
     `<div class="meta">resiliency: ${x.resiliency ? (x.resiliency.reds ? x.resiliency.reds + " watch(es) turned red while the arms ran" : "no watch turned red while the arms ran") : "running"} · the evidence ${lean}</div>` +
-    (x.state === "proposed" && !bare ? `<div class="acts"><button class="ws-btn p" data-promote>promote ${esc(x.agent)}</button> <button class="ws-btn" data-decline>decline</button><span class="meta"> · or say “promote ${esc(x.agent)} to floor ops”</span></div>` : "");
+    (x.state === "proposed" && !bare ? `<div class="acts"><button class="ws-btn p" data-promote>promote ${esc(x.agent)}</button> <select data-at title="where the next life stands — the promotion's one field; the experiment room's own floor by stock">${promoteAtOptions(x)}</select> <button class="ws-btn" data-decline>decline</button><span class="meta"> · or say “promote ${esc(x.agent)} to floor ops”</span></div>` : "");
   const b = into ? elIn(into, "msg theirs", html) : el("msg theirs", html);
-  const pb = b.querySelector("[data-promote]"); if (pb) pb.onclick = () => serviceWords(`promote ${x.agent}`);                  // W118: a button's word goes where a typed word goes —
+  const pb = b.querySelector("[data-promote]"); if (pb) pb.onclick = () => { const sel = b.querySelector("[data-at]"); serviceWords(promoteWordsFor(x.agent, sel ? sel.value : "")); };   // W118: a button's word goes where a typed word goes —
   const db = b.querySelector("[data-decline]"); if (db) db.onclick = () => serviceWords(`decline the ${x.agent} experiment`);   // through the glass's own parser, never straight to a body
   return b;
+}
+function promoteAtOptions(x){     // JB (SPEC-STUDIO-01 step 11, 2026-10-14: "the chat window does not have this option"): the card in the chat picks where the next life stands, as the inspector's does
+  const u = (WORLD && WORLD.scope) || "u:dev";
+  const floors = ((LEVELS && LEVELS.levels) || []).filter(l => l.level !== "universe" && !l.experiment).map(l => [l.path.split("/").slice(1).join("/"), `${l.level} ${l.name}${l.level === "room" ? " on floor " + String(l.parent || "").split("/").pop().replace(/^f:/, "") : ""}`]);
+  const f = String((x && x.room) || "").match(/\/(f:[a-z0-9_-]+)\//), at = f ? f[1] : u;
+  return [[u, "the universe itself"], ...floors].map(([v, w]) => `<option value="${esc(v)}" ${v === at ? "selected" : ""}>${esc(w)}</option>`).join("");
+}
+function promoteWordsFor(agent, at){   // the picker's value as the chat's own word — "promote bob", "… to floor ops", "… to room r on floor ops", "… to the universe"
+  const m = String(at || "").match(/^f:([a-z0-9_-]+)(?:\/r:([a-z0-9_-]+))?$/);
+  if (!at) return `promote ${agent}`;
+  if (!m) return `promote ${agent} to the universe`;
+  return m[2] ? `promote ${agent} to room ${m[2]} on floor ${m[1]}` : `promote ${agent} to floor ${m[1]}`;
 }
 function clearDisplay(){          // clear ≠ erase: the words stay in the Record
   log.innerHTML = ""; for (const k in PENDING) delete PENDING[k];

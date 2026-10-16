@@ -313,6 +313,51 @@ under their own names. Where the next life stands as the promotion's one
 field. The hull's laws never in the agent's graph. The chat's words as the
 record and the walker's way. The guide turning with the glass.
 
+### 9. What the walk asked for (JB, SPEC-STUDIO-01 step 11, 2026-10-14) — seeds, not built
+
+Step 11 passed, validated on the ground. While it passed JB named three things a
+kernel that deploys and governs agentic lives will need. Each is a spoonful of
+its own on his word; none is built; the plan (0005) places them after sp11.
+
+1. **Floors and rooms made from the card, through the architect.** The
+   promotion's one field picks WHERE the next life stands. It should also be
+   able to MAKE the place — "a new floor", "a room on floor X", "a new floor
+   and a room on it" — and that making is a deployment the architect (allen,
+   the cloud-architect firmware of 0037, not yet slotted in the plan) carries
+   out on the kernel's word: the levels door declares the level, the architect
+   lays what the level needs, the seat follows. Until allen is built the
+   levels door alone (`/levels/open`) makes the place; the card's word for it
+   is the seed. JB: "that would tell our firmware architect (allen) how to
+   deploy."
+2. **Criticality and classification on every agent.** A kernel deploying
+   agentic lives in a bank, a hospital, a ministry, an army needs each
+   agent's CRITICALITY (how much harm its failure does) and CLASSIFICATION
+   (what it may read and say) as fields of its template: declared at the
+   bench, read by the gate (the hold's level rises with criticality), by the
+   reviewers (the security chip judges the diff against the classification),
+   by the promotion (a classified agent stands only on a floor that carries
+   the classification), and worn on the card and the roster. The template
+   contract gains two fields (`criticality` · `classification`) with a closed
+   vocabulary; a template without them wears the lowest. This touches the
+   contract (`contracts/v0`, rule 9): a spoonful of its own, on JB's explicit
+   word. JB: "it will be necessary to define the criticality and
+   classification of any agent as an attribute/schema of any agent."
+3. **Guardrails as a layer of the hull.** The ring already has the stage for
+   it: between recall and work the hull may refuse, narrow or rewrite — the
+   KERNEL'S guardrails, declared on the floor and worn by every body on it,
+   outside any graph — layered over the ones a LangGraph engineers in its own
+   code. Two layers the record tells apart: a hop refused by the hull's rail
+   wears the rail's name; a hop refused inside the code wears the code's
+   (W146 made every hop a row, so the record is ready for it). The seed names
+   the stage and the record; the rails themselves (what they read, who
+   declares them, how a floor's rails and a room's compose) are a design of
+   their own. JB: "this would allow for guardrails to be layered (kernel
+   guardrails vs those engineered into the langgraph itself)."
+
+Taken the same day, in sp10 (W145 · W146 · sp10b in 0005): a new name at NAME
+moves the effort; the hull's own hops; the chat's card picks where the next life
+stands; the declaration coloured; the reviewers told the harness's law.
+
 ## The four answers (JB, 2026-10-13, through the question door)
 
 1. **One Yes for "put to work"** — the chain is one consequential act at L2,
@@ -406,11 +451,25 @@ golden set, a Yes, joined. No walk of 2026-10-12/13 is wasted.
    fixture doors-v0), drawn in a window over the Panel on "how the kernel
    works" and from HOW IT WORKS on the sill; the guide 0.14.0;
    `test_map.py`. No schema change.
-3. **ONE WORD TO WORK.** `POST /benches/<name>/work` (ONE hold at L2, JB's
-   lock): cuts in order, skips what stands, opens the experiment; the
-   card's lines for every refusal. The chat's word and the bench's button,
-   one door. Proofs: the experiments fixture grows the chain; a walk of the
-   four refusals as lines.
+3. **ONE WORD TO WORK — BUILT 2026-10-14 on JB's word ("commit it and
+   start spoonful 10").** `POST /benches/<name>/work` on both kernels: ONE
+   hold at L2 (`bench.work`), a governing seat's word like the cut. The
+   pure law `plan_work` (fixture benches-v0, `bench_work_plan` ×7) reads
+   the bench against the shelf — graph · golden · template, in order: a
+   changed draft is a cut as the next version, the same bytes a line
+   ("stands — unchanged, skipped"), a craft standing on the shelf with no
+   draft a line, and a missing graph · golden set · template draft, an
+   unchanged template, or an experiment already running on the agent a
+   refusal in words BEFORE any hold. The hold's text names every cut; the
+   Yes runs the chain in the settle's one transaction — each cut its own
+   fact (`crafts.cut`), the Experiment opened on the agent's own
+   (`experiments.open_in`), the bench moved to THE CARD with its hold
+   cleared. The glass: the wizard's step is PUT TO WORK (one button, the
+   lines read on the bench), "put <name> to work" in the chat, one door
+   (`putToWork`); the guide 0.15.0. Proofs: `test_benches.py` (the chain
+   through the Yes, the refusals, the skip) · `tests/benches.rs` (the
+   doors, 403 to a reading seat, the Yes through `/confirm`) · conformance
+   on both kernels. Named, not built: the agent's own PUT TO WORK (sp11).
 4. **THE AGENT MAKES IT ALL.** The workshop binding turned (§6), the `bench`
    tool, the docs tools named in three templates, the one-call rule lifted,
    the agent on Opus; SPEC-STUDIO-01 Part B walked BY THE AGENT on JB's one
