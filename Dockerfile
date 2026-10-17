@@ -1,5 +1,6 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — rearch row 4, re-base sp2: one image for the kernel · 2026-09-29
 # Amended: Claude Fable 5.1 (claude-fable-5-1) — W95: procps in the box (ps · pkill) · 2026-10-02
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — 0.2.0: the image for linux/arm64 AND linux/amd64 (buildx; amd64 PAID) · 2026-10-16
 #
 # orrethd — the Orreth kernel, one image. The Rust kernel (`orreth-spine`, feature `bridge`)
 # is THE door on :4600; the crew it seats are Python bodies (`orreth_spine.body`), spawned as
@@ -7,8 +8,17 @@
 # beside the glass page, the crew manifest, the templates, the tool declarations and the canon
 # the MITL reads on disk (docs/rearch). Build from the repo root:
 #
-#     docker build -t ghcr.io/iotlodge/orrethd .
+#     docker build -t ghcr.io/iotlodge/orrethd .                     # this machine's own platform
 #     docker compose -f spine/compose.yaml --profile kernel up -d     # beside the rig's four boxes
+#
+# The RELEASE is one image for two platforms (0.2.0, 2026-10-16 — amd64 was owed from 0.1.0): every
+# stage below is platform-neutral (rust · debian · uv publish both), so buildx builds the Rust stage
+# once per platform (the foreign one under the Desktop's emulation; slow, but the same bytes a native
+# box would make) and `:latest` is the same manifest list:
+#
+#     docker buildx build --platform linux/amd64,linux/arm64 \
+#         -t ghcr.io/iotlodge/orrethd:$(cat VERSION) -t ghcr.io/iotlodge/orrethd:latest --load .
+#     docker buildx build --platform linux/amd64,linux/arm64 -t ... --push .   # the publish, on JB's word
 #
 # Dials the container reads: SPINE_PG · SPINE_RABBIT · SPINE_KAFKA (the rails by service name),
 # SPINE_GATEWAY (LiteLLM), SPINE_BRIDGE_PORT (4600), SPINE_BIND (0.0.0.0 here — the box's door must be
