@@ -107,8 +107,8 @@ reference on `:4601` beside or instead of the kernel. Provider keys ride in from
 `.env` at the root — a key value lives in no record and no file of Orreth's.
 
 As a box: `docker compose -f spine/compose.yaml --profile kernel up -d` pulls the published kernel
-(`ghcr.io/iotlodge/orrethd:0.2.0`, linux/arm64 and linux/amd64) — the kernel and its crew in one image beside the
-rig's four boxes, its selves kept on a named volume. `docker build -t ghcr.io/iotlodge/orrethd:0.2.0 .`
+(`ghcr.io/iotlodge/orrethd:0.2.1`, linux/arm64 and linux/amd64) — the kernel and its crew in one image beside the
+rig's four boxes, its selves kept on a named volume. `docker build -t ghcr.io/iotlodge/orrethd:0.2.1 .`
 from the repo root builds the same image from this tree.
 
 ## Test it
@@ -149,8 +149,8 @@ Brain, the Console, the demo reel, the old `orrethd` plane and its Python sim �
 log, one law at every layer). It is kept whole, never deleted, at the tag `main-v0.72-old-world`
 and the branch `old-world/main-v0.72`; `docs/rearch/0009` is the ledger of what each old organ
 became here. Since `v0.1.0-the-kernel` (2026-09-29, re-base sp3) `main` carries THIS world; its second era,
-`v0.2.0-the-studio` (2026-10-16), merged the Engineered Agents phase and THE STUDIO whole — `VERSION`
-says `0.2.0`, and both kernels' health doors whisper the same number. The book at
+`v0.2.0-the-studio` (2026-10-16), merged the Engineered Agents phase and THE STUDIO whole; `v0.2.1` the same night cured W153 (a fresh world's first light) — `VERSION`
+says `0.2.1`, and both kernels' health doors whisper the same number. The book at
 [docs.orreth.ai](https://docs.orreth.ai) teaches this world (rewritten 2026-09-30), and
 [demo.orreth.ai](https://demo.orreth.ai) is a photograph of THE PANEL — a kernel that really ran, every door
 read at one moment, the feed's captured minutes replaying, nothing movable (`scripts/snapshot_glass.py`).
