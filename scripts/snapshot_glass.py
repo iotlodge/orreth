@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — THE SPECTATOR: the panel's photograph for demo.orreth.ai
 #             (the refresh season's step 3, JB 2026-09-30); the 0.72 Console's snapshot_console.py rests in archive/
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — 0.2.0's photograph: the Studio-era doors captured (levels · wear · seats ·
+#          measurements · keychecks · map · drafts · benches · experiments · includes · hops by run and case) · 2026-10-16
 """Capture a moment of a live kernel as a static, view-only PANEL.
 
 Reads every door the glass reads — with a REAL seat, used here and never shipped —
@@ -41,7 +43,10 @@ GLASS = ROOT / "spine/glass/index.html"
 # every GET the glass makes on its own (the keyed doors are harvested from these answers)
 STILL = ["/health", "/seat", "/guide", "/world", "/crew", "/monitor", "/analyzer", "/bodies",
          "/minds", "/services", "/markers", "/markers/kinds", "/intentions", "/levers",
-         "/harness", "/asks", "/residents", "/parked"]
+         "/harness", "/asks", "/residents", "/parked",
+         # 0.2.0 (the Engineered Agents phase and THE STUDIO): the path, the shelf's wear, the seats, the operating
+         # state, the key-checks, the kernel's own map, and the Studio's drafts · benches · experiments
+         "/levels", "/wear", "/seats", "/measurements", "/keychecks", "/map", "/drafts", "/benches", "/experiments"]
 PERSONAL = ["/profile?person={p}", "/proof?person={p}", "/sessions?person={p}", "/mitl?person={p}&session="]
 
 SECRET_SHAPES = re.compile(r"(sk-ant-|sk-or-|sk-[A-Za-z0-9]{20,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{30,}|xox[abp]-|-----BEGIN)")
@@ -58,12 +63,23 @@ class Kernel:
         self.base, self.seat = base.rstrip("/"), seat
 
     def get(self, path: str, timeout: int = 20) -> tuple[int, str]:
+        """One knock; the kernel's ceiling (twenty a second, a burst of sixty per seat — 429 with
+        `retry_after_s`) is honoured by waiting and knocking again, never by giving up quietly."""
         req = urllib.request.Request(self.base + path, headers={"authorization": "Bearer " + self.seat})
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                return r.status, r.read().decode()
-        except urllib.error.HTTPError as e:
-            return e.code, e.read().decode(errors="replace")
+        for _ in range(30):
+            try:
+                with urllib.request.urlopen(req, timeout=timeout) as r:
+                    return r.status, r.read().decode()
+            except urllib.error.HTTPError as e:
+                body = e.read().decode(errors="replace")
+                if e.code != 429:
+                    return e.code, body
+                try:
+                    wait = float(json.loads(body).get("retry_after_s") or 1)
+                except Exception:  # noqa: BLE001 — the words were not JSON; a second is the kernel's own default
+                    wait = 1.0
+                time.sleep(max(0.2, wait))
+        return 429, body
 
 
 def seat_person(wire: str) -> tuple[str, bool]:
@@ -93,8 +109,10 @@ def main() -> int:
         return 2
 
     out = Path(a.out).resolve(); fx = out / "fixtures"; fx.mkdir(parents=True, exist_ok=True)
+    reuse = a.feed_seconds <= 0 and (fx / "feed.json").exists()   # --feed-seconds 0: the film already made stands; every door is read again
     for old in fx.glob("*.json"):
-        old.unlink()
+        if not (reuse and old.name == "feed.json"):
+            old.unlink()
     captured: dict[str, str] = {}
 
     def capture(path: str, quiet: bool = False) -> str | None:
@@ -112,6 +130,8 @@ def main() -> int:
         return body
 
     at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    if reuse:                                                  # the moment is the film's own, so the clock and the replay agree
+        at = json.loads((fx / "feed.json").read_text()).get("at") or at
     print(f"the still panel — every door, as {person}{' (governs)' if governs else ''}")
     for p in STILL:
         capture(p)
@@ -119,41 +139,54 @@ def main() -> int:
         capture(p.format(p=urllib.parse.quote(person)))
 
     # the feed: its captured minutes, each notice with the moment it arrived
-    print(f"the feed — {a.feed_seconds}s of notices")
     events: list[dict] = []
+    if reuse:
+        events = json.loads((fx / "feed.json").read_text()).get("events", [])
+        print(f"the feed — the film already made stands: {len(events)} notices from {at}")
+    else:
+        print(f"the feed — {a.feed_seconds}s of notices")
     req = urllib.request.Request(f"{a.kernel}/feed?seat={urllib.parse.quote(seat)}", headers={"accept": "text/event-stream"})
     t0 = time.monotonic(); name = None; data: list[str] = []
-    try:
-        with urllib.request.urlopen(req, timeout=a.feed_seconds + 5) as r:
-            while time.monotonic() - t0 < a.feed_seconds:
-                line = r.readline()
-                if not line:
-                    break
-                line = line.decode().rstrip("\n")
-                if line.startswith(":"):
-                    continue
-                if line.startswith("event:"):
-                    name = line[6:].strip()
-                elif line.startswith("data:"):
-                    data.append(line[5:].strip())
-                elif line == "" and data:
-                    events.append({"t": int((time.monotonic() - t0) * 1000), "event": name, "data": "\n".join(data)})
-                    name = None; data = []
-    except Exception as e:  # the stream closed or timed out — what was heard is the photograph
-        print(f"  (the feed closed: {e})")
-    (fx / "feed.json").write_text(json.dumps({"at": at, "seconds": a.feed_seconds, "events": events}))
-    print(f"  {len(events)} notices → fixtures/feed.json")
+    if not reuse:
+        try:
+            with urllib.request.urlopen(req, timeout=a.feed_seconds + 5) as r:
+                while time.monotonic() - t0 < a.feed_seconds:
+                    line = r.readline()
+                    if not line:
+                        break
+                    line = line.decode().rstrip("\n")
+                    if line.startswith(":"):
+                        continue
+                    if line.startswith("event:"):
+                        name = line[6:].strip()
+                    elif line.startswith("data:"):
+                        data.append(line[5:].strip())
+                    elif line == "" and data:
+                        events.append({"t": int((time.monotonic() - t0) * 1000), "event": name, "data": "\n".join(data)})
+                        name = None; data = []
+        except Exception as e:  # the stream closed or timed out — what was heard is the photograph
+            print(f"  (the feed closed: {e})")
+    if not reuse:
+        (fx / "feed.json").write_text(json.dumps({"at": at, "seconds": a.feed_seconds, "events": events}))
+        print(f"  {len(events)} notices → fixtures/feed.json")
 
     # the keyed doors, harvested from every answer so far: asks · facts · sessions · analyzer roots · markers · minds · services · schedules
     print("the keyed doors")
     text = "\n".join(captured.values()) + "\n".join(e["data"] for e in events)
     sessions = json.loads(captured.get(f"/sessions?person={urllib.parse.quote(person)}", '{"sessions": []}')).get("sessions", [])
-    kept = sessions[: a.sessions]
-    (fx / fixture_name(f"/sessions?person={urllib.parse.quote(person)}")).write_text(json.dumps({"sessions": kept}))
-    for s in kept:
+    kept = []                                                  # the newest N sessions WITH words — an empty one (a chat just opened) is no opening page
+    for s in sessions:
+        if len(kept) >= a.sessions:
+            break
         body = capture(f"/session/{s['session_id']}")
-        if body:
-            text += body
+        if not body:
+            continue
+        if not json.loads(body).get("asks"):
+            (fx / fixture_name(f"/session/{s['session_id']}")).unlink(missing_ok=True); captured.pop(f"/session/{s['session_id']}", None)
+            print(f"  /session/{s['session_id']} — empty, not the opening page")
+            continue
+        kept.append(s); text += body
+    (fx / fixture_name(f"/sessions?person={urllib.parse.quote(person)}")).write_text(json.dumps({"sessions": kept}))
     ask_ids = list(dict.fromkeys(re.findall(r"\bask_[0-9a-f]{8,16}\b", text)))
     for aid in ask_ids[-a.asks:]:
         capture(f"/ask/{aid}", quiet=True)
@@ -176,6 +209,30 @@ def main() -> int:
             capture(f"/schedules/{urllib.parse.quote(str(c['name']))}", quiet=True)
     for s in kept:
         capture(f"/mitl?person={urllib.parse.quote(person)}&session={s['session_id']}", quiet=True)
+        capture(f"/includes?session={s['session_id']}", quiet=True)                   # the session's crew (0.2.0)
+    # 0.2.0 — THE STUDIO's keyed doors: each bench whole, each experiment whole and by its agent, the wear of every
+    # craft and every body, and THE REPLAY — every harness run's hops, case by case, named in the experiments
+    for b in json.loads(captured.get("/benches", "{}")).get("benches", []):
+        if isinstance(b, dict) and b.get("name"):
+            capture(f"/benches/{urllib.parse.quote(str(b['name']))}", quiet=True)
+    exps = [e for e in json.loads(captured.get("/experiments", "{}")).get("experiments", []) if isinstance(e, dict)]
+    for e in exps:
+        if e.get("experiment_id"):
+            body = capture(f"/experiments?id={urllib.parse.quote(str(e['experiment_id']))}", quiet=True)
+            if body:
+                text += body
+                cases = sorted({int(c) for c in re.findall(r'"case":\s*(\d+)', body)} | {1})   # the whole names each case; the listing does not
+                for run in dict.fromkeys(re.findall(r"\brun_[0-9a-f]{8,16}\b", body)):
+                    for c in cases:
+                        capture(f"/hops?run={run}&case={c}", quiet=True)
+    for agent in {e.get("agent") for e in exps if e.get("agent")}:
+        capture(f"/experiments?agent={urllib.parse.quote(str(agent))}", quiet=True)
+    for sv in json.loads(captured.get("/services", "{}")).get("services", []):
+        if isinstance(sv, dict) and sv.get("name"):
+            capture(f"/wear?component={urllib.parse.quote(str(sv['name']))}", quiet=True)
+    for c in json.loads(captured.get("/crew", "{}")).get("crew", []):
+        if isinstance(c, dict) and c.get("did"):
+            capture(f"/wear?did={urllib.parse.quote(str(c['did']))}", quiet=True)
     print(f"  {len(captured)} doors in the photograph")
 
     # the sweep: a key-shaped secret anywhere in the fixtures stops the press

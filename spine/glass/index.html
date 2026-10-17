@@ -4983,6 +4983,7 @@ const PANEL = {ROST: [], MON: null, GOV: {}, MINDS: null, SERV: null, INTS: [], 
 /* ---- one read per pointer (sp2's cleanup): the chat and the panel share a single /ask/<id> read for the same notice;
    a fact the notice points at is read once through the fact door ---- */
 function askRead(ref, fresh){                   // W97 (SPEC-PATH-01, 2026-10-05): a TERMINAL notice (reply · refused · confirm needed) never takes the
+  if (!ref || !String(ref).startsWith("ask_")) return Promise.resolve(null);   // W154 (JB's console, 2026-10-16): a notice whose ref is no ask — a key-check's kc_… on its cadence — is never read through the ask door (it was 404 after 404)
   const now = Date.now(), c = PANEL.ASKS.get(ref);   // cached view — the echo serves inside the 600 ms window, and its reply notice read the journey's stale view ("no words came back")
   if (c && !fresh && now - c.at < 600) return c.p;
   const p = fetch("/ask/" + ref).then(x => x.ok ? x.json() : null).catch(()=>null);
