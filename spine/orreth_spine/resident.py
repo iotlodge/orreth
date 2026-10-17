@@ -61,6 +61,8 @@ SERVE_QUEUE = "resident.serve.00"
 SERVE_KEY = "cmd.dev.00.resident.serve"
 
 
+MEMORY_LOCK = 742198      # W153: the working memory's own session lock — one below the DDL guard (742199), never it
+
 def serve_queue(name: str | None = None) -> str:
     """Queue names wear the SPINE_QUEUE_NS namespace when one is set —
     a test session lives on its own benches and can never race a live
@@ -1133,29 +1135,60 @@ class Resident:
         parts.append(COMMON_LAWS)
         return "\n".join(parts)
 
+    def memory_tables(self, conn, *, patience_s: float = 120.0, _hold_s: float = 0.0) -> None:
+        """The working memory's tables laid ONCE per life, at BIRTH (W153, 2026-10-16): the
+        saver's own migrations (LangGraph's checkpoint tables and, after them, three indexes
+        built CONCURRENTLY). Two laws, both learned on a fresh world's first light, where every
+        body stumbled at its first serve with `DeadlockDetected` (22 on one light):
+        · A KEY OF ITS OWN (`MEMORY_LOCK`), never the DDL guard's 742199 — a `CREATE INDEX
+          CONCURRENTLY` waits for every open transaction's snapshot, and the bodies birthing
+          beside this one wait for the DDL guard INSIDE a transaction: the guard's holder waited
+          for them and they for it, a cycle Postgres cut by killing a serve.
+        · THE WAIT HOLDS NO SNAPSHOT: a try-lock polled on an autocommit line (each try its own
+          instant transaction), never a blocking `pg_advisory_lock` — a blocked SELECT is a
+          transaction with a snapshot, and the holder's CONCURRENTLY would wait for it too.
+        Idempotent; the rows outlive every line. Runs here or, if birth skipped it, at the first
+        serve through `prepare`. `_hold_s` is a proof's pause between the lock and the migrations
+        (the window the hazard needs; on an empty schema the migrations take milliseconds)."""
+        if self._ckpt_setup:
+            return
+        import psycopg
+        from langgraph.checkpoint.postgres import PostgresSaver
+        with psycopg.connect(conn.info.dsn, password=conn.info.password, autocommit=True,
+                             application_name=f"orreth body {self.name} memory tables") as own:
+            t0 = time.monotonic()
+            while True:
+                if own.execute("SELECT pg_try_advisory_lock(%s)", (MEMORY_LOCK,)).fetchone()[0]:
+                    break
+                if time.monotonic() - t0 > patience_s:          # a holder that never lets go: say so, in words
+                    raise RuntimeError(f"{self.name}: the working memory's tables are held by another life for {patience_s:.0f}s — not laid")
+                time.sleep(0.1)
+            try:
+                if _hold_s:
+                    time.sleep(_hold_s)
+                PostgresSaver(own).setup()
+            finally:
+                own.execute("SELECT pg_advisory_unlock(%s)", (MEMORY_LOCK,))
+        self._ckpt_setup = True
+
     def prepare(self, conn) -> None:
         """Working memory (canon 0003 · MEM-2): the graph checkpointed on
         the ground after every hop — on a connection of its OWN, so a
         serve that rolls back keeps the hops it already made and a life
         that dies mid-graph resumes at its hop, never re-hearing, never
-        re-recalling. Called once per life, at the first serve."""
+        re-recalling. Called once per line, at the first serve; the tables
+        were laid at birth (`memory_tables`) — laid here only if birth skipped it."""
         if self._ckpt_graph is not None:
             return
         import psycopg
         from langgraph.checkpoint.postgres import PostgresSaver
+        self.memory_tables(conn)
         # the cure (2026-10-08): the saver's line is opened for THIS serve window and closed with
         # the body's line (`release_line`); the checkpoints are rows and outlive every line — only
-        # the connection comes and goes. The migrations run once per life.
+        # the connection comes and goes.
         own = psycopg.connect(conn.info.dsn, password=conn.info.password,
                               autocommit=True, application_name=f"orreth body {self.name} memory")
         saver = PostgresSaver(own)
-        if not self._ckpt_setup:
-            own.execute("SELECT pg_advisory_lock(742199)")      # the DDL guard, session-
-            try:                                                # scoped: the saver's
-                saver.setup()                                   # migrations commit on
-            finally:                                            # their own
-                own.execute("SELECT pg_advisory_unlock(742199)")
-            self._ckpt_setup = True
         self._ckpt_conn = own
         self._ckpt_graph = self._build_graph(saver)
 

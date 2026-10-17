@@ -351,6 +351,7 @@ def serve(template, binding, policy, *, stop: threading.Event, ready: threading.
         for _attempt in range(20):                          # birth retries: a schema race or a slow
             try:                                            # ground never kills a body before it lives
                 ground.ensure_all(conn)
+                r.memory_tables(conn)                       # W153: the working memory's tables at BIRTH — no serve runs DDL
                 joined = r.join(conn)
                 break
             except PlacementRefused as e:                   # P6 sp4: the ground cannot seat this body —

@@ -1,4 +1,5 @@
 # PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — THE GROUND CONNECTIONS CURE (JB's word 2026-10-08) · 2026-10-08
+# Amended: Claude Fable 5.1 (claude-fable-5-1) — W153: a closed line's ghost — the count settles before it judges · 2026-10-16
 """THE GROUND CONNECTIONS CURE (JB, 2026-10-08: "we must ensure that our architecture
 continues to scale as we expand"). The finding: the crew of 11 lit and idle, the ground
 held 37 connections — two per body (its serve line and its working memory's), whether it
@@ -47,12 +48,21 @@ def _body(template, home):
     return r
 
 
-def _lines_of(pg, name: str) -> int:
-    """The ground's own count of the lines a body holds — every connection named for it."""
-    cur = pg.cursor()
-    cur.execute("SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()"
-                " AND application_name LIKE %s", (f"orreth body {name}%",))
-    return int(cur.fetchone()[0])
+def _lines_of(pg, name: str, expect: int | None = None, settle_s: float = 2.0) -> int:
+    """The ground's own count of the lines a body holds — every connection named for it. A line
+    just closed can still be listed for an instant while its backend goes (W153's proof run showed
+    two such ghosts); with `expect` the count is read again until it agrees or `settle_s` pass —
+    a line that truly lingers still fails."""
+    import time as _t
+    t0 = _t.monotonic()
+    while True:
+        cur = pg.cursor()
+        cur.execute("SELECT count(*) FROM pg_stat_activity WHERE datname = current_database()"
+                    " AND application_name LIKE %s", (f"orreth body {name}%",))
+        n = int(cur.fetchone()[0])
+        if expect is None or n == expect or _t.monotonic() - t0 > settle_s:
+            return n
+        _t.sleep(0.05)
 
 
 # ---- the law, pure ----------------------------------------------------------------------
@@ -147,14 +157,14 @@ def test_a_body_holds_a_ground_line_only_while_it_serves_and_keeps_its_lease_wit
     r = _body(ECHO, tmp_path / "home")
     r.join(pg)
     # born: no line; the lease kept on a cadence with a line opened and closed for it
-    assert not r.holds_line() and _lines_of(pg, "echo") == 0
+    assert not r.holds_line() and _lines_of(pg, "echo", expect=0) == 0
     assert r.keep_lease(DSN, every_s=0) is True and not r.holds_line()
     assert r.keep_lease(DSN) is False                                  # inside the cadence: nothing to do
     assert {b["name"]: b["alive"] for b in presence.roster(pg)} == {"echo": True}
-    assert _lines_of(pg, "echo") == 0                                      # the renew's line is gone
+    assert _lines_of(pg, "echo", expect=0) == 0                                      # the renew's line is gone
     # an empty bench: polled with NO ground connection
     r.serve_once(None, idle_s=0.3, max_commands=10)
-    assert not r.holds_line() and _lines_of(pg, "echo") == 0
+    assert not r.holds_line() and _lines_of(pg, "echo", expect=0) == 0
     # a command lands: the line is taken — two on the ground, the body's and its working memory's
     text = f"Marker {secrets.token_hex(3)}: say this back."
     ask_id = dispatch.submit_ask(pg, text, person=ME)
@@ -171,15 +181,15 @@ def test_a_body_holds_a_ground_line_only_while_it_serves_and_keeps_its_lease_wit
             break
     assert row and row[0] == "replied" and text in row[1]
     assert r.holds_line() and r._ckpt_conn is not None and r._serve_conn is r._line
-    assert _lines_of(pg, "echo") == 2
+    assert _lines_of(pg, "echo", expect=2) == 2
     # warm for the idle window, then let go — the memory's line with it; the next serve opens afresh
     assert r.release_line(idle_s=60) is False and r.holds_line()
     assert r.release_line(idle_s=0) is True and not r.holds_line()
     assert r._ckpt_conn is None and r._ckpt_graph is None and r._serve_conn is None
-    assert _lines_of(pg, "echo") == 0
+    assert _lines_of(pg, "echo", expect=0) == 0
     assert r.release_line() is False
     # the lease rides the held line while it stands
     r.hold_line(DSN)
-    assert r.keep_lease(DSN, every_s=0) is True and _lines_of(pg, "echo") == 1
+    assert r.keep_lease(DSN, every_s=0) is True and _lines_of(pg, "echo", expect=1) == 1
     r.release_line()
-    assert _lines_of(pg, "echo") == 0
+    assert _lines_of(pg, "echo", expect=0) == 0

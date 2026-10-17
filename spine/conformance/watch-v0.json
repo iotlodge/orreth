@@ -218,7 +218,7 @@
    }
   },
   {
-   "name": "watch_metrics: the vocabulary both kernels measure - fifteen names in one order; a name here is a value the snapshot carries, never a zero by omission (the honest glass, 2026-09-29) (twenty since Phase 8 sp5: the five measurements; twenty-one since the ground connections cure, 2026-10-08: ground_connections; twenty-two since Phase 8 sp6: key_checks_failed)",
+   "name": "watch_metrics: the vocabulary both kernels measure - twenty-two names in one order (the fifteen of 0.1.0, the five measurements, ground_connections, key_checks_failed); a name here is a value the snapshot carries, never a zero by omission (the honest glass, 2026-09-29) (twenty since Phase 8 sp5: the five measurements; twenty-one since the ground connections cure, 2026-10-08: ground_connections; twenty-two since Phase 8 sp6: key_checks_failed)",
    "kind": "watch_metrics",
    "input": {},
    "expect": {
