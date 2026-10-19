@@ -1,15 +1,19 @@
 # Orreth — the architecture
 
 <!-- PROVENANCE: Claude Fable 5.1 (claude-fable-5-1) — THE REFRESH SEASON step 5, the repo's face (JB 2026-09-30: "an Architecture markdown that has nice professional graphs … light/dark") · 2026-09-30.
-     The diagrams are hand-drawn SVG in docs/images, one light and one dark file each, chosen by the reader's own theme. -->
+     The diagrams are hand-drawn SVG in docs/images, one light and one dark file each, chosen by the reader's own theme.
+     Amended: THE OPERATING STATE on the face (JB 2026-10-19): §1 the operating state and the loop that keeps it (a Mermaid drawing GitHub renders in the reader's theme), §10 THE STUDIO, the 0.2.1 counts · 2026-10-19 -->
 
-**Orreth is a kernel for fleets of agents.** It holds the rigid control an operating system holds
-for programs — identity, memory, the rails work rides on, the meter, the gate, the watches and the
+**Orreth is a kernel for fleets of agents, built to keep their operating state continuously
+measured and continuously improving.** It holds the rigid control an operating system holds for
+programs — identity, memory, the rails work rides on, the meter, the gate, the watches and the
 levers — in one process under one law, so that everything a body does lands on one signed record
 and a person can always stop what the machine manages. Policy stays with humans. An intention is
-the unit of control.
+the unit of control. And the point of all that rigid control is a scorecard: five measurements at
+the top of the kernel, read live off what the agents do, obeyed at every act, and closed as a loop
+that improves the agents themselves.
 
-This page is the map of kernel **0.1.0** as it runs today: what exists, how it fits, and the laws
+This page is the map of kernel **0.2.1** as it runs today: what exists, how it fits, and the laws
 each part is built to keep. It draws only machinery that runs; the standing register of what is
 proven, partial or owed is [`design/the-honest-boundary.md`](design/the-honest-boundary.md), and a
 claim not on that page is a claim we do not make. The book at [docs.orreth.ai](https://docs.orreth.ai)
@@ -27,7 +31,168 @@ walks a newcomer through it in plain words.*
 
 ---
 
-## 1 · The shape of a running world
+## 1 · The operating state — what the kernel is for
+
+The kernel does not measure itself by looking inward. It measures itself **through the agents
+running in it**: every reply a body gives, every ask it serves, every meter line its thoughts
+leave, every hop its graph walks, every thumb a person puts on its answer. Those rows are the
+evidence. Five measurements — the owner's **Kernel Strategic Measurements** of 2026-10-05 — are
+read off them live, each **1.0000 at the ideal**; each is a watch the kernel keeps; one of the
+kernel's own intentions owns their reds; and the loop closes in THE STUDIO, where the agent that
+fell short is improved by a person and judged at a gate before its next life is seated.
+
+### The five measurements
+
+| Measurement | What it means | What the kernel reads at v0 | The evidence it reads | Unknown while |
+|---|---|---|---|---|
+| **TRUST** | the ability to do the right thing | graded live replies that passed (A, B or C) over all graded live replies | the grader's signed verdicts on replies (`spine_verdicts.on_ask`) | no reply has been graded |
+| **RECALL** | the ability to replay | served asks whose reply landed under a marker — the chain is the replay — over all served asks | the asks table: every reply with its marker | no ask has been served |
+| **EFFICIENCY** | the use of Orreth | serves of the last day finished inside their latency class over all serves — a chat ask 30 s, work and events 180 s, by the hull's edge | the ask's asked-at and replied-at, its marker's kind | nothing served in the last day |
+| **EXPERIENCE** | feedback | thumbs up over thumbs given through the feedback door | the feedback table, one row per thumb | no thumb has been given |
+| **COST** | correlation and itemisation, Layer 7 down to Layer 1 | the spend a serving ask can be named for over all spend | the meter: every line wears the ask it served | nothing has been spent |
+
+Each is **unknown** while its denominator is empty — said, never a silent 1.0 — and an unknown
+turns no watch red. The Monitor says each one in words, not only as a number (*trust: 0.8000 — 4
+of 5 graded replies passed*; *experience: unknown — no thumbs given yet*), and the measurements
+door serves the five alone. The law is pure and mirrored on both kernels
+(`spine/orreth_spine/operating.py` · `operating.rs` · the fixture `operating-v0.json`).
+
+### Every operation is an observation
+
+An agent in Orreth works in one of **three modes**, and the kernel knows which from the ask's
+marker, never from a mode switch:
+
+| Mode | What wakes it | The hull's edge | Its latency class |
+|---|---|---|---|
+| **Helping a person in the chat** | a human's own ask, or a thought asked of an include in the session | chat | 30 s |
+| **Doing its assigned work** | an objective's child, or an intention's occurrence — structural markers | work | 180 s |
+| **Responding to an event** | a red watch, an improvement marked, an experiment's run, a grading, any declared kind the body is interested in | event | 180 s |
+
+Whichever mode, the same things happen, and each is evidence under one of the five:
+
+- the ask wears a **marker** naming its origin and its parent — so Recall can count the chain, and
+  Efficiency can know the edge and the class the serve owes;
+- the body thinks under its **own virtual key** at the one gateway, so every thought lands as a
+  **meter line wearing the ask** — Cost's numerator; the kernel never sees the prompt;
+- every node the body's graph walks is a **hop** on the ground — when it started, how long it took,
+  whether it ended well, the hashes of what went in and out — replayable by ask, or by an
+  experiment's run and case;
+- the reply lands as a **signed fact** under the same marker, through the same door, over the same
+  rails as everything else;
+- **the grade beat** takes a body's replies of the last hour that no one has graded — five per
+  beat, never a reviewer's own words — and hands each to the **grader** under a grading marker
+  beneath the reply's own ask; the grader answers in one form, *grade: ‹A–F› — ‹one line›*, and
+  writes its **signed verdict** on the reply in its own transaction — Trust's evidence;
+- a person's 👍 or 👎 under the reply is a fact under the person's seat — Experience's evidence,
+  and evidence the grader weighs, never the verdict itself.
+
+Nothing in that list is reported by the worker. It is read off what the worker did, by a kernel
+that authorizes and meters and never sees the prompt, and graded by a body other than the actor.
+That is covenant rule 2 — **nothing grades its own yardstick** — applied to the whole fleet, and
+it is why the scorecard can be trusted.
+
+### The watches and THE OPERATING STATE intention
+
+A watch is red while its condition holds (`metric op threshold`) and green otherwise. At light,
+once per world, the kernel declares seven watches of its own: `trust < 1.0` · `recall < 1.0` ·
+`efficiency < 1.0` · `experience < 1.0` · `cost < 1.0`; `ground_connections >= ceiling − reserve`
+(the ground filling before Postgres refuses a line); `key_checks_failed > 0` (a seated body that
+could not prove, on the identity chip's cadence, that it is who and what it says).
+
+Beside its Resiliency intention the kernel declares one more of its own, **THE OPERATING STATE**:
+*keep this world's operating state at 1.0 — Trust · Recall · Efficiency · Experience · Cost: when a
+measurement goes red, get it green*. Both are interested in `watch-red`; **the watch is the
+discriminator** — an intention that names watches takes the reds of those metrics alone, and one
+that names none takes every other red. So a measurement's red reaches the Operating State, and a
+red on the ground, the outbox, a body or a door reaches Resiliency and the remediation rail (§6).
+
+### The loop closes in THE STUDIO
+
+The Operating State's planner is the planner; its runner is the **critic**, and the critic has one
+tool, **propose**. Asked under an improvement marker — a measurement's red, or a person's own
+*mark this as improvement* — its recall packs the improvement marked, the marked reply and the
+responsible body's template from the shelf, and its proposal lands as a **draft of that body's
+craft under the body's owner** (the seat that promoted it, else the template's registrar, else the
+world's owner), marked *proposed by the critic from marker …*. A fact tells the owner's chat. The
+owner opens the draft in THE STUDIO (§10), cuts it at the interlock, the **Experiment** runs the
+candidate against its golden set with four signed reviewers at the gate, and the promotion seats
+the agent's next life where the owner says. The next life's replies feed the same five numbers.
+**Raw feedback never reaches a body**; every change to an agent goes through a person and the gate.
+
+```mermaid
+flowchart TB
+    subgraph AGENTS["what the agents do — in chat · on assigned work · on events"]
+        reply["a reply, signed"]
+        hop["a hop, timed"]
+        thought["a thought, through the gateway"]
+    end
+    subgraph EVIDENCE["the evidence on the ground"]
+        verdict["the grader's signed verdict — the GRADE BEAT"]
+        thumb["a thumb — the feedback door"]
+        meterline["a meter line wearing the ask"]
+        askrow["the ask's row: marker · edge · times"]
+    end
+    subgraph MEAS["the five measurements — 1.0 at the ideal, unknown while empty"]
+        trust["TRUST"]
+        recall["RECALL"]
+        eff["EFFICIENCY"]
+        exp["EXPERIENCE"]
+        cost["COST"]
+    end
+    watches["the kernel's watches: metric < 1.0 is RED"]
+    opstate["THE OPERATING STATE intention — planner: the planner · runner: the critic"]
+    propose["the critic's PROPOSE: a draft under the agent's owner"]
+    studio["THE STUDIO: the owner cuts → the Experiment judges → the promotion"]
+    person["a person: 👍 👎 · mark this as improvement · the Yes"]
+    reply --> verdict
+    reply --> askrow
+    hop --> askrow
+    thought --> meterline
+    person --> thumb
+    verdict --> trust
+    askrow --> recall
+    askrow --> eff
+    thumb --> exp
+    meterline --> cost
+    trust --> watches
+    recall --> watches
+    eff --> watches
+    exp --> watches
+    cost --> watches
+    watches -->|"a measurement's red"| opstate
+    person -->|"an improvement marked"| opstate
+    opstate --> propose
+    propose --> studio
+    studio -->|"the next life, seated"| AGENTS
+```
+
+### Itemised from the top down
+
+Cost's phrase in the canon is *Layer 7 through Layer 1*: an act in the glass traced down to the
+metal it cost. At v0 the kernel itemises this far: **the world** (the five are read per universe;
+the meter by world — what this world spent today, every mind); **the body** (every body thinks
+under its own key with a budget and a renewal window, the fuel clause of its lease, so spend is
+itemised per body; its verdicts and thumbs are on its replies; its wear says which crafts it was
+made of when it answered); **the stall** (every thought names the mind that answered, resolved by
+one law and said in the journey); **the ask** (every meter line wears the ask; the verdict is on the
+ask; the thumb on the reply; the latency class is the edge it took — the unit the five ratios
+count); **the hop** (timed and recorded, not yet costed).
+
+### What is not measured yet
+
+The five are coverage ratios at v0: Trust is pass over graded, not a judgement of the ungraded;
+Efficiency's classes are fixed by the edge (30 s · 180 s), not declared per body; Experience
+counts thumbs only; Recall counts a marker's presence, not a replay performed. Dollars stop at
+the ask — the Costs Panel's itemisation to the metal is a named seed. An imported LangGraph's own
+model calls are off the meter (the kernel records its hops, not its spend). There is no roll-up
+across cells. The grade beat runs on one kernel and spends; its dial turns it off. The operating
+state's own walk in the glass (SPEC-OPERATING-01) is owed, and on the Studio's walk of 2026-10-16
+the critic filed its proposal and closed without its verdict line, recorded as missing. All of it
+is on the register.
+
+---
+
+## 2 · The shape of a running world
 
 On one laptop, Orreth is five processes in Docker and, inside the kernel's own process, ten more.
 
@@ -46,7 +211,7 @@ carries them:
 | Organ | What it is | Its doors |
 |---|---|---|
 | **DESK** | Who is seated and who may come in — the seat a person takes with a code from their authenticator, and the join desk every body walks through. | `/seat` · `/enroll` · `/join` |
-| **GROUND** | The kernel's memory: one Postgres database, one schema with one writer ever, forty-three tables — every ask, reply, fact, lease, watch and meter line. | `/recall` · `/export` · `/fact/:id` · `/parked` |
+| **GROUND** | The kernel's memory: one Postgres database, one schema with one writer ever, fifty-two tables at schema 12 — every ask, reply, fact, lease, watch, meter line, verdict, thumb and hop. | `/recall` · `/export` · `/fact/:id` · `/parked` |
 | **GATEWAY** | The meter: LiteLLM, run and managed by the kernel. Every body has its own virtual key wearing its budget; every answer comes back with its cost. | `/minds` · `/minds/spend` |
 | **SHELF** | Every service the kernel governs — tools, MCP servers, stores, sources and minds — and every craft a body is made of — templates, prompts, skills, policies, graphs, bindings and golden sets, addressed by name and pin, never a self — on one lifecycle ladder: registered → versioned → healthy or unhealthy → retired. The wear table says which body wears which craft at which version; a draft lives under its author until the cut. A graph declaration may branch (a way out wears `when`: the hull's edge · the ask's words · the last reply; one default at most; forward only), and the body's hull picks the way out as the run goes. | `/services` · `/wear` · `/drafts` |
 | **MONITOR** | The operating state, live: the rails, the bodies, the asks, the watches, the health checks, the harness, and every lever. | `/monitor` · `/harness` · `/levers` · `/bodies` |
@@ -107,7 +272,7 @@ person's word.
 
 ---
 
-## 2 · The road an ask takes
+## 3 · The road an ask takes
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/arch-ask-road-dark.svg">
@@ -127,7 +292,7 @@ is handed to exactly one body by the inbox's footprint, and a second delivery is
 
 ---
 
-## 3 · Identity — the seat and the lease
+## 4 · Identity — the seat and the lease
 
 Two things stand at the DESK, and they are the same shape: a capability token in the covenant's
 form — subject, audience, grants, constraints, chain, signature — that can only narrow as it is
@@ -165,7 +330,7 @@ the same self, life after life, and a new DID per run is a defect; **scopes only
 
 ---
 
-## 4 · Memory — four memories, one truth
+## 5 · Memory — four memories, one truth
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/arch-four-memories-dark.svg">
@@ -185,15 +350,16 @@ long-objective resume are owed and say so on the register.
 
 ---
 
-## 5 · The remediation rail — how a red watch is cured
+## 6 · The remediation rail — how a red watch is cured
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/arch-remediation-dark.svg">
   <img alt="How a red watch is cured: a dossier off the ground, the planner's lever from the catalogue, the consequence ladder, the watch read again" src="images/arch-remediation-light.svg" width="100%">
 </picture>
 
-A watch is red while its condition holds. When one turns red, the kernel's standing Resiliency
-intention wakes. The kernel first reads a **dossier** off the ground — the watch, who it names and
+A watch is red while its condition holds. When one turns red, one of the kernel's two standing
+intentions wakes: a measurement's red goes to THE OPERATING STATE (§1), every other red to
+Resiliency — the watch is the discriminator. For Resiliency the kernel first reads a **dossier** off the ground — the watch, who it names and
 their state, the last acts on them, what happened last time — with no mind involved. It hands the
 planner that dossier and the **lever catalogue** (`spine/levers.v0.json`: every governed act, its
 consequence class, who may pull it, how long it takes to settle). The planner answers inside the
@@ -209,7 +375,7 @@ never a deletion.
 
 ---
 
-## 6 · Cells and the seam — how two worlds speak
+## 7 · Cells and the seam — how two worlds speak
 
 A cell is a universe — one kernel, one database, one role. Inside it the kernel serves three
 levels on one path (universe · floor · room, Phase 8 sp1); between cells speaks the seam below.
@@ -229,12 +395,12 @@ old home refuses to serve. A second cell is one command: `scripts/dev.sh cell tw
 
 ---
 
-## 7 · Two kernels, one law
+## 8 · Two kernels, one law
 
 The Python **reference** (`spine/orreth_spine`, the Bridge on `:4601`) is the same kernel written
 first. It is not a fallback; it is the yardstick. Every law is pinned by a conformance fixture both
-kernels must pass unchanged (`spine/conformance/*.json`; 730 cases on the Rust side, the Python
-suite in the nine hundreds), and the SDK (`agents/orreth-agent-sdk`, Apache-2.0) is held to the
+kernels must pass unchanged (`spine/conformance/*.json`, thirty-two fixtures; the Python suite at
+1,419 green on the dark rig at 0.2.1, the Rust workspace and the conformance run green beside it), and the SDK (`agents/orreth-agent-sdk`, Apache-2.0) is held to the
 reference's bytes by a parity test. Canonical bytes are the contract: sorted keys, compact
 separators, ASCII — byte-identical across the SDK, the reference and the kernel. The crypto
 surface — the kernel's own seed and signature, the seat's mint and verification, the desk's proof,
@@ -243,28 +409,18 @@ owner's explicit word.
 
 ---
 
-## 8 · The glass — THE PANEL and the one chat
+## 9 · The glass — THE PANEL and the one chat
 
 One HTML page (`spine/glass/index.html`), served by either kernel, no build step. It is a control
 room's mimic panel: **geometry is what is declared** (the organs, every socket, the tools), **light
 is what is happening** (a segment lights when a fact passes, then fades), **colour is who did it**
 (amber a person, cyan a body, violet the kernel, red a watch or a hold). Three soft toggles —
 ARCHITECTURE, OPERATIONS, PERFORMANCE — layer the same drawing. The CREW and MONITOR pulls, the
-ANALYZER hatch and THE WORKSHOP (Phase 8 sp3: the full-screen pull where a craft is authored — your
-drafts under your seat, the shelf's crafts, a graph drawn from its declaration with the node inspector,
-the cut held at the interlock, its own agent `workshop` on your words; Phase 8 sp4: an agent's cut OPENS THE
-EXPERIMENT — a trial life in an experiment room, the grader's and the critic's signed verdicts, THE EXPERIMENT
-card with its proposal, the stamped promotion that seats the agent's next life where you say, and the ladder
-rest · decommission · restore; Phase 8 sp5: THE OPERATING STATE — JB's five measurements on the Monitor pull, unknown
-until there is something to measure, watched by the kernel and owned by one intention beside Resiliency; the grader
-hearing every live reply and signing its verdict; 👍 👎 under every reply; the critic's proposals landing under a body's
-owner; "summon critic"; a repo'd graph run inside the hull by an import node; Phase 8 sp6: THE TWO CHIPS — the identity
-and security chips reviewing at the gate beside the grader and the critic, so no slot on the card stands empty, and THE
-KEY-CHECK: every seated body challenged on a cadence to prove who and what it is, the join desk's challenge repeated,
-its verdict a fact, the day's failures the kernel's seventh watch — "show the key checks"; THE WIZARD, 2026-10-12: the
-Workshop's first screen, "+ new agent" — one flow from a name to the body joined with no JSON: the graph shaped, the golden
-cases as a form, three ordinary drafts saved, three cuts each held at the interlock, the Experiment's card inline, the
-promotion with where the next life stands, "name joined") are the same truth from the same doors, and every row is a door.
+ANALYZER hatch and THE STUDIO (§10) are the same truth from the same doors, and every row is a
+door. The MONITOR pull is the operating state live: the pulse (what the world spent today), the
+peers, the minds, the health checks, the rails, every body, the asks left waiting, the
+MEASUREMENTS card (§1) above the WATCHES card, the key-checks, and the harness; every lever a
+person can pull is on it, each recorded, never deleted.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="images/monitor-dark.jpg">
@@ -284,10 +440,54 @@ take the lead — and in every one a consequence holds for a person.
 
 ---
 
+## 10 · THE STUDIO — where an agent is made, judged and seated
+
+The loop of §1 ends in a person's hands, and this is the room they hold it in. THE STUDIO is the
+kernel's own: LangGraph Studio's shape — a drawn graph, a run, the state per node, a hold at an
+interrupt — with no second product, no second kernel and no hosted key (canon `rearch/0011`). Two
+kernels would be two truths.
+
+**A bench per effort.** Every agent in the making is a **bench** on the ground (`spine_benches`),
+not in a browser: its name, its owner, where it stands in the chain, and the three drafts it
+carries — the **graph** (a declaration that may branch: a way out wears `when`, forward only, one
+default at most; a node may contain a graph; an `import` node names a repository's compiled
+LangGraph by repo, commit and entry), the **golden set** (the cases a candidate must pass, written
+as a form) and the **template** (its persona or function, its tools, its mind). A second browser,
+a second seat or the workshop agent all see the same bench.
+
+**The agent makes it, the person says Yes.** *"+ new agent"* walks a person from a name to a body
+joined with no JSON. Or one brief to the **workshop** agent, which searches the shelf, shapes the
+graph, writes the golden cases and the template, files all three drafts on a bench and asks the
+kernel for its one hold, `bench.work` — the whole chain behind a single Yes. The hold wears two
+faces, the chat's and the bench card's, and both answer the same wait.
+
+**The cut and the Experiment.** A draft is cut at the interlock, and an agent's cut **opens an
+Experiment**: a trial life is born in an experiment room with the candidate's crafts, run against
+the golden set, and four reviewers sign a verdict on the arms under the experiment's own id — the
+**grader** (did it pass its cases), the **critic** (is it better), the **identity chip** (are its
+claims about itself true) and the **security chip** (what may the candidate do that the standing
+version may not, and where were bodies turned away). The card shows the arms, the verdicts and the
+leaning; a failed case holds the gate. The same grader that judges a candidate here judges the
+seated on live replies for Trust — one law, different evidence.
+
+**The promotion and the ladder.** A promotion is a stamped act that seats the agent's next life
+**where the owner says** — the floor or room it stands on — and records which seat promoted it, so
+the critic's later proposals land under that owner. The standing life rests, the candidate serves,
+and the ladder runs rest → decommission → restore, each a governed, recorded act, never a deletion.
+
+**The true graph and the replay.** When a body runs a compiled graph — its own or an imported
+repository's — it records the shape it truly ran and a **hop** for every node, by the ask or by
+the experiment's run and case. The Studio draws the true graph inside the hull's ring as boxes
+inside boxes, lights it as the run goes, and replays any run from the ground afterwards. Every
+hop a body walks is also a row the operating state reads.
+
+---
+
 ## Where to read next
 
 - [`design/the-honest-boundary.md`](design/the-honest-boundary.md) — the standing register: proven, partial, parked, with the evidence named.
 - [`rearch/0005-v1-scope-and-build-plan.md`](rearch/0005-v1-scope-and-build-plan.md) — the build plan and the walks that proved each row.
-- [`rearch/0001`–`0010`](rearch/) — the canon of this world: the experience charter, transport, memory, agent, markers, intent, the port, the old world carried, the Workshop.
+- [`rearch/0010-the-workshop.md`](rearch/0010-the-workshop.md) · [`rearch/0011-the-studio.md`](rearch/0011-the-studio.md) — the Engineered Agents phase: the operating state's canon (0010 §7) and the Studio's.
+- [`rearch/0001`–`0011`](rearch/) — the canon of this world: the experience charter, transport, memory, agent, markers, intent, the port, the old world carried, the Workshop, the Studio.
 - [`design/0000`–`0017`](design/) — the constitution the covenant enforces; [`.claude/skills/orreth-covenant`](../.claude/skills/orreth-covenant/SKILL.md) — the hard rules every model coding here holds to.
 - [docs.orreth.ai](https://docs.orreth.ai) — the book: run it, watch it, build a body of your own.
